@@ -1,0 +1,941 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Delphi — Know the Gap Before You Commit</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;0,900;1,400;1,600;1,700&family=EB+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #FAF7F2;
+    --card: #F2EDE6;
+    --border: #E0D8CE;
+    --border-dark: #C4BAB0;
+    --text: #1C1C1A;
+    --text-mid: #3E3830;
+    --text-light: #7A7060;
+    --accent: #3D6B21;
+    --accent-dark: #2D5016;
+    --dark: #141410;
+    --gold: #B8935A;
+    --white: #FFFFFF;
+    --ff: 'Playfair Display', Georgia, serif;
+    --ffb: 'EB Garamond', Georgia, serif;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--ffb);
+    font-size: 18px;
+    font-weight: 500;
+    line-height: 1.75;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* ── NAV ── */
+  nav {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 100;
+    padding: 18px 56px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: rgba(250,247,242,0.95);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid transparent;
+    transition: border-color 0.3s;
+  }
+
+  nav.scrolled { border-bottom-color: var(--border); }
+
+  .logo {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    text-decoration: none;
+  }
+
+  .logo-mark {
+    width: 38px; height: 38px;
+    border-radius: 50%;
+    background: var(--accent);
+    color: var(--white);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--ff);
+    font-size: 18px;
+    font-weight: 700;
+  }
+
+  .logo-name {
+    font-family: var(--ff);
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--text);
+    letter-spacing: 0.5px;
+  }
+
+  .nav-btn {
+    background: var(--accent);
+    color: var(--white);
+    border: none;
+    border-radius: 3px;
+    padding: 11px 28px;
+    font-family: var(--ffb);
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    cursor: pointer;
+    text-decoration: none;
+    transition: background 0.2s;
+  }
+
+  .nav-btn:hover { background: var(--accent-dark); }
+
+  /* ── HERO ── */
+  .hero {
+    min-height: 86vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 140px 48px 80px;
+    max-width: 860px;
+    margin: 0 auto;
+  }
+
+  .hero h1 {
+    font-family: var(--ff);
+    font-size: clamp(44px, 6.5vw, 84px);
+    font-weight: 700;
+    line-height: 1.05;
+    color: var(--text);
+    margin-bottom: 36px;
+    letter-spacing: -2px;
+  }
+
+  .hero h1 em {
+    font-style: italic;
+    color: var(--accent);
+  }
+
+  .hero-body {
+    font-size: 20px;
+    line-height: 1.85;
+    color: var(--text-mid);
+    margin-bottom: 48px;
+    max-width: 720px;
+    font-weight: 500;
+  }
+
+  .hero-actions {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 24px;
+    flex-wrap: wrap;
+  }
+
+  .btn-primary {
+    background: var(--accent);
+    color: var(--white);
+    border: none;
+    border-radius: 3px;
+    padding: 16px 40px;
+    font-family: var(--ffb);
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 2.5px;
+    text-transform: uppercase;
+    cursor: pointer;
+    text-decoration: none;
+    display: inline-block;
+    transition: background 0.2s, transform 0.15s;
+  }
+
+  .btn-primary:hover {
+    background: var(--accent-dark);
+    transform: translateY(-1px);
+  }
+
+  .btn-outline {
+    background: transparent;
+    color: var(--text-mid);
+    border: 1.5px solid var(--border-dark);
+    border-radius: 3px;
+    padding: 15px 32px;
+    font-family: var(--ffb);
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    cursor: pointer;
+    text-decoration: none;
+    display: inline-block;
+    transition: all 0.2s;
+  }
+
+  .btn-outline:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+
+  /* ── TRUST — DARK ── */
+  .trust {
+    background: var(--dark);
+    padding: 88px 56px;
+  }
+
+  .trust-inner {
+    max-width: 1060px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 72px;
+    align-items: start;
+  }
+
+  .trust h2 {
+    font-family: var(--ff);
+    font-size: clamp(34px, 4vw, 52px);
+    font-weight: 700;
+    color: var(--white);
+    line-height: 1.1;
+    margin-bottom: 28px;
+    letter-spacing: -0.5px;
+  }
+
+  .trust h2 em {
+    font-style: italic;
+    color: var(--gold);
+  }
+
+  .trust-body {
+    font-size: 17px;
+    font-weight: 500;
+    line-height: 1.9;
+    color: rgba(255,255,255,0.72);
+  }
+
+  .trust-body p { margin-bottom: 16px; }
+  .trust-body p:last-child { margin-bottom: 0; }
+  .trust-body strong { color: var(--white); font-weight: 700; }
+
+  .trust-list {
+    border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+
+  .trust-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+    padding: 20px 26px;
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+    transition: background 0.15s;
+  }
+
+  .trust-item:last-child { border-bottom: none; }
+  .trust-item:hover { background: rgba(255,255,255,0.05); }
+
+  .trust-dot {
+    width: 22px; height: 22px;
+    border-radius: 50%;
+    background: var(--accent);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    margin-top: 2px;
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--white);
+  }
+
+  .trust-item p {
+    font-size: 16px;
+    font-weight: 600;
+    color: rgba(255,255,255,0.82);
+    line-height: 1.65;
+    font-family: var(--ffb);
+  }
+
+  /* ── REPORT TYPES ── */
+  .types {
+    padding: 88px 56px;
+    max-width: 1060px;
+    margin: 0 auto;
+  }
+
+  .types h2 {
+    font-family: var(--ff);
+    font-size: clamp(34px, 4vw, 52px);
+    font-weight: 700;
+    color: var(--text);
+    line-height: 1.1;
+    letter-spacing: -0.5px;
+    margin-bottom: 52px;
+  }
+
+  .types h2 em {
+    font-style: italic;
+    color: var(--accent);
+  }
+
+  .types-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+  }
+
+  .type-card {
+    border: 1.5px solid var(--border);
+    border-radius: 10px;
+    padding: 44px 40px;
+    background: var(--white);
+    transition: transform 0.2s, box-shadow 0.2s;
+  }
+
+  .type-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 12px 40px rgba(0,0,0,0.07);
+  }
+
+  .type-card.featured {
+    background: var(--accent);
+    border-color: var(--accent);
+  }
+
+  .type-tag {
+    display: inline-block;
+    font-size: 11px;
+    letter-spacing: 2.5px;
+    text-transform: uppercase;
+    color: var(--accent);
+    background: rgba(61,107,33,0.08);
+    border-radius: 20px;
+    padding: 5px 14px;
+    margin-bottom: 20px;
+    font-family: var(--ffb);
+    font-weight: 700;
+  }
+
+  .type-card.featured .type-tag {
+    color: var(--white);
+    background: rgba(255,255,255,0.18);
+  }
+
+  .type-card h3 {
+    font-family: var(--ff);
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 16px;
+    line-height: 1.15;
+    letter-spacing: -0.3px;
+  }
+
+  .type-card.featured h3 { color: var(--white); }
+
+  .type-card p {
+    font-size: 16px;
+    font-weight: 500;
+    line-height: 1.85;
+    color: var(--text-mid);
+    margin-bottom: 20px;
+  }
+
+  .type-card.featured p { color: rgba(255,255,255,0.88); }
+
+  .type-best {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text-light);
+    line-height: 1.65;
+    font-style: italic;
+    padding-top: 20px;
+    border-top: 1px solid var(--border);
+    font-family: var(--ffb);
+    margin-bottom: 24px;
+  }
+
+  .type-card.featured .type-best {
+    color: rgba(255,255,255,0.62);
+    border-top-color: rgba(255,255,255,0.18);
+  }
+
+  .type-btn {
+    display: inline-block;
+    padding: 12px 28px;
+    border-radius: 40px;
+    font-family: var(--ffb);
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    text-decoration: none;
+    transition: all 0.2s;
+    cursor: pointer;
+    border: none;
+  }
+
+  .type-btn-outline {
+    border: 1.5px solid var(--border-dark);
+    color: var(--text);
+    background: transparent;
+  }
+
+  .type-btn-outline:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+    transform: translateY(-1px);
+  }
+
+  .type-btn-solid {
+    background: var(--white);
+    color: var(--accent);
+    border: 1.5px solid transparent;
+  }
+
+  .type-btn-solid:hover {
+    background: var(--card);
+    transform: translateY(-1px);
+  }
+
+  /* ── WHAT YOU GET ── */
+  .get {
+    padding: 88px 56px;
+    background: var(--card);
+    border-top: 1px solid var(--border);
+  }
+
+  .get-inner {
+    max-width: 1060px;
+    margin: 0 auto;
+  }
+
+  .get h2 {
+    font-family: var(--ff);
+    font-size: clamp(34px, 4vw, 52px);
+    font-weight: 700;
+    color: var(--text);
+    line-height: 1.1;
+    letter-spacing: -0.5px;
+    margin-bottom: 52px;
+  }
+
+  .get h2 em {
+    font-style: italic;
+    color: var(--accent);
+  }
+
+  .get-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1px;
+    background: var(--border);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+  }
+
+  .get-item {
+    background: var(--white);
+    padding: 36px 32px;
+    transition: background 0.15s;
+  }
+
+  .get-item:hover { background: var(--bg); }
+
+  .get-item::before {
+    content: '';
+    display: block;
+    width: 36px;
+    height: 3px;
+    background: var(--accent);
+    margin-bottom: 20px;
+    border-radius: 2px;
+  }
+
+  .get-item h3 {
+    font-family: var(--ffb);
+    font-size: 19px;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 10px;
+    line-height: 1.35;
+  }
+
+  .get-item p {
+    font-size: 16px;
+    font-weight: 500;
+    line-height: 1.8;
+    color: var(--text-mid);
+  }
+
+  /* ── PRICING ── */
+  .pricing {
+    padding: 88px 56px;
+    background: var(--bg);
+    border-top: 1px solid var(--border);
+  }
+
+  .pricing-inner {
+    max-width: 1060px;
+    margin: 0 auto;
+  }
+
+  .pricing h2 {
+    font-family: var(--ff);
+    font-size: clamp(34px, 4vw, 52px);
+    font-weight: 700;
+    color: var(--text);
+    line-height: 1.1;
+    letter-spacing: -0.5px;
+    margin-bottom: 48px;
+  }
+
+  .pricing h2 em {
+    font-style: italic;
+    color: var(--accent);
+  }
+
+  .pricing-cards {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+  }
+
+  .pricing-card {
+    border: 1.5px solid var(--border);
+    border-radius: 10px;
+    padding: 40px;
+    background: var(--white);
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    transition: transform 0.2s, box-shadow 0.2s;
+  }
+
+  .pricing-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 12px 40px rgba(0,0,0,0.07);
+  }
+
+  .pricing-card.featured {
+    background: var(--accent);
+    border-color: var(--accent);
+  }
+
+  .pricing-type {
+    font-size: 11px;
+    letter-spacing: 2.5px;
+    text-transform: uppercase;
+    color: var(--text-light);
+    font-family: var(--ffb);
+    font-weight: 700;
+  }
+
+  .pricing-card.featured .pricing-type { color: rgba(255,255,255,0.65); }
+
+  .pricing-amount {
+    font-family: var(--ff);
+    font-size: 56px;
+    font-weight: 700;
+    color: var(--text);
+    line-height: 1;
+  }
+
+  .pricing-card.featured .pricing-amount { color: var(--white); }
+
+  .pricing-yr {
+    font-family: var(--ffb);
+    font-size: 20px;
+    font-weight: 500;
+    color: var(--text-mid);
+  }
+
+  .pricing-card.featured .pricing-yr { color: rgba(255,255,255,0.7); }
+
+  .pricing-desc {
+    font-size: 16px;
+    font-weight: 500;
+    color: var(--text-mid);
+    line-height: 1.7;
+    font-family: var(--ffb);
+    flex: 1;
+  }
+
+  .pricing-card.featured .pricing-desc { color: rgba(255,255,255,0.82); }
+
+  .pricing-btn {
+    display: block;
+    text-align: center;
+    padding: 14px 20px;
+    border-radius: 3px;
+    font-family: var(--ffb);
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    text-decoration: none;
+    transition: all 0.15s;
+    cursor: pointer;
+    border: none;
+  }
+
+  .p-btn-outline {
+    border: 1.5px solid var(--border-dark);
+    color: var(--text);
+    background: transparent;
+  }
+
+  .p-btn-outline:hover { border-color: var(--accent); color: var(--accent); }
+
+  .p-btn-solid {
+    background: var(--white);
+    color: var(--accent);
+    font-weight: 700;
+  }
+
+  .p-btn-solid:hover { background: var(--card); }
+
+  .pricing-trial {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text-light);
+    margin-top: 16px;
+    font-family: var(--ffb);
+  }
+
+  /* ── CLOSING ── */
+  .closing {
+    text-align: center;
+    padding: 88px 48px;
+    background: var(--dark);
+  }
+
+  .closing h2 {
+    font-family: var(--ff);
+    font-size: clamp(30px, 4vw, 52px);
+    font-weight: 700;
+    color: var(--white);
+    letter-spacing: -0.5px;
+    margin-bottom: 14px;
+    line-height: 1.1;
+  }
+
+  .closing h2 em {
+    font-style: italic;
+    color: var(--gold);
+  }
+
+  .closing p {
+    font-size: 19px;
+    font-weight: 500;
+    color: rgba(255,255,255,0.55);
+    margin-bottom: 36px;
+    font-family: var(--ffb);
+  }
+
+  .btn-light {
+    background: var(--white);
+    color: var(--accent);
+    border: none;
+    border-radius: 3px;
+    padding: 16px 40px;
+    font-family: var(--ffb);
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 2.5px;
+    text-transform: uppercase;
+    cursor: pointer;
+    text-decoration: none;
+    display: inline-block;
+    transition: background 0.2s, transform 0.15s;
+  }
+
+  .btn-light:hover {
+    background: var(--card);
+    transform: translateY(-1px);
+  }
+
+  /* ── FOOTER ── */
+  footer {
+    background: var(--dark);
+    border-top: 1px solid rgba(255,255,255,0.07);
+    padding: 32px 56px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 24px;
+  }
+
+  .footer-logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .footer-mark {
+    width: 30px; height: 30px;
+    border-radius: 50%;
+    background: var(--accent);
+    color: var(--white);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--ff);
+    font-size: 14px;
+    font-weight: 700;
+  }
+
+  .footer-name {
+    font-family: var(--ff);
+    font-size: 17px;
+    font-weight: 700;
+    color: var(--white);
+  }
+
+  .footer-promise {
+    font-size: 14px;
+    font-weight: 500;
+    color: rgba(255,255,255,0.35);
+    text-align: right;
+    line-height: 1.65;
+    max-width: 380px;
+    font-family: var(--ffb);
+  }
+
+  /* ── REVEAL ── */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(14px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .hero { animation: fadeUp 0.65s ease both; }
+
+  .reveal {
+    opacity: 0;
+    transform: translateY(20px);
+    transition: opacity 0.6s ease, transform 0.6s ease;
+  }
+
+  .reveal.visible { opacity: 1; transform: translateY(0); }
+
+  /* ── RESPONSIVE ── */
+  @media (max-width: 860px) {
+    nav { padding: 14px 22px; }
+    .hero { padding: 110px 24px 64px; }
+    .trust { padding: 60px 24px; }
+    .trust-inner { grid-template-columns: 1fr; gap: 40px; }
+    .types { padding: 60px 24px; }
+    .types-grid { grid-template-columns: 1fr; }
+    .get { padding: 60px 24px; }
+    .get-grid { grid-template-columns: 1fr; }
+    .pricing { padding: 60px 24px; }
+    .pricing-cards { grid-template-columns: 1fr; }
+    .closing { padding: 60px 24px; }
+    footer { padding: 28px 24px; flex-direction: column; text-align: center; }
+    .footer-promise { text-align: center; }
+  }
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav id="nav">
+  <a href="#" class="logo">
+    <div class="logo-mark">D</div>
+    <span class="logo-name">Delphi</span>
+  </a>
+  <a href="#start" class="nav-btn">Start Evaluation</a>
+</nav>
+
+<!-- HERO -->
+<div class="hero">
+  <h1>Know the gap<br>before you <em>commit.</em></h1>
+  <p class="hero-body">
+    It's time to buy new software. You have a good idea of the vendors in the space and you know what problem you need to solve. What is less clear is what it means to prepare your organization to adopt and use the solution.
+    <br><br>
+    Delphi shows you a shortlist based on your inputs, how to prepare your data and your organization before you go into the demo, and what questions to ask throughout the buying cycle.
+  </p>
+  <div class="hero-actions">
+    <a href="#start" class="btn-primary">Start your evaluation</a>
+    <a href="#what" class="btn-outline">See what's in the report</a>
+  </div>
+</div>
+
+<!-- TRUST — DARK -->
+<div class="trust reveal">
+  <div class="trust-inner">
+    <div>
+      <h2>Funded by subscribers.<br><em>Not vendors.</em></h2>
+      <div class="trust-body">
+        <p>No platform pays for placement. No vendor pays for a favorable assessment. No affiliate relationships influence what we recommend. <strong>Ever.</strong></p>
+        <p>Every material claim in your report is linked to a source — vendor documentation, verified user reviews, published implementation data. You see exactly where every fact comes from before you act on it.</p>
+        <p>This is not a review site. It is not a comparison tool. It is an independent assessment built for your specific situation.</p>
+      </div>
+    </div>
+    <div class="trust-list">
+      <div class="trust-item">
+        <div class="trust-dot">✓</div>
+        <p>No vendor pays for placement or recommendation</p>
+      </div>
+      <div class="trust-item">
+        <div class="trust-dot">✓</div>
+        <p>Every claim linked to a source you can verify</p>
+      </div>
+      <div class="trust-item">
+        <div class="trust-dot">✓</div>
+        <p>Based on publicly available vendor documentation and verified user reviews</p>
+      </div>
+      <div class="trust-item">
+        <div class="trust-dot">✓</div>
+        <p>Specific to your situation — not a generic ranking or comparison chart</p>
+      </div>
+      <div class="trust-item">
+        <div class="trust-dot">✓</div>
+        <p>If you are not ready to buy, we tell you that and explain what to address first</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- REPORT TYPES -->
+<div class="types reveal" id="types">
+  <h2>Two report types.<br><em>One clear picture.</em></h2>
+  <div class="types-grid">
+    <div class="type-card featured">
+      <div class="type-tag">The Evaluation</div>
+      <h3>Find the right tool for your situation.</h3>
+      <p>You have a problem to solve and you know the category. Delphi takes your situation — team size, stack, budget, readiness, timeline — and tells you which tool is the best fit, what it actually costs to implement, what your organization needs to prepare, and what to ask before you sign. One recommendation, clearly stated.</p>
+      <p class="type-best">Best for: first-time buyers, teams migrating off an existing platform, anyone who wants an independent read before entering the sales cycle.</p>
+      <a href="#start" class="type-btn type-btn-solid">Start Evaluation</a>
+    </div>
+    <div class="type-card">
+      <div class="type-tag">The Stack Fit</div>
+      <h3>Know how it lands in what you already have.</h3>
+      <p>You are adding to an existing tech stack and need to know how a new tool will work in your environment. Beyond integration specs — this looks at data flow, process overlap, team capacity to manage an expanded stack, and whether the tool creates dependencies or conflicts with what you already have.</p>
+      <p class="type-best">Best for: teams with an established stack evaluating additions, ops leaders managing tool sprawl, anyone asking whether this will actually work with what we have.</p>
+      <a href="#stackfit" class="type-btn type-btn-outline">Start Stack Fit</a>
+    </div>
+  </div>
+</div>
+
+<!-- WHAT YOU GET -->
+<div class="get reveal" id="what">
+  <div class="get-inner">
+    <h2>A report built for<br><em>your</em> situation.</h2>
+    <div class="get-grid">
+      <div class="get-item">
+        <h3>Tools matched to your budget and readiness</h3>
+        <p>Your shortlist assessed against total budget — subscription plus implementation — and your organizational capacity. Tools that fit come first.</p>
+      </div>
+      <div class="get-item">
+        <h3>Practical implementation requirements</h3>
+        <p>What each tool actually requires from your organization. Setup, data preparation, integration type, and ongoing admin burden — not just the license fee.</p>
+      </div>
+      <div class="get-item">
+        <h3>Integration reality check</h3>
+        <p>Native integration or third-party connector? What breaks if prerequisites are not met. The difference between what the vendor says and what implementation requires.</p>
+      </div>
+      <div class="get-item">
+        <h3>Organizational readiness score</h3>
+        <p>Scored across six dimensions: data readiness, ops capacity, alignment, change management, integration readiness, and executive sponsorship.</p>
+      </div>
+      <div class="get-item">
+        <h3>Questions to ask before you decide</h3>
+        <p>Pointed questions specific to your situation — the ones that surface gaps if they exist, and that the sales conversation will not naturally raise.</p>
+      </div>
+      <div class="get-item">
+        <h3>One clear recommendation</h3>
+        <p>One tool, clearly stated, with reasoning tied to what you told us. If you are not ready to buy, we say that and tell you what to address first.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- PRICING -->
+<div class="pricing reveal">
+  <div class="pricing-inner">
+    <h2>Transparent<br><em>Pricing.</em></h2>
+    <div class="pricing-cards">
+      <div class="pricing-card">
+        <div class="pricing-type">One Report</div>
+        <div class="pricing-amount">$175</div>
+        <div class="pricing-desc">Full evaluation, one category. Most organizations evaluate more than once.</div>
+        <a href="#start" class="pricing-btn p-btn-outline">Start evaluation</a>
+      </div>
+      <div class="pricing-card featured">
+        <div class="pricing-type">Annual Subscription</div>
+        <div class="pricing-amount">$300<span class="pricing-yr">/yr</span></div>
+        <div class="pricing-desc">Unlimited evaluations. Both report types. Cancel anytime.</div>
+        <a href="#start" class="pricing-btn p-btn-solid">Subscribe</a>
+      </div>
+    </div>
+    <p class="pricing-trial">Limited access available. No credit card required to start.</p>
+  </div>
+</div>
+
+
+<!-- STACK FIT COMING SOON -->
+<div id="stackfit" style="background: var(--card); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); padding: 72px 56px; text-align: center;">
+  <div style="max-width: 560px; margin: 0 auto;">
+    <div style="display: inline-block; font-size: 11px; letter-spacing: 2.5px; text-transform: uppercase; color: var(--accent); background: rgba(61,107,33,0.08); border-radius: 20px; padding: 5px 14px; margin-bottom: 24px; font-family: var(--ffb); font-weight: 700;">The Stack Fit</div>
+    <h2 style="font-family: var(--ff); font-size: clamp(28px, 4vw, 44px); font-weight: 700; color: var(--text); line-height: 1.1; letter-spacing: -0.5px; margin-bottom: 16px;">Coming soon.</h2>
+    <p style="font-size: 17px; font-weight: 500; color: var(--text-mid); line-height: 1.85; margin-bottom: 32px; font-family: var(--ffb);">The Stack Fit is in development. Leave your email and we will let you know when it is ready.</p>
+    <div style="display: flex; gap: 10px; justify-content: center; max-width: 400px; margin: 0 auto;">
+      <input type="email" placeholder="your@email.com" style="flex: 1; border: 1.5px solid var(--border-dark); border-radius: 3px; padding: 12px 16px; font-size: 16px; font-weight: 500; font-family: var(--ffb); background: var(--white); color: var(--text); outline: none;">
+      <button style="background: var(--accent); color: var(--white); border: none; border-radius: 3px; padding: 12px 24px; font-family: var(--ffb); font-size: 13px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; cursor: pointer; white-space: nowrap;">Notify Me</button>
+    </div>
+  </div>
+</div>
+
+<!-- CLOSING -->
+<div class="closing reveal" id="start">
+  <h2>Know the gap<br>before you <em>commit.</em></h2>
+  <p>The independent report for software buyers.</p>
+  <a href="#" class="btn-light">Start your evaluation</a>
+</div>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-logo">
+    <div class="footer-mark">D</div>
+    <span class="footer-name">Delphi</span>
+  </div>
+  <p class="footer-promise">Funded by subscribers, not vendors. No platform pays for placement, recommendation, or access. Ever.</p>
+</footer>
+
+<script>
+  const nav = document.getElementById('nav');
+  window.addEventListener('scroll', () => {
+    nav.classList.toggle('scrolled', window.scrollY > 20);
+  });
+
+  const reveals = document.querySelectorAll('.reveal');
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('visible');
+        observer.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.08 });
+
+  reveals.forEach(el => observer.observe(el));
+</script>
+
+</body>
+</html>
