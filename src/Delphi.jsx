@@ -296,29 +296,83 @@ export default function Delphi({ paymentStatus, startCheckout, onHome }) {
     else generateReport(newAnswers);
   };
 
-  const generateReport = async (finalAnswers) => {
-    setStep("generating");
-    try {
-      const res = await fetch("/.netlify/functions/generate-report", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          system: reportType === "stack_fit" ? STACK_PROMPT : EVAL_PROMPT,
-          prompt: reportType === "stack_fit" ? buildStackPrompt(finalAnswers) : buildEvalPrompt(finalAnswers),
-        }),
-      });
-      const data = await res.json();
-      const text = data.text || "";
-      if (!text) throw new Error("empty");
-      const sections = parseReport(text);
-      if (!sections.length) throw new Error("no sections");
-      setReportSections(sections);
-      setStep("report");
-    } catch (e) {
-      setReportSections([{ title: "What We Heard", content: ["Unable to generate your report. Please try again."] }]);
-      setStep("report");
-    }
-  };
+ const generateReport = async (finalAnswers) => {
+  setStep("generating");
+
+  const jobId = `report-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+
+  try {
+    // Kick off background job
+    await fetch("/.netlify/functions/generate-report-background", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        jobId,
+        system: reportType === "stack_fit" ? STACK_PROMPT : EVAL_PROMPT,
+        prompt: reportType === "stack_fit"
+          ? buildStackPrompt(finalAnswers)
+          : buildEvalPrompt(finalAnswers),
+      }),
+    });
+
+    // Poll for result every 3 seconds
+    const maxAttempts = 60; // 3 min max
+    let attempts = 0;
+
+    const poll = async () => {
+      if (attempts >= maxAttempts) {
+        setReportSections([{
+          title: "What We Heard",
+          content: ["Report generation timed out. Please try again."]
+        }]);
+        setStep("report");
+        return;
+      }
+
+      attempts++;
+
+      try {
+        const res = await fetch(`/.netlify/functions/get-report?jobId=${jobId}`);
+        const data = await res.json();
+
+        if (data.status === "complete") {
+          const text = data.text || "";
+          const sections = parseReport(text);
+          if (!sections.length) {
+            setReportSections([{
+              title: "What We Heard",
+              content: ["Unable to parse your report. Please try again."]
+            }]);
+          } else {
+            setReportSections(sections);
+          }
+          setStep("report");
+        } else if (data.status === "error") {
+          setReportSections([{
+            title: "What We Heard",
+            content: ["Unable to generate your report. Please try again."]
+          }]);
+          setStep("report");
+        } else {
+          // Still pending — poll again
+          setTimeout(poll, 3000);
+        }
+      } catch (e) {
+        setTimeout(poll, 3000);
+      }
+    };
+
+    // Start polling after 5 seconds
+    setTimeout(poll, 5000);
+
+  } catch (e) {
+    setReportSections([{
+      title: "What We Heard",
+      content: ["Unable to generate your report. Please try again."]
+    }]);
+    setStep("report");
+  }
+};
 
   const restart = () => {
     setStep("select"); setReportType(null); setCurrentQ(0); setAnswers({});
