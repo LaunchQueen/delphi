@@ -4,5 +4,5 @@
 [functions]
   node_bundler = "esbuild"
 
-[functions."generate-report"]
-  timeout = 60
+[functions."generate-report-background"]
+  timeout = 300
