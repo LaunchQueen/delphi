@@ -298,28 +298,40 @@ export default function Delphi({ paymentStatus, startCheckout, onHome }) {
 
 const generateReport = async (finalAnswers) => {
   setStep("generating");
-  try {
-    const res = await fetch("/.netlify/functions/generate-report", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        system: reportType === "stack_fit" ? STACK_PROMPT : EVAL_PROMPT,
-        prompt: reportType === "stack_fit"
-          ? buildStackPrompt(finalAnswers)
-          : buildEvalPrompt(finalAnswers),
-      }),
-    });
-    const data = await res.json();
-    const text = data.text || "";
-    if (!text) throw new Error("empty");
-    const sections = parseReport(text);
-    if (!sections.length) throw new Error("no sections");
-    setReportSections(sections);
-    setStep("report");
-  } catch (e) {
-    setReportSections([{ title: "What We Heard", content: ["Unable to generate your report. Please try again."] }]);
-    setStep("report");
-  }
+
+  const jobId = `r-${Date.now()}`;
+  const system = reportType === "stack_fit" ? STACK_PROMPT : EVAL_PROMPT;
+  const prompt = reportType === "stack_fit" ? buildStackPrompt(finalAnswers) : buildEvalPrompt(finalAnswers);
+
+  await fetch("/.netlify/functions/generate-report-background", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ jobId, system, prompt }),
+  });
+
+  const poll = async (attempts = 0) => {
+    if (attempts > 60) {
+      setReportSections([{ title: "What We Heard", content: ["Report timed out. Please try again."] }]);
+      return setStep("report");
+    }
+    try {
+      const { status, text } = await fetch(`/.netlify/functions/get-report?jobId=${jobId}`).then(r => r.json());
+      if (status === "done") {
+        const sections = parseReport(text ?? "");
+        setReportSections(sections.length ? sections : [{ title: "What We Heard", content: ["Unable to parse report. Please try again."] }]);
+        setStep("report");
+      } else if (status === "error") {
+        setReportSections([{ title: "What We Heard", content: ["Unable to generate your report. Please try again."] }]);
+        setStep("report");
+      } else {
+        setTimeout(() => poll(attempts + 1), 3000);
+      }
+    } catch {
+      setTimeout(() => poll(attempts + 1), 3000);
+    }
+  };
+
+  setTimeout(() => poll(), 5000);
 };
 
     // Poll for result every 3 seconds
