@@ -326,61 +326,8 @@ const generateReport = async (finalAnswers) => {
     const maxAttempts = 60; // 3 min max
     let attempts = 0;
 
-    const poll = async () => {
-      if (attempts >= maxAttempts) {
-        setReportSections([{
-          title: "What We Heard",
-          content: ["Report generation timed out. Please try again."]
-        }]);
-        setStep("report");
-        return;
-      }
-
-      attempts++;
-
-      try {
-        const res = await fetch(`/.netlify/functions/get-report?jobId=${jobId}`);
-        const data = await res.json();
-
-        if (data.status === "complete") {
-          const text = data.text || "";
-          const sections = parseReport(text);
-          if (!sections.length) {
-            setReportSections([{
-              title: "What We Heard",
-              content: ["Unable to parse your report. Please try again."]
-            }]);
-          } else {
-            setReportSections(sections);
-          }
-          setStep("report");
-        } else if (data.status === "error") {
-          setReportSections([{
-            title: "What We Heard",
-            content: ["Unable to generate your report. Please try again."]
-          }]);
-          setStep("report");
-        } else {
-          // Still pending — poll again
-          setTimeout(poll, 3000);
-        }
-      } catch (e) {
-        setTimeout(poll, 3000);
-      }
-    };
-
-    // Start polling after 5 seconds
-    setTimeout(poll, 5000);
-
-  } catch (e) {
-    setReportSections([{
-      title: "What We Heard",
-      content: ["Unable to generate your report. Please try again."]
-    }]);
-    setStep("report");
-  }
-};
-
+    
+  
   const restart = () => {
     setStep("select"); setReportType(null); setCurrentQ(0); setAnswers({});
     setCurrentInput(""); setCurrentMulti([]); setReportSections([]); setActiveSection(0);
