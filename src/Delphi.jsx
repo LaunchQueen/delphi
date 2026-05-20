@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 
+// ─── DESIGN TOKENS ────────────────────────────────────────────────────────────
 const C = {
   bg: "#FAF7F2", card: "#F2EDE6", sidebar: "#EDE6DC", border: "#E0D8CE",
   borderDark: "#C4BAB0", text: "#1C1C1A", textMid: "#3E3830", textLight: "#7A7060",
@@ -8,7 +9,9 @@ const C = {
 };
 const FF = "'EB Garamond', Georgia, serif";
 const FFD = "'Playfair Display', Georgia, serif";
+const GS = "@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,700;1,600&family=EB+Garamond:wght@400;500;600;700&display=swap'); * { box-sizing: border-box; margin: 0; padding: 0; } button { cursor: pointer; } textarea { outline: none; } textarea:focus { border-color: " + C.accent + " !important; } input:focus { outline: none; border-color: " + C.accent + " !important; } @keyframes fadeUp { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:translateY(0); } } @keyframes spin { to { transform: rotate(360deg); } } ::-webkit-scrollbar { width: 5px; } ::-webkit-scrollbar-thumb { background: " + C.border + "; border-radius: 3px; }";
 
+// ─── TOOL CATEGORIES ──────────────────────────────────────────────────────────
 const TOOL_CATEGORIES = [
   { id: "abm", label: "Account-Based Marketing (ABM)", tools: ["6sense", "Demandbase", "Terminus", "Rollworks", "HubSpot (ABM)"] },
   { id: "sales_engagement", label: "Sales Engagement", tools: ["Outreach", "Salesloft", "Apollo", "Groove"] },
@@ -18,36 +21,551 @@ const TOOL_CATEGORIES = [
   { id: "crm", label: "CRM", tools: ["Salesforce", "HubSpot CRM", "Microsoft Dynamics", "Pipedrive"] },
 ];
 
-const BASE_EVAL_QUESTIONS = [
-  { id: "problem", layer: 1, text: "Why are you considering new software?", hint: "Include your team size, go-to-market strategy, and the current problem you are trying to solve. The more specific you are, the more accurate your report.", type: "text" },
-  { id: "maturity", layer: 1, text: "Has your team used tools in this category before?", hint: "Most teams are somewhere in between — they have tried tactics in this space but never had the right infrastructure.", type: "choice", options: ["First time evaluating this category", "Tried it, never got traction", "Done it before, migrating platforms", "We have a mature program"] },
-  { id: "sales_alignment", layer: 1, text: "Is sales involved in this decision, or is marketing driving it alone?", hint: "Tools that require cross-team adoption fail without sales buy-in from the start.", type: "choice", options: ["Marketing driving it, sales not involved", "Sales knows but is not engaged", "Joint decision, sales at the table", "Sales is actually pushing for this"] },
-  { id: "stack", layer: 1, text: "What is your current stack — CRM, marketing automation, data provider? And how healthy is it?", hint: "List your key tools and be direct about how healthy each one is — data quality, adoption, and whether they are being used as intended.", type: "text" },
-  { id: "ops_support", layer: 1, text: "Who is going to own this tool once it is live?", hint: "Most teams do not have dedicated ops support yet — that is normal. Do you have someone who owns your marketing tech, even part time?", type: "choice", options: ["Dedicated marketing ops person", "Shared ops resource, part time", "Whoever buys it will figure it out", "We plan to hire for this"] },
-  { id: "account_list", layer: 1, text: "How many target accounts are you working with — and is that list agreed upon by sales and marketing?", hint: "200 tightly defined accounts and 10,000 loosely defined ones require very different tools.", type: "text" },
-  { id: "budget", layer: 1, text: "What is your total budget — subscription plus implementation combined?", hint: "Implementation, integrations, admin, and training can easily match the license cost in year one.", type: "choice", options: ["Under $30K total", "$30K to $75K", "$75K to $150K", "$150K or more", "Not sure yet"] },
-  { id: "timeline", layer: 1, text: "Is there a hard deadline driving this decision?", hint: "Timeline pressure is one of the biggest predictors of a rough implementation.", type: "choice", options: ["Hard deadline, under 60 days", "3 to 6 months, some flexibility", "No pressure, doing this right", "Still in internal alignment"] },
-  { id: "data_quality", layer: 2, text: "On a scale from disaster we know about to a well-governed system, how would you rank your CRM data cleanliness?", hint: "This single factor predicts implementation success more than anything else.", type: "choice", options: ["It is a disaster", "Messy but functional", "Decent, some gaps", "Clean and well-governed"] },
-  { id: "change_readiness", layer: 2, text: "How would you describe your organization's appetite for change right now?", hint: "The tool is rarely the problem. The organization's readiness to change is.", type: "choice", options: ["Low — people are change-fatigued", "Medium — willing but cautious", "High — leadership is aligned and pushing", "Unknown — have not tested it yet"] },
-  { id: "vendor_references", layer: 2, text: "Have you talked to customers the vendor did not refer you to?", hint: "References the vendor provides are curated. Finding your own is the single most important thing you can do.", type: "choice", options: ["Yes, found our own references", "Only vendor-provided references", "Have not done reference calls yet", "Planning to"] },
+// ─── UNIVERSAL CORE QUESTIONS ─────────────────────────────────────────────────
+const CORE_QUESTIONS = [
+  {
+    id: "problem", layer: 1,
+    text: "What problem are you trying to solve, and why now?",
+    hint: "Include your team size, go-to-market motion, and what's breaking or missing today.",
+    type: "text",
+  },
+  {
+    id: "maturity", layer: 1,
+    text: "Has your team used tools in this category before?",
+    hint: "Be honest — what happened last time tells us more than what you're hoping for this time.",
+    type: "choice",
+    options: ["First time evaluating this category", "Tried it, never got traction", "Done it before, migrating platforms", "We have a mature program we're expanding"],
+    branch: {
+      trigger: ["Tried it, never got traction", "Done it before, migrating platforms"],
+      id: "maturity_detail",
+      text: "What happened? What broke, what didn't work, or why are you switching?",
+      hint: "This is one of the most predictive inputs in your report.",
+      type: "text",
+    },
+  },
+  {
+    id: "ops_support", layer: 1,
+    text: "Who will own this tool once it's live?",
+    hint: "The person who buys it and the person who runs it are rarely the same. Who's the operator?",
+    type: "choice",
+    options: ["Dedicated marketing or revenue ops person", "Shared ops resource, part time", "Whoever buys it will figure it out", "We're planning to hire for this"],
+    branch: {
+      trigger: ["Whoever buys it will figure it out", "We're planning to hire for this"],
+      id: "ops_detail",
+      text: "Who is the most likely internal owner, and what is their current capacity?",
+      hint: "Tools without a named operator fail within 90 days.",
+      type: "text",
+    },
+  },
+  {
+    id: "stack", layer: 1,
+    text: "List your current stack — CRM, MAP, data provider, engagement tools. For each, be honest about whether it's healthy and actually being used as intended.",
+    hint: "Don't just list tools. Tell us if the data is clean, if people use it, and if it's integrated.",
+    type: "text",
+  },
+  {
+    id: "data_quality", layer: 2,
+    text: "How would you describe your CRM data quality right now?",
+    hint: "This single factor predicts implementation success more than anything else.",
+    type: "choice",
+    options: ["Clean and well-governed", "Decent with some gaps", "Messy but functional", "It's a disaster and we know it"],
+    branch: {
+      trigger: ["Messy but functional", "It's a disaster and we know it"],
+      id: "data_detail",
+      text: "What's the primary cause — bad input, no ownership, data decay, or something else? Is there a plan to fix it?",
+      hint: "The plan matters as much as the problem.",
+      type: "text",
+    },
+  },
+  {
+    id: "change_readiness", layer: 2,
+    text: "How would you describe your organization's appetite for change right now?",
+    hint: "The tool is rarely the problem. Organizational readiness is.",
+    type: "choice",
+    options: ["High — leadership is aligned and pushing", "Medium — willing but cautious", "Low — people are change-fatigued", "Unknown — we haven't tested it"],
+    branch: {
+      trigger: ["Low — people are change-fatigued", "Unknown — we haven't tested it"],
+      id: "change_detail",
+      text: "What's driving the fatigue or uncertainty? Recent reorg, too many tools, prior failed implementations?",
+      hint: "Pattern recognition here prevents the same failure from happening again.",
+      type: "text",
+    },
+  },
+  {
+    id: "budget", layer: 2,
+    text: "What is your total budget — license plus implementation combined?",
+    hint: "Implementation, integrations, admin, and training can easily match the license cost in year one.",
+    type: "choice",
+    options: ["Under $30K total", "$30K to $75K", "$75K to $150K", "$150K or more", "Not sure yet"],
+    branch: {
+      trigger: ["Not sure yet"],
+      id: "budget_detail",
+      text: "What's driving the uncertainty — no budget allocated, waiting for approval, or still scoping?",
+      hint: "This affects which tools are even worth evaluating.",
+      type: "text",
+    },
+  },
+  {
+    id: "timeline", layer: 2,
+    text: "Is there a hard deadline driving this decision?",
+    hint: "Timeline pressure is one of the biggest predictors of a rough implementation.",
+    type: "choice",
+    options: ["Hard deadline, under 60 days", "3 to 6 months, some flexibility", "No pressure, doing this right", "Still in internal alignment"],
+    branch: {
+      trigger: ["Hard deadline, under 60 days"],
+      id: "timeline_detail",
+      text: "What's driving the deadline — board pressure, a campaign, a new hire, a contract expiration?",
+      hint: "Artificial deadlines are negotiable. Real ones change the recommendation.",
+      type: "text",
+    },
+  },
 ];
 
-const BASE_STACK_QUESTIONS = [
-  { id: "current_stack", layer: 1, text: "What does your current stack look like?", hint: "List your CRM, marketing automation platform, data warehouse, BI tool, and enrichment provider. Be direct about how healthy each one is and whether they are being used as intended.", type: "text" },
-  { id: "integration_method", layer: 1, text: "How are your current tools integrated?", hint: "How your existing stack is connected tells us what a new addition will require.", type: "choice", options: ["Native integrations built by the vendors", "Middleware like Zapier or Make", "Custom API work built by our team", "A mix of native integrations and custom API work", "A mix of all of these", "Honestly not sure"] },
-  { id: "integration_owner", layer: 1, text: "Who owns integrations in your organization?", hint: "This determines what is realistic when a new tool needs to connect to existing systems.", type: "choice", options: ["Engineering team", "Marketing or revenue ops", "A third-party consultant", "Nobody owns it clearly", "We are still figuring that out"] },
-  { id: "data_flow", layer: 1, text: "What data needs to flow between the new tool and your existing stack?", hint: "Which systems need to talk to the new tool, in which direction, and how frequently. This is where most stack fit problems live.", type: "text" },
-  { id: "connector_tolerance", layer: 1, text: "What is your tolerance for a connector versus a native integration?", hint: "Some organizations are fine with Zapier. Others have learned the hard way that connectors break at the worst moments.", type: "choice", options: ["Native only — connectors have burned us before", "Prefer native but open to connectors", "Connectors are fine if they are reliable", "No preference — we just need it to work", "Not sure what the difference means for us"] },
-  { id: "integration_failures", layer: 1, text: "Have you had integration failures before?", hint: "What broke, why, and what it cost. This is one of the most important readiness signals we collect.", type: "choice", options: ["Yes — significant failures that cost us time and money", "Yes — minor issues we worked through", "No failures but we are cautious", "No failures and we are confident in our setup", "We are too early to have had failures yet"] },
-  { id: "stack_budget", layer: 2, text: "What is your total budget for this addition — license plus implementation?", hint: "Integration work often costs as much as the license.", type: "choice", options: ["Under $20K total", "$20K to $50K", "$50K to $100K", "$100K or more", "Not sure yet"] },
-  { id: "stack_timeline", layer: 2, text: "Is there a timeline pressure on this decision?", hint: "Rushed integrations are where things break.", type: "choice", options: ["Hard deadline, under 60 days", "3 to 6 months, some flexibility", "No pressure, doing this right", "Still in planning"] },
-];
+// ─── CATEGORY-SPECIFIC QUESTIONS ──────────────────────────────────────────────
+const CATEGORY_QUESTIONS = {
+  abm: [
+    {
+      id: "abm_account_list", layer: 1,
+      text: "How many target accounts are you working with?",
+      hint: "200 tightly defined accounts and 10,000 loosely defined ones require very different tools.",
+      type: "choice",
+      options: ["Fewer than 250 — tightly defined", "250 to 1,000", "1,000 to 5,000", "More than 5,000 — broadly defined"],
+      branch: {
+        trigger: ["More than 5,000 — broadly defined"],
+        id: "abm_account_detail",
+        text: "Are these accounts agreed upon by sales and marketing, or is this primarily a marketing-defined list?",
+        hint: "Sales ignoring the list is the #1 ABM failure mode.",
+        type: "text",
+      },
+    },
+    {
+      id: "abm_sales_sponsor", layer: 1,
+      text: "Is there a named sales leader sponsoring this initiative who has committed to changing how their team works accounts?",
+      hint: "Right tool plus bad implementation plus no sponsorship is an expensive mistake.",
+      type: "choice",
+      options: ["Yes — named sponsor, fully committed", "Sales knows about it but hasn't committed to behavior change", "Marketing is driving this, sales will be informed after", "We haven't had that conversation yet"],
+      branch: {
+        trigger: ["Sales knows about it but hasn't committed to behavior change", "Marketing is driving this, sales will be informed after", "We haven't had that conversation yet"],
+        id: "abm_sponsor_detail",
+        text: "What's the plan to get sales committed before go-live? Without it, ABM tools fail within 6 months.",
+        hint: "This isn't a judgment — it's the most important thing to solve before you sign.",
+        type: "text",
+      },
+    },
+    {
+      id: "abm_intent", layer: 2,
+      text: "Has your team used intent data before?",
+      hint: "Intent data is only valuable if you have workflows to act on it.",
+      type: "choice",
+      options: ["Yes, and we have workflows built around it", "Yes, but we never really trusted or acted on it", "No, this would be our first time", "Not sure what intent data means in practice"],
+      branch: {
+        trigger: ["Yes, but we never really trusted or acted on it", "Not sure what intent data means in practice"],
+        id: "abm_intent_detail",
+        text: "What would it take for your team to trust and act on intent signals? Who would own that workflow?",
+        hint: "Unused intent data is expensive noise.",
+        type: "text",
+      },
+    },
+    {
+      id: "abm_content", layer: 2,
+      text: "Do you have content mapped to each persona in your buying committee?",
+      hint: "ABM without multi-threaded content is expensive banner ads.",
+      type: "choice",
+      options: ["Yes — persona-specific content for each stage", "Partially — some personas covered, not all", "We have content but it's not persona-mapped", "No — we're selling to whoever picks up the phone"],
+      branch: {
+        trigger: ["Partially — some personas covered, not all", "We have content but it's not persona-mapped", "No — we're selling to whoever picks up the phone"],
+        id: "abm_content_detail",
+        text: "Who owns content creation, and is there capacity to build persona-specific content before or during implementation?",
+        hint: "The content gap is usually bigger than teams expect.",
+        type: "text",
+      },
+    },
+  ],
 
+  sales_engagement: [
+    {
+      id: "se_sponsor", layer: 1,
+      text: "Is there a named sales leader who will enforce adoption of this tool?",
+      hint: "Tools that are optional are dead within 90 days.",
+      type: "choice",
+      options: ["Yes — it's in their QBR and they're measuring it", "There's interest but no enforcement plan", "This is being pushed on sales from above", "Sales doesn't know about this yet"],
+      branch: {
+        trigger: ["There's interest but no enforcement plan", "This is being pushed on sales from above", "Sales doesn't know about this yet"],
+        id: "se_sponsor_detail",
+        text: "What's the plan to make adoption non-optional? This is the single biggest predictor of whether this tool succeeds.",
+        hint: "Be specific — who will enforce it and how.",
+        type: "text",
+      },
+    },
+    {
+      id: "se_sequences", layer: 1,
+      text: "Who owns your sales sequence and cadence library?",
+      hint: "If every rep writes their own sequences, you have a content problem that no tool fixes.",
+      type: "choice",
+      options: ["Marketing owns it — documented and maintained", "Sales ops owns it", "Individual reps write their own", "We don't have sequences yet"],
+      branch: {
+        trigger: ["Individual reps write their own", "We don't have sequences yet"],
+        id: "se_sequences_detail",
+        text: "Who will own building and maintaining the sequence library in the new tool? This is the #1 implementation gap.",
+        hint: "Marketing typically owns this in high-performing orgs.",
+        type: "text",
+      },
+    },
+    {
+      id: "se_fatigue", layer: 1,
+      text: "How many tools are your reps currently expected to use daily?",
+      hint: "More tools means less selling. Every addition needs a justification.",
+      type: "choice",
+      options: ["1 to 2 — very lean stack", "3 to 4 — manageable", "5 or more — it's a lot", "Honestly not sure, nobody has counted"],
+      branch: {
+        trigger: ["5 or more — it's a lot", "Honestly not sure, nobody has counted"],
+        id: "se_fatigue_detail",
+        text: "Which tools are actually being used vs. ignored? Adding another tool to an ignored stack doesn't work.",
+        hint: "The ones being ignored tell you more than the ones being used.",
+        type: "text",
+      },
+    },
+    {
+      id: "se_contact_data", layer: 2,
+      text: "How would you rate your contact data quality — email validity, phone numbers, titles?",
+      hint: "Sequences sent to bad data destroy your domain reputation and demoralizes reps.",
+      type: "choice",
+      options: ["Clean — regularly validated", "Decent but aging", "Patchy — some segments good, some bad", "It's a mess"],
+      branch: {
+        trigger: ["Patchy — some segments good, some bad", "It's a mess"],
+        id: "se_contact_detail",
+        text: "Is there a data enrichment or validation plan before go-live? Domain reputation damage from bad sends is slow to recover.",
+        hint: "This needs to be solved before sequences go live, not after.",
+        type: "text",
+      },
+    },
+    {
+      id: "se_managers", layer: 2,
+      text: "Will sales managers use this tool to coach — reviewing sequence performance, running 1:1s from the data?",
+      hint: "Manager adoption is where ROI lives. Rep adoption is table stakes.",
+      type: "choice",
+      options: ["Yes — it's already in their workflow expectations", "Probably, but it's not formalized", "Unlikely — managers are already stretched", "We haven't thought about manager adoption"],
+      branch: {
+        trigger: ["Probably, but it's not formalized", "Unlikely — managers are already stretched", "We haven't thought about manager adoption"],
+        id: "se_managers_detail",
+        text: "What would need to be true for managers to actually use this for coaching? That's where the ROI conversation lives.",
+        hint: "If managers won't use it, the tool becomes a rep surveillance tool — which kills adoption.",
+        type: "text",
+      },
+    },
+  ],
+
+  revenue_intelligence: [
+    {
+      id: "ri_legal", layer: 1,
+      text: "Has your legal team reviewed call recording consent requirements for every state and country your reps sell into?",
+      hint: "Two-party consent states include California, Illinois, Florida, and others. This needs legal review before go-live.",
+      type: "choice",
+      options: ["Yes — legal has signed off, consent workflows are in place", "We're aware of it but haven't formally addressed it", "We didn't know this was a legal issue", "We only sell domestically and assumed it was fine"],
+      branch: {
+        trigger: ["We're aware of it but haven't formally addressed it", "We didn't know this was a legal issue", "We only sell domestically and assumed it was fine"],
+        id: "ri_legal_detail",
+        text: "Which states and countries do your reps sell into? List them — we'll flag specific consent requirements in your report.",
+        hint: "This is not a box-checking exercise. Exposure here is real.",
+        type: "text",
+      },
+    },
+    {
+      id: "ri_rep_buyin", layer: 1,
+      text: "Have reps been involved in the evaluation, or will recording be announced after the decision is made?",
+      hint: "Reps who feel surveilled without consent become actively resistant and find workarounds.",
+      type: "choice",
+      options: ["Reps were part of the selection process", "We plan to involve them before go-live", "This will be announced after the decision", "We haven't thought about how to introduce it"],
+      branch: {
+        trigger: ["This will be announced after the decision", "We haven't thought about how to introduce it"],
+        id: "ri_buyin_detail",
+        text: "What's the change management plan for introducing recording to the team?",
+        hint: "The best implementations involved reps early. The worst were surprise announcements.",
+        type: "text",
+      },
+    },
+    {
+      id: "ri_managers", layer: 2,
+      text: "Will managers watch calls and coach from them weekly?",
+      hint: "If managers won't watch calls, the ROI calculation changes significantly.",
+      type: "choice",
+      options: ["Yes — defined expectation with accountability", "Probably, but it's not formalized yet", "Managers are already stretched thin", "We're buying it for deal visibility, not coaching"],
+      branch: {
+        trigger: ["Probably, but it's not formalized yet", "Managers are already stretched thin", "We're buying it for deal visibility, not coaching"],
+        id: "ri_managers_detail",
+        text: "If coaching isn't the primary use case, what is? The ROI story — and the vendor you choose — depends heavily on the answer.",
+        hint: "Deal visibility, forecasting accuracy, and coaching require different configurations.",
+        type: "text",
+      },
+    },
+    {
+      id: "ri_crm", layer: 2,
+      text: "Is your CRM ready to receive structured data from a revenue intelligence tool — call summaries, next steps, deal risk scores?",
+      hint: "This is where most revenue intelligence implementations stall.",
+      type: "choice",
+      options: ["Yes — fields are mapped and ops owns the integration", "Probably, but we haven't scoped it", "Our CRM is too messy to receive clean data", "We don't know what that integration requires"],
+      branch: {
+        trigger: ["Probably, but we haven't scoped it", "Our CRM is too messy to receive clean data", "We don't know what that integration requires"],
+        id: "ri_crm_detail",
+        text: "Who will own the CRM integration and field mapping? And what's the current state of the fields that would receive this data?",
+        hint: "Garbage in from revenue intelligence on top of a messy CRM makes the CRM worse, not better.",
+        type: "text",
+      },
+    },
+    {
+      id: "ri_sponsor", layer: 2,
+      text: "Who is the executive sponsor — is this sales-driven or being pushed on sales from another function?",
+      hint: "Tools pushed on sales without a sales sponsor get ignored.",
+      type: "choice",
+      options: ["Sales leadership is driving this", "Joint decision between sales and revenue ops", "Being pushed on sales from marketing or finance", "No clear sponsor yet"],
+      branch: {
+        trigger: ["Being pushed on sales from marketing or finance", "No clear sponsor yet"],
+        id: "ri_sponsor_detail",
+        text: "What's the plan to get a sales leader as the named owner before go-live?",
+        hint: "This is a political problem, not a technical one. It needs to be solved first.",
+        type: "text",
+      },
+    },
+  ],
+
+  data_enrichment: [
+    {
+      id: "de_usecase", layer: 1,
+      text: "What specifically are you enriching?",
+      hint: "Prospecting lists, CRM contacts, and inbound leads each require different data and different workflows.",
+      type: "choice",
+      options: ["Prospecting — building new outbound lists", "CRM enrichment — filling gaps in existing records", "Inbound enrichment — appending data to form fills", "All three", "Not sure yet"],
+      branch: {
+        trigger: ["Not sure yet"],
+        id: "de_usecase_detail",
+        text: "Walk us through your current outbound or inbound process. Where are the data gaps that are hurting you most?",
+        hint: "Use case clarity is the single biggest predictor of enrichment ROI.",
+        type: "text",
+      },
+    },
+    {
+      id: "de_writeback", layer: 1,
+      text: "Do you have a plan for where enriched data goes in your CRM?",
+      hint: "Field mapping and conflict resolution are where enrichment implementations break down.",
+      type: "choice",
+      options: ["Yes — documented field mapping, ops owns it", "We know roughly where it goes but it's not documented", "We haven't figured that out yet", "We don't have someone who owns that decision"],
+      branch: {
+        trigger: ["We know roughly where it goes but it's not documented", "We haven't figured that out yet", "We don't have someone who owns that decision"],
+        id: "de_writeback_detail",
+        text: "Who will own the field mapping decision, and what happens to existing data that conflicts with enriched data?",
+        hint: "Overwriting good data with bad enriched data is a real and common problem.",
+        type: "text",
+      },
+    },
+    {
+      id: "de_decay", layer: 2,
+      text: "Do you have a plan for managing data decay over time?",
+      hint: "B2B data decays at roughly 30% annually. Enrichment is a subscription to ongoing maintenance, not a one-time fix.",
+      type: "choice",
+      options: ["Yes — we have a refresh cadence and someone owns it", "We know it's a problem but don't have a plan", "We didn't know data decayed that fast", "We're planning to address it after we get the tool"],
+      branch: {
+        trigger: ["We know it's a problem but don't have a plan", "We didn't know data decayed that fast", "We're planning to address it after we get the tool"],
+        id: "de_decay_detail",
+        text: "Who would own the refresh cadence, and how often does your sales team complain about stale contact data today?",
+        hint: "If sales is already frustrated with data quality, enrichment without a maintenance plan just delays the complaint.",
+        type: "text",
+      },
+    },
+    {
+      id: "de_ownership", layer: 2,
+      text: "Who will own the enrichment workflow day-to-day?",
+      hint: "Enrichment tools bought without a named operator become shelfware within a quarter.",
+      type: "choice",
+      options: ["Dedicated ops or data person", "Shared ops resource", "The person who bought it", "We're figuring that out"],
+      branch: {
+        trigger: ["The person who bought it", "We're figuring that out"],
+        id: "de_ownership_detail",
+        text: "What is that person's current capacity, and what will they stop doing to take this on?",
+        hint: "Capacity is the honest question most teams avoid.",
+        type: "text",
+      },
+    },
+    {
+      id: "de_intent", layer: 2,
+      text: "Are you looking for contact and company data, intent data, or both?",
+      hint: "These are different products with different use cases, even when sold by the same vendor.",
+      type: "choice",
+      options: ["Contact and company data only", "Intent data only", "Both — we understand the difference", "Both — we're not sure what the difference means in practice"],
+      branch: {
+        trigger: ["Both — we're not sure what the difference means in practice"],
+        id: "de_intent_detail",
+        text: "Walk us through how you'd use each. Intent data without a workflow to act on signals is expensive noise.",
+        hint: "Most teams buy both and only use one.",
+        type: "text",
+      },
+    },
+  ],
+
+  marketing_automation: [
+    {
+      id: "ma_database", layer: 1,
+      text: "How would you describe your current contact database — is it segmented, clean, and ready to activate?",
+      hint: "Platform selection depends heavily on database readiness, not just size.",
+      type: "choice",
+      options: ["Yes — segmented by persona, clean, ready to run programs", "Partially — some segments solid, others need work", "No — needs significant cleanup before we can activate", "We don't have a database yet — building from scratch"],
+      branch: {
+        trigger: ["Partially — some segments solid, others need work", "No — needs significant cleanup before we can activate"],
+        id: "ma_database_detail",
+        text: "What's the primary issue — duplicates, missing fields, no engagement history, or poor segmentation?",
+        hint: "The answer determines whether you need a data project before or alongside the platform implementation.",
+        type: "text",
+      },
+    },
+    {
+      id: "ma_nurture", layer: 1,
+      text: "How complex is your nurture program — or how complex do you need it to be?",
+      hint: "Complex programs without a dedicated owner become unmaintainable within a year.",
+      type: "choice",
+      options: ["Simple — one or two linear drip sequences", "Moderate — branching logic based on behavior", "Complex — multi-track, persona-based, behavior-triggered", "We don't have nurture yet — starting from scratch"],
+      branch: {
+        trigger: ["Complex — multi-track, persona-based, behavior-triggered", "We don't have nurture yet — starting from scratch"],
+        id: "ma_nurture_detail",
+        text: "Who will build and maintain the nurture architecture? And is that person already on staff?",
+        hint: "This is a full-time job at scale. Most teams underestimate it.",
+        type: "text",
+      },
+    },
+    {
+      id: "ma_content", layer: 1,
+      text: "Do you have enough content to actually run nurture programs right now?",
+      hint: "Platforms bought before content exists sit idle and create organizational frustration.",
+      type: "choice",
+      options: ["Yes — library built and mapped to funnel stages", "Partially — some content exists but gaps remain", "No — we'd be buying the platform before the content exists", "Content is being created in parallel"],
+      branch: {
+        trigger: ["No — we'd be buying the platform before the content exists", "Content is being created in parallel"],
+        id: "ma_content_detail",
+        text: "What's the content production timeline, and who owns it?",
+        hint: "If content and platform go live at the same time, neither gets the attention it needs.",
+        type: "text",
+      },
+    },
+    {
+      id: "ma_crm_sync", layer: 2,
+      text: "How will this platform sync with your CRM?",
+      hint: "Marketing automation without clean CRM sync creates duplicate data and broken lead routing.",
+      type: "choice",
+      options: ["Native integration — already scoped", "Middleware like Zapier or Make", "Custom API work", "We don't know yet"],
+      branch: {
+        trigger: ["Custom API work", "We don't know yet"],
+        id: "ma_crm_detail",
+        text: "Who owns the integration decision and build? And has ops reviewed the field mapping requirements?",
+        hint: "The CRM sync is the most common MAP implementation failure point.",
+        type: "text",
+      },
+    },
+    {
+      id: "ma_scoring", layer: 2,
+      text: "Do you have a lead scoring model, and does sales agree with how leads are qualified?",
+      hint: "Automation that routes leads sales doesn't trust creates more conflict than it solves.",
+      type: "choice",
+      options: ["Yes — documented model, sales has signed off", "We have scoring but sales ignores the scores", "No scoring yet — starting from scratch", "Sales and marketing disagree on what a qualified lead looks like"],
+      branch: {
+        trigger: ["We have scoring but sales ignores the scores", "Sales and marketing disagree on what a qualified lead looks like"],
+        id: "ma_scoring_detail",
+        text: "What's driving the disagreement or distrust? And who owns the conversation to align on lead definitions?",
+        hint: "This is a process problem that needs to be solved before the platform is configured, not after.",
+        type: "text",
+      },
+    },
+  ],
+
+  crm: [
+    {
+      id: "crm_consolidation", layer: 1,
+      text: "Are you implementing a single new CRM or consolidating multiple existing instances?",
+      hint: "PE rollup and acquisition scenarios are a fundamentally different implementation — plan accordingly.",
+      type: "choice",
+      options: ["Single implementation — one system, one migration", "Consolidating two systems", "Consolidating three or more — PE rollup or acquisition scenario", "Partially consolidated — some business units still on separate systems"],
+      branch: {
+        trigger: ["Consolidating two systems", "Consolidating three or more — PE rollup or acquisition scenario", "Partially consolidated — some business units still on separate systems"],
+        id: "crm_consolidation_detail",
+        text: "Who owns the data reconciliation across instances — specifically duplicate accounts, conflicting contact records, and different pipeline stage definitions?",
+        hint: "This is the highest-risk element of a multi-instance consolidation. It needs a named owner before day one.",
+        type: "text",
+      },
+    },
+    {
+      id: "crm_migration", layer: 1,
+      text: "What data are you migrating from your current system?",
+      hint: "Full history migrations without a dedicated owner are the #1 CRM implementation failure.",
+      type: "choice",
+      options: ["Full history — all contacts, accounts, activities, opportunities", "Selective — active accounts and open pipeline only", "Starting fresh — no migration", "We don't know yet what needs to move"],
+      branch: {
+        trigger: ["Full history — all contacts, accounts, activities, opportunities", "We don't know yet what needs to move"],
+        id: "crm_migration_detail",
+        text: "Who owns the migration plan — internal ops, a consultant, or the vendor?",
+        hint: "Vendor-led migrations are rarely as complete as vendor-assisted migrations with internal ownership.",
+        type: "text",
+      },
+    },
+    {
+      id: "crm_process", layer: 1,
+      text: "Are your current sales processes documented before you move them into a new CRM?",
+      hint: "A CRM reflects your process — it doesn't create one.",
+      type: "choice",
+      options: ["Yes — stages, fields, and workflows are all documented", "Partially — main process is clear but details aren't written down", "No — hoping the new CRM helps us figure that out", "Our process is broken and we want the CRM to fix it"],
+      branch: {
+        trigger: ["No — hoping the new CRM helps us figure that out", "Our process is broken and we want the CRM to fix it"],
+        id: "crm_process_detail",
+        text: "What's the plan to document the process before configuration begins? Who owns that work?",
+        hint: "Configuring a CRM around a broken process permanently encodes the broken process.",
+        type: "text",
+      },
+    },
+    {
+      id: "crm_adherence", layer: 2,
+      text: "When a rep closes a deal today, how completely does the full activity history exist in your current system?",
+      hint: "This pattern — disciplined or not — follows you into every new CRM.",
+      type: "choice",
+      options: ["Completely — full visibility into every deal", "Mostly — key activities logged, details missing", "Partially — depends on the rep", "Poorly — the CRM is a graveyard of incomplete records"],
+      branch: {
+        trigger: ["Partially — depends on the rep", "Poorly — the CRM is a graveyard of incomplete records"],
+        id: "crm_adherence_detail",
+        text: "What's driving the inconsistency — too many required fields, no manager enforcement, or the tool doesn't match how reps sell?",
+        hint: "The cause determines whether a new CRM fixes it or inherits it.",
+        type: "text",
+      },
+    },
+    {
+      id: "crm_customization", layer: 2,
+      text: "How customized does your CRM need to be to match your sales process?",
+      hint: "Heavy customization without a dedicated admin becomes unmaintainable and gets blamed on the tool.",
+      type: "choice",
+      options: ["Minimal — standard pipeline stages and fields work for us", "Moderate — some custom fields and workflow automation", "Heavy — complex territory rules, custom objects, advanced automation", "We don't know yet"],
+      branch: {
+        trigger: ["Heavy — complex territory rules, custom objects, advanced automation", "We don't know yet"],
+        id: "crm_custom_detail",
+        text: "Who will own configuration and ongoing administration? What's their current capacity?",
+        hint: "Heavy CRM customization is a full-time job. Most teams treat it as a project, then wonder why it breaks.",
+        type: "text",
+      },
+    },
+    {
+      id: "crm_integrations", layer: 2,
+      text: "How many systems need to integrate with the new CRM?",
+      hint: "CRM sits at the center of your stack — every integration decision downstream flows from this.",
+      type: "choice",
+      options: ["Just one or two — MAP and maybe one other", "Three to five systems", "Six or more — complex integration environment", "We haven't mapped our integration requirements yet"],
+      branch: {
+        trigger: ["Six or more — complex integration environment", "We haven't mapped our integration requirements yet"],
+        id: "crm_integrations_detail",
+        text: "Who owns your integration architecture? And has ops reviewed what breaks during the CRM migration?",
+        hint: "Integrations that work in the old CRM don't automatically work in the new one.",
+        type: "text",
+      },
+    },
+  ],
+};
+
+// ─── PROMPTS ──────────────────────────────────────────────────────────────────
 const EVAL_PROMPT = `You are Delphi, an independent software evaluation analyst for B2B SaaS buyers. You have no financial relationship with any vendor. Your job is to help buyers understand the gap between what a software tool actually requires and where their organization currently stands.
 
-CRITICAL REQUIREMENT: Every factual claim you make must include a cited source link. Use your web search capability to find current, accurate information before making any claim. Do not make claims from memory — search for current vendor documentation, recent G2 or Gartner Peer Insights reviews, pricing pages, implementation guides, and news. If you cannot find a source for a claim, do not make the claim.
-
-Format every sourced claim like this: "This platform requires a dedicated admin [Source: vendor.com/implementation-guide]" — the link goes inline, immediately after the claim it supports.
+Be direct, honest, and specific. You work for the buyer, not the vendor. Never hedge to protect a vendor relationship — you have none.
 
 Use ONLY these exact section headers, in this order:
 ## What We Heard
@@ -56,28 +574,29 @@ Use ONLY these exact section headers, in this order:
 ## Questions to Ask Each Vendor
 ## Red Flags to Watch For
 ## Our Recommendation
+## Sources
 
 SECTION REQUIREMENTS:
 
-**What We Heard** — Summarize the buyer's situation back to them in 3-4 sentences. No sources needed here.
+**What We Heard** — Synthesize the buyer's situation in 3-4 sentences. This is a senior analyst's read of their real situation, not a playback of their answers.
 
-**Tool-by-Tool Assessment** — For each tool the buyer listed, cover: what it actually does well (sourced), what it struggles with (sourced from real user reviews), typical implementation timeline (sourced), real pricing if available (sourced), and what kind of team/org it fits best (sourced). Every factual claim needs a source link.
+**Tool-by-Tool Assessment** — For each tool: what it actually does well, what it struggles with, typical implementation timeline, real pricing if known, and what kind of org it fits best. Be specific.
 
-**What Your Organization Will Need** — Based on the buyer's answers about their team, stack, and readiness: what specifically will they need to prepare, invest in, or change to get value from these tools. Be specific and honest. Source any claims about typical implementation requirements.
+**What Your Organization Will Need** — Based on their answers: what specifically will they need to prepare, invest in, or change. Tied directly to what they told you. No generic advice.
 
-**Questions to Ask Each Vendor** — 5-7 sharp, specific questions the buyer should ask in their next conversation. These should be questions vendors often dodge or answer vaguely.
+**Questions to Ask Each Vendor** — 5-7 sharp questions vendors often dodge or answer vaguely. Make them specific to this category and this buyer's situation.
 
-**Red Flags to Watch For** — Specific warning signs during demos and sales conversations for this category of software. Source any claims about known vendor behaviors.
+**Red Flags to Watch For** — Specific warning signs during demos and sales conversations for this category. Name names when warranted.
 
-**Our Recommendation** — One clear recommendation based on this specific buyer's situation. Explain the reasoning. If none of the tools are a good fit given their answers, say that directly.
+**Our Recommendation** — One clear recommendation based on this specific buyer's situation. If none of the tools are a good fit, say so directly.
 
-Tone: Direct, honest, independent. You work for the buyer, not the vendor. Never hedge to protect a vendor relationship — you have none.`;
+**Sources** — List the key reference sources for this report. Include vendor documentation pages, G2 and Gartner Peer Insights profiles, and category-specific research sources. Format as a simple list with URLs. These are starting points for the buyer's own verification — not footnotes.
 
-const STACK_PROMPT = `You are Delphi, an independent software implementation analyst for B2B SaaS buyers. You have no financial relationship with any vendor. A buyer has already created a shortlist and now needs to understand what their existing tech stack and team will need to do to make each tool work.
+Tone: Direct. Honest. Independent. No filler. No hedging.`;
 
-CRITICAL REQUIREMENT: Every factual claim you make must include a cited source link. Use your web search capability to find current, accurate information before making any claim. Do not make claims from memory — search for current vendor documentation, integration guides, G2 or Gartner Peer Insights reviews, and implementation case studies. If you cannot find a source for a claim, do not make the claim.
+const STACK_PROMPT = `You are Delphi, an independent software implementation analyst for B2B SaaS buyers. You have no financial relationship with any vendor. A buyer has a shortlist and needs to understand what their existing stack and team will need to do to make each tool work.
 
-Format every sourced claim like this: "Native Salesforce integration requires Sales Cloud Enterprise or above [Source: vendor.com/integrations]" — the link goes inline, immediately after the claim it supports.
+Be direct, honest, and specific. You work for the buyer. The goal is to prevent failed implementations.
 
 Use ONLY these exact section headers, in this order:
 ## What We Heard
@@ -86,58 +605,91 @@ Use ONLY these exact section headers, in this order:
 ## What Your Team Will Need to Do
 ## Questions to Ask Before You Integrate
 ## Our Compatibility Verdict
+## Sources
 
 SECTION REQUIREMENTS:
 
-**What We Heard** — Summarize the buyer's current stack and shortlist back to them in 3-4 sentences. No sources needed here.
+**What We Heard** — Synthesize the buyer's current stack and situation in 3-4 sentences.
 
-**Stack Compatibility Assessment** — For each tool on the shortlist: assess compatibility with the buyer's current stack. Score each integration dimension 1-5 and explain what the score means. Source every compatibility claim from vendor documentation or verified user reports. Flag any known integration failures or common problems.
+**Stack Compatibility Assessment** — For each tool on the shortlist: compatibility with their current stack, score each integration dimension 1-5, flag known integration failures or common problems.
 
-**Integration Readiness** — Assess the buyer's organization on five dimensions: Integration Ownership Clarity, Current Stack Health, Data Model Maturity, Team Capacity for New Integrations, Historical Integration Track Record. For each: score 1-5, explain what it means, and say what they should do about it.
+**Integration Readiness** — Assess on five dimensions: Integration Ownership Clarity, Current Stack Health, Data Model Maturity, Team Capacity, Historical Integration Track Record. Score 1-5 each, explain, say what to do about it.
 
-**What Your Team Will Need to Do** — Specific, concrete actions the buyer's team will need to take before, during, and after implementation. Not generic advice — tied directly to their answers about their stack and team. Source any claims about typical implementation requirements.
+**What Your Team Will Need to Do** — Specific concrete actions before, during, and after implementation. Tied directly to their answers.
 
-**Questions to Ask Before You Integrate** — 5-7 sharp questions about integration specifically. Questions vendors often avoid answering clearly.
+**Questions to Ask Before You Integrate** — 5-7 sharp integration-specific questions vendors avoid answering clearly.
 
-**Our Compatibility Verdict** — A direct verdict on whether each tool is a realistic fit given their stack and team capacity. If the answer is no for a tool, say so clearly and explain why.
+**Our Compatibility Verdict** — Direct verdict on whether each tool is a realistic fit. If no, say so and explain why.
 
-Tone: Direct, honest, independent. You work for the buyer. The goal is to prevent failed implementations, not to validate the purchase decision.`;
+**Sources** — List key reference sources: vendor integration documentation, known compatibility guides, G2 and Gartner Peer Insights profiles. Format as a simple list with URLs.
 
+Tone: Direct. Honest. Independent. No filler.`;
+
+// ─── PROMPT BUILDERS ──────────────────────────────────────────────────────────
 function buildEvalPrompt(answers) {
-  return "Buyer diagnostic answers:\nCategories: " + (Array.isArray(answers.categories) ? answers.categories.join(", ") : answers.categories || "Not provided") +
-    "\nTools on shortlist: " + (Array.isArray(answers.shortlist) ? answers.shortlist.join(", ") : answers.shortlist || "Not provided") +
-    "\nWhy considering / team context: " + (answers.problem || "Not provided") +
-    "\nPrior experience: " + (answers.maturity || "Not provided") +
-    "\nSales alignment: " + (answers.sales_alignment || "Not provided") +
-    "\nCurrent stack and health: " + (answers.stack || "Not provided") +
-    "\nOps ownership: " + (answers.ops_support || "Not provided") +
-    "\nTarget account list: " + (answers.account_list || "Not provided") +
-    "\nTotal budget: " + (answers.budget || "Not provided") +
-    "\nTimeline: " + (answers.timeline || "Not provided") +
-    "\nCRM data quality: " + (answers.data_quality || "Not provided") +
-    "\nChange readiness: " + (answers.change_readiness || "Not provided") +
-    "\nIndependent references: " + (answers.vendor_references || "Not provided") +
-    "\n\nGenerate the Delphi evaluation report now.";
+  const lines = [
+    "Buyer diagnostic answers:",
+    "Categories: " + (answers.categories?.join(", ") || "Not provided"),
+    "Tools on shortlist: " + (answers.shortlist?.join(", ") || "Not provided"),
+    "Problem / why now: " + (answers.problem || "Not provided"),
+    "Prior experience: " + (answers.maturity || "Not provided"),
+    answers.maturity_detail ? "Prior experience detail: " + answers.maturity_detail : null,
+    "Ops ownership: " + (answers.ops_support || "Not provided"),
+    answers.ops_detail ? "Ops detail: " + answers.ops_detail : null,
+    "Current stack: " + (answers.stack || "Not provided"),
+    "CRM data quality: " + (answers.data_quality || "Not provided"),
+    answers.data_detail ? "Data detail: " + answers.data_detail : null,
+    "Change readiness: " + (answers.change_readiness || "Not provided"),
+    answers.change_detail ? "Change detail: " + answers.change_detail : null,
+    "Budget: " + (answers.budget || "Not provided"),
+    answers.budget_detail ? "Budget detail: " + answers.budget_detail : null,
+    "Timeline: " + (answers.timeline || "Not provided"),
+    answers.timeline_detail ? "Timeline detail: " + answers.timeline_detail : null,
+  ];
+
+  // Category-specific answers
+  const catKeys = Object.keys(answers).filter(k =>
+    !["categories", "shortlist", "problem", "maturity", "maturity_detail", "ops_support", "ops_detail",
+      "stack", "data_quality", "data_detail", "change_readiness", "change_detail",
+      "budget", "budget_detail", "timeline", "timeline_detail"].includes(k)
+  );
+  if (catKeys.length) {
+    lines.push("\nCategory-specific answers:");
+    catKeys.forEach(k => answers[k] && lines.push(k + ": " + answers[k]));
+  }
+
+  lines.push("\nGenerate the Delphi evaluation report now.");
+  return lines.filter(Boolean).join("\n");
 }
 
 function buildStackPrompt(answers) {
-  return "Stack Fit diagnostic answers:\nCategories being added: " + (Array.isArray(answers.categories) ? answers.categories.join(", ") : answers.categories || "Not provided") +
-    "\nTools being considered: " + (Array.isArray(answers.stack_shortlist) ? answers.stack_shortlist.join(", ") : answers.stack_shortlist || "Not provided") +
-    "\nCurrent stack: " + (answers.current_stack || "Not provided") +
-    "\nHow current tools are integrated: " + (answers.integration_method || "Not provided") +
-    "\nWho owns integrations: " + (answers.integration_owner || "Not provided") +
-    "\nData flow requirements: " + (answers.data_flow || "Not provided") +
-    "\nConnector tolerance: " + (answers.connector_tolerance || "Not provided") +
-    "\nPrior integration failures: " + (answers.integration_failures || "Not provided") +
-    "\nTotal budget: " + (answers.stack_budget || "Not provided") +
-    "\nTimeline: " + (answers.stack_timeline || "Not provided") +
-    "\n\nGenerate the Delphi Stack Fit compatibility report now.";
+  const lines = [
+    "Stack Fit diagnostic answers:",
+    "Categories: " + (answers.categories?.join(", ") || "Not provided"),
+    "Tools being considered: " + (answers.stack_shortlist?.join(", ") || "Not provided"),
+    "Problem / why now: " + (answers.problem || "Not provided"),
+    "Current stack: " + (answers.stack || "Not provided"),
+    "CRM data quality: " + (answers.data_quality || "Not provided"),
+    answers.data_detail ? "Data detail: " + answers.data_detail : null,
+    "Change readiness: " + (answers.change_readiness || "Not provided"),
+    "Budget: " + (answers.budget || "Not provided"),
+    "Timeline: " + (answers.timeline || "Not provided"),
+  ];
+
+  const catKeys = Object.keys(answers).filter(k =>
+    !["categories", "stack_shortlist", "problem", "stack", "data_quality", "data_detail",
+      "change_readiness", "budget", "timeline"].includes(k)
+  );
+  if (catKeys.length) {
+    lines.push("\nCategory-specific answers:");
+    catKeys.forEach(k => answers[k] && lines.push(k + ": " + answers[k]));
+  }
+
+  lines.push("\nGenerate the Delphi Stack Fit compatibility report now.");
+  return lines.filter(Boolean).join("\n");
 }
 
-const EVAL_ICONS = { "What We Heard": "◎", "Your Shortlist, Assessed": "◈", "Readiness Score": "◐", "What You Should Know": "◆", "Questions to Ask in Your Next Demo": "◇", "Our Recommendation": "●" };
-const STACK_ICONS = { "What We Heard": "◎", "Stack Compatibility Assessment": "◈", "Integration Readiness": "◐", "What You Should Know": "◆", "Questions to Ask Before You Integrate": "◇", "Our Compatibility Verdict": "●" };
-const TIMING_OPTIONS = ["Within 1 to 3 months", "3 to 6 months", "6 to 12 months", "Just researching for now"];
-
+// ─── REPORT PARSING & RENDERING ───────────────────────────────────────────────
 function parseReport(text) {
   const sections = [];
   let current = null;
@@ -145,253 +697,312 @@ function parseReport(text) {
     if (line.startsWith("## ")) {
       if (current) sections.push(current);
       current = { title: line.replace("## ", "").trim(), content: [] };
-    } else if (current) current.content.push(line);
+    } else if (current) {
+      current.content.push(line);
+    }
   }
   if (current) sections.push(current);
   return sections;
 }
 
-function getScoreColor(score) {
-  if (score <= 2) return C.red;
-  if (score <= 3) return C.amber;
-  return C.accent;
-}
-
-function getScoreLabel(score) {
-  if (score <= 2) return "Needs attention before purchasing";
-  if (score <= 3) return "Proceed with preparation";
-  return "Well positioned";
-}
-
-function renderTable(rows) {
-  if (!rows || rows.length < 2) return null;
-  const headers = rows[0].split("|").map(h => h.trim()).filter(Boolean);
-  const dataRows = rows.slice(1).map(r => r.split("|").map(c => c.trim()).filter(Boolean));
-  return (
-    <div style={{ overflowX: "auto", marginBottom: 20, marginTop: 8 }}>
-      <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 15, fontFamily: FF }}>
-        <thead>
-          <tr style={{ background: C.accent }}>
-            {headers.map((h, j) => <th key={j} style={{ padding: "10px 14px", textAlign: "left", color: C.white, fontWeight: 700, fontSize: 13 }}>{h}</th>)}
-          </tr>
-        </thead>
-        <tbody>
-          {dataRows.map((row, j) => (
-            <tr key={j} style={{ background: j % 2 === 0 ? C.white : C.card, borderBottom: "1px solid " + C.border }}>
-              {row.map((cell, k) => <td key={k} style={{ padding: "10px 14px", color: C.textMid, fontWeight: 500, lineHeight: 1.5 }}>{cell.replace(/\*\*(.*?)\*\*/g, "$1")}</td>)}
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
-  );
-}
-
 function renderContent(content) {
-  const rawLines = content.join("\n").split("\n");
+  const lines = content.join("\n").split("\n");
   const elements = [];
   let i = 0;
 
-  while (i < rawLines.length) {
-    const line = rawLines[i];
+  while (i < lines.length) {
+    const line = lines[i];
     if (!line.trim()) { i++; continue; }
+
     const clean = line.replace(/\*\*(.*?)\*\*/g, "$1");
 
-    // Table detection
+    // Table
     if (line.trim().startsWith("|")) {
-      const tableRows = [];
+      const rows = [];
       let j = i;
-      while (j < rawLines.length && rawLines[j].trim().startsWith("|")) {
-        if (!rawLines[j].match(/^\s*\|[\s-:]+\|/)) tableRows.push(rawLines[j]);
+      while (j < lines.length && lines[j].trim().startsWith("|")) {
+        if (!lines[j].match(/^\s*\|[\s-:]+\|/)) rows.push(lines[j]);
         j++;
       }
-      if (tableRows.length >= 2) {
-        const tableEl = renderTable(tableRows);
-        if (tableEl) elements.push(<div key={i}>{tableEl}</div>);
+      if (rows.length >= 2) {
+        const headers = rows[0].split("|").map(h => h.trim()).filter(Boolean);
+        const data = rows.slice(1).map(r => r.split("|").map(c => c.trim()).filter(Boolean));
+        elements.push(
+          <div key={i} style={{ overflowX: "auto", margin: "12px 0" }}>
+            <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 14, fontFamily: FF }}>
+              <thead>
+                <tr style={{ background: C.accent }}>
+                  {headers.map((h, j) => <th key={j} style={{ padding: "10px 14px", textAlign: "left", color: C.white, fontWeight: 700, fontSize: 13 }}>{h}</th>)}
+                </tr>
+              </thead>
+              <tbody>
+                {data.map((row, j) => (
+                  <tr key={j} style={{ background: j % 2 === 0 ? C.white : C.card, borderBottom: "1px solid " + C.border }}>
+                    {row.map((cell, k) => <td key={k} style={{ padding: "10px 14px", color: C.textMid, lineHeight: 1.5 }}>{cell.replace(/\*\*(.*?)\*\*/g, "$1")}</td>)}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        );
         i = j; continue;
       }
     }
 
-    // Score card
-    if (/^OVERALL (READINESS|COMPATIBILITY):/i.test(line)) {
-      const match = line.match(/(\d(?:\.\d)?)\s*\/\s*5/);
-      const score = match ? parseFloat(match[1]) : null;
-      if (score) {
-        const color = getScoreColor(score);
-        elements.push(
-          <div key={i} style={{ background: color, borderRadius: 8, padding: "24px 28px", margin: "16px 0 24px", display: "flex", alignItems: "center", gap: 20 }}>
-            <div style={{ textAlign: "center", flexShrink: 0 }}>
-              <div style={{ fontSize: 52, fontWeight: 700, color: C.white, lineHeight: 1, fontFamily: FFD }}>{score}</div>
-              <div style={{ fontSize: 12, color: "rgba(255,255,255,0.8)", fontWeight: 600, letterSpacing: 1 }}>OUT OF 5</div>
-            </div>
-            <div>
-              <div style={{ fontSize: 18, fontWeight: 700, color: C.white, marginBottom: 4, fontFamily: FFD }}>{getScoreLabel(score)}</div>
-              <div style={{ fontSize: 14, fontWeight: 500, color: "rgba(255,255,255,0.85)", lineHeight: 1.5 }}>The dimensional breakdown below shows where you have alignment and where you have gaps.</div>
-            </div>
-          </div>
-        );
-        i++; continue;
-      }
+    // URL detection for Sources section
+    if (line.trim().match(/^https?:\/\//)) {
+      const url = line.trim();
+      elements.push(
+        <div key={i} style={{ marginBottom: 8 }}>
+          <a href={url} target="_blank" rel="noopener noreferrer"
+            style={{ color: C.accent, fontSize: 15, fontFamily: FF, wordBreak: "break-all", textDecoration: "underline" }}>
+            {url}
+          </a>
+        </div>
+      );
+      i++; continue;
     }
 
-    if (line.startsWith("### ")) { elements.push(<h3 key={i} style={{ fontSize: 13, fontWeight: 700, letterSpacing: 1.5, textTransform: "uppercase", color: C.accent, margin: "24px 0 10px", fontFamily: FF }}>{line.replace("### ", "")}</h3>); i++; continue; }
-    if (line.match(/^\*\*(.+)\*\*$/)) { elements.push(<p key={i} style={{ fontSize: 17, fontWeight: 700, color: C.text, margin: "0 0 10px", lineHeight: 1.6, fontFamily: FF }}>{clean}</p>); i++; continue; }
+    // Source lines with label
+    if (line.trim().match(/^[-•]\s*https?:\/\//)) {
+      const url = line.trim().replace(/^[-•]\s*/, "");
+      elements.push(
+        <div key={i} style={{ display: "flex", gap: 10, marginBottom: 8 }}>
+          <span style={{ color: C.accent, flexShrink: 0 }}>—</span>
+          <a href={url} target="_blank" rel="noopener noreferrer"
+            style={{ color: C.accent, fontSize: 15, fontFamily: FF, wordBreak: "break-all", textDecoration: "underline" }}>
+            {url}
+          </a>
+        </div>
+      );
+      i++; continue;
+    }
+
+    if (line.startsWith("### ")) {
+      elements.push(<h3 key={i} style={{ fontSize: 13, fontWeight: 700, letterSpacing: 1.5, textTransform: "uppercase", color: C.accent, margin: "24px 0 10px", fontFamily: FF }}>{line.replace("### ", "")}</h3>);
+      i++; continue;
+    }
+    if (line.match(/^\*\*(.+)\*\*$/)) {
+      elements.push(<p key={i} style={{ fontSize: 17, fontWeight: 700, color: C.text, margin: "0 0 10px", lineHeight: 1.6, fontFamily: FF }}>{clean}</p>);
+      i++; continue;
+    }
     if (line.startsWith("- ") || line.startsWith("• ")) {
-      elements.push(<div key={i} style={{ display: "flex", gap: 12, marginBottom: 10 }}><span style={{ color: C.accent, flexShrink: 0, marginTop: 4, fontSize: 14 }}>—</span><p style={{ fontSize: 16, fontWeight: 500, lineHeight: 1.8, color: C.textMid, margin: 0, fontFamily: FF }}>{line.replace(/^[-•]\s/, "").replace(/\*\*(.*?)\*\*/g, "$1")}</p></div>);
+      elements.push(
+        <div key={i} style={{ display: "flex", gap: 12, marginBottom: 10 }}>
+          <span style={{ color: C.accent, flexShrink: 0, marginTop: 4, fontSize: 14 }}>—</span>
+          <p style={{ fontSize: 16, fontWeight: 500, lineHeight: 1.8, color: C.textMid, margin: 0, fontFamily: FF }}>{line.replace(/^[-•]\s/, "").replace(/\*\*(.*?)\*\*/g, "$1")}</p>
+        </div>
+      );
       i++; continue;
     }
     if (/^\d+\./.test(line)) {
-      elements.push(<div key={i} style={{ display: "flex", gap: 12, marginBottom: 10 }}><span style={{ color: C.accent, flexShrink: 0, marginTop: 4, minWidth: 20, fontSize: 14, fontFamily: FF }}>{line.match(/^\d+/)[0]}.</span><p style={{ fontSize: 16, fontWeight: 500, lineHeight: 1.8, color: C.textMid, margin: 0, fontFamily: FF }}>{line.replace(/^\d+\.\s/, "").replace(/\*\*(.*?)\*\*/g, "$1")}</p></div>);
+      elements.push(
+        <div key={i} style={{ display: "flex", gap: 12, marginBottom: 10 }}>
+          <span style={{ color: C.accent, flexShrink: 0, minWidth: 20, fontSize: 14, fontFamily: FF }}>{line.match(/^\d+/)[0]}.</span>
+          <p style={{ fontSize: 16, fontWeight: 500, lineHeight: 1.8, color: C.textMid, margin: 0, fontFamily: FF }}>{line.replace(/^\d+\.\s/, "").replace(/\*\*(.*?)\*\*/g, "$1")}</p>
+        </div>
+      );
       i++; continue;
     }
+
     elements.push(<p key={i} style={{ fontSize: 16, fontWeight: 500, lineHeight: 1.9, color: C.textMid, marginBottom: 14, fontFamily: FF }}>{clean}</p>);
     i++;
   }
   return elements;
 }
 
+// ─── SECTION ICONS ────────────────────────────────────────────────────────────
+const EVAL_ICONS = {
+  "What We Heard": "◎", "Tool-by-Tool Assessment": "◈", "What Your Organization Will Need": "◐",
+  "Questions to Ask Each Vendor": "◇", "Red Flags to Watch For": "◆", "Our Recommendation": "●", "Sources": "○"
+};
+const STACK_ICONS = {
+  "What We Heard": "◎", "Stack Compatibility Assessment": "◈", "Integration Readiness": "◐",
+  "What Your Team Will Need to Do": "◆", "Questions to Ask Before You Integrate": "◇", "Our Compatibility Verdict": "●", "Sources": "○"
+};
+
+// ─── SHARED UI COMPONENTS ─────────────────────────────────────────────────────
+const Logo = ({ small }) => (
+  <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: small ? 4 : 40 }}>
+    <div style={{ width: small ? 34 : 36, height: small ? 34 : 36, borderRadius: "50%", background: C.accent, color: C.white, display: "flex", alignItems: "center", justifyContent: "center", fontSize: small ? 15 : 16, fontWeight: 700, fontFamily: FFD }}>D</div>
+    {!small && (
+      <div>
+        <p style={{ fontSize: 18, fontWeight: 700, color: C.text, fontFamily: FFD }}>Delphi</p>
+        <p style={{ fontSize: 11, color: C.textLight, letterSpacing: 2, textTransform: "uppercase" }}>Independent report for software buyers</p>
+      </div>
+    )}
+    {small && <p style={{ fontSize: 16, fontWeight: 700, color: C.text, fontFamily: FFD }}>Delphi</p>}
+  </div>
+);
+
+const Btn = ({ children, onClick, disabled, variant = "primary", full }) => (
+  <button onClick={onClick} disabled={disabled}
+    style={{
+      background: variant === "primary" ? (disabled ? C.border : C.accent) : variant === "ghost" ? "transparent" : C.white,
+      color: variant === "primary" ? C.white : variant === "ghost" ? C.textLight : C.accent,
+      border: variant === "ghost" ? "1.5px solid " + C.borderDark : variant === "white" ? "1.5px solid " + C.border : "none",
+      borderRadius: 4, padding: "12px 24px", fontSize: 14, letterSpacing: 1.5, textTransform: "uppercase",
+      fontFamily: FF, fontWeight: 700, cursor: disabled ? "default" : "pointer",
+      width: full ? "100%" : "auto", opacity: disabled ? 0.5 : 1, transition: "all 0.15s",
+    }}>{children}</button>
+);
+
+// ─── MAIN COMPONENT ───────────────────────────────────────────────────────────
 export default function Delphi({ paymentStatus, startCheckout, onHome }) {
   const [reportType, setReportType] = useState(null);
   const [step, setStep] = useState("select");
   const [selectedCategories, setSelectedCategories] = useState([]);
   const [selectedTools, setSelectedTools] = useState([]);
   const [categoryStep, setCategoryStep] = useState("categories");
+  const [questionQueue, setQuestionQueue] = useState([]);
   const [currentQ, setCurrentQ] = useState(0);
   const [answers, setAnswers] = useState({});
   const [currentInput, setCurrentInput] = useState("");
-  const [currentMulti, setCurrentMulti] = useState([]);
+  const [hoveredChoice, setHoveredChoice] = useState(null);
   const [reportSections, setReportSections] = useState([]);
   const [activeSection, setActiveSection] = useState(0);
-  const [consentOn, setConsentOn] = useState(false);
-  const [timing, setTiming] = useState(null);
-  const [email, setEmail] = useState("");
-  const [emailSubmitted, setEmailSubmitted] = useState(false);
-  const [hoveredChoice, setHoveredChoice] = useState(null);
   const inputRef = useRef(null);
 
-  const questions = reportType === "stack_fit" ? BASE_STACK_QUESTIONS : BASE_EVAL_QUESTIONS;
+  const q = questionQueue[currentQ];
+  const progress = questionQueue.length > 0 ? Math.round(((currentQ + 1) / questionQueue.length) * 100) : 0;
   const sectionIcons = reportType === "stack_fit" ? STACK_ICONS : EVAL_ICONS;
-  const q = questions[currentQ];
-  const progress = Math.round(((currentQ + 1) / questions.length) * 100);
 
   useEffect(() => {
-    if (step === "questions" && q && q.type === "text") setTimeout(() => inputRef.current && inputRef.current.focus(), 50);
+    if (step === "questions" && q?.type === "text") {
+      setTimeout(() => inputRef.current?.focus(), 50);
+    }
   }, [currentQ, step]);
 
-  const startReport = (type) => { setReportType(type); setStep("category_select"); setSelectedCategories([]); setSelectedTools([]); setCategoryStep("categories"); };
-  const toggleCategory = (id) => setSelectedCategories(prev => prev.includes(id) ? prev.filter(c => c !== id) : [...prev, id]);
-  const toggleTool = (tool) => setSelectedTools(prev => prev.includes(tool) ? prev.filter(t => t !== tool) : [...prev, tool]);
+  // Build question queue from selected categories
+  const buildQuestionQueue = (categories) => {
+    const queue = [...CORE_QUESTIONS];
+    // Add category-specific questions for selected categories
+    // If multiple categories selected, deduplicate by question id
+    const seen = new Set(CORE_QUESTIONS.map(q => q.id));
+    categories.forEach(catId => {
+      const catQs = CATEGORY_QUESTIONS[catId] || [];
+      catQs.forEach(q => {
+        if (!seen.has(q.id)) {
+          seen.add(q.id);
+          queue.push(q);
+        }
+      });
+    });
+    return queue;
+  };
+
+  const startReport = (type) => {
+    setReportType(type);
+    setStep("category_select");
+    setSelectedCategories([]);
+    setSelectedTools([]);
+    setCategoryStep("categories");
+  };
+
+  const toggleCategory = (id) => setSelectedCategories(prev =>
+    prev.includes(id) ? prev.filter(c => c !== id) : [...prev, id]
+  );
+
+  const toggleTool = (tool) => setSelectedTools(prev =>
+    prev.includes(tool) ? prev.filter(t => t !== tool) : [...prev, tool]
+  );
 
   const confirmSelection = () => {
     const shortlistKey = reportType === "stack_fit" ? "stack_shortlist" : "shortlist";
-    const labels = selectedCategories.map(id => { const c = TOOL_CATEGORIES.find(x => x.id === id); return c ? c.label : null; }).filter(Boolean);
-    setAnswers(prev => ({ ...prev, categories: labels, [shortlistKey]: selectedTools }));
-    setStep("questions"); setCurrentQ(0);
+    const labels = selectedCategories.map(id => TOOL_CATEGORIES.find(x => x.id === id)?.label).filter(Boolean);
+    const queue = buildQuestionQueue(selectedCategories);
+    setAnswers({ categories: labels, [shortlistKey]: selectedTools });
+    setQuestionQueue(queue);
+    setCurrentQ(0);
+    setStep("questions");
   };
 
   const submitAnswer = (value) => {
     const newAnswers = { ...answers, [q.id]: value };
-    setAnswers(newAnswers); setCurrentInput(""); setCurrentMulti([]); setHoveredChoice(null);
-    if (currentQ < questions.length - 1) setCurrentQ(currentQ + 1);
-    else generateReport(newAnswers);
+
+    // Check for branch question
+    if (q.branch && q.branch.trigger.includes(value)) {
+      const branchQ = { ...q.branch, isBranch: true };
+      const newQueue = [
+        ...questionQueue.slice(0, currentQ + 1),
+        branchQ,
+        ...questionQueue.slice(currentQ + 1),
+      ];
+      setQuestionQueue(newQueue);
+    }
+
+    setAnswers(newAnswers);
+    setCurrentInput("");
+    setHoveredChoice(null);
+
+    if (currentQ < questionQueue.length - 1) {
+      setCurrentQ(currentQ + 1);
+    } else {
+      generateReport(newAnswers);
+    }
   };
 
-const generateReport = async (finalAnswers) => {
-  setStep("generating");
+  const generateReport = async (finalAnswers) => {
+    setStep("generating");
+    const jobId = `r-${Date.now()}`;
+    const system = reportType === "stack_fit" ? STACK_PROMPT : EVAL_PROMPT;
+    const prompt = reportType === "stack_fit" ? buildStackPrompt(finalAnswers) : buildEvalPrompt(finalAnswers);
 
-  const jobId = `r-${Date.now()}`;
-  const system = reportType === "stack_fit" ? STACK_PROMPT : EVAL_PROMPT;
-  const prompt = reportType === "stack_fit" ? buildStackPrompt(finalAnswers) : buildEvalPrompt(finalAnswers);
+    await fetch("/.netlify/functions/generate-report-background", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ jobId, system, prompt }),
+    });
 
-  await fetch("/.netlify/functions/generate-report-background", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ jobId, system, prompt }),
-  });
-
-  const poll = async (attempts = 0) => {
-    if (attempts > 60) {
-      setReportSections([{ title: "What We Heard", content: ["Report timed out. Please try again."] }]);
-      return setStep("report");
-    }
-    try {
-      const { status, text } = await fetch(`/.netlify/functions/get-report?jobId=${jobId}`).then(r => r.json());
-      if (status === "done") {
-        const sections = parseReport(text ?? "");
-        setReportSections(sections.length ? sections : [{ title: "What We Heard", content: ["Unable to parse report. Please try again."] }]);
-        setStep("report");
-      } else if (status === "error") {
-        setReportSections([{ title: "What We Heard", content: ["Unable to generate your report. Please try again."] }]);
-        setStep("report");
-      } else {
+    const poll = async (attempts = 0) => {
+      if (attempts > 60) {
+        setReportSections([{ title: "What We Heard", content: ["Report timed out. Please try again."] }]);
+        return setStep("report");
+      }
+      try {
+        const { status, text } = await fetch(`/.netlify/functions/get-report?jobId=${jobId}`).then(r => r.json());
+        if (status === "done") {
+          const sections = parseReport(text ?? "");
+          setReportSections(sections.length ? sections : [{ title: "What We Heard", content: ["Unable to parse report. Please try again."] }]);
+          setStep("report");
+        } else if (status === "error") {
+          setReportSections([{ title: "What We Heard", content: ["Unable to generate your report. Please try again."] }]);
+          setStep("report");
+        } else {
+          setTimeout(() => poll(attempts + 1), 3000);
+        }
+      } catch {
         setTimeout(() => poll(attempts + 1), 3000);
       }
-    } catch {
-      setTimeout(() => poll(attempts + 1), 3000);
-    }
+    };
+
+    setTimeout(() => poll(), 5000);
   };
 
-  setTimeout(() => poll(), 5000);
-};
-
-    // Poll for result every 3 seconds
-    const maxAttempts = 60; // 3 min max
-    let attempts = 0;
-
-    
-  
   const restart = () => {
     setStep("select"); setReportType(null); setCurrentQ(0); setAnswers({});
-    setCurrentInput(""); setCurrentMulti([]); setReportSections([]); setActiveSection(0);
-    setConsentOn(false); setTiming(null); setEmail(""); setEmailSubmitted(false);
+    setCurrentInput(""); setReportSections([]); setActiveSection(0);
     setSelectedCategories([]); setSelectedTools([]); setCategoryStep("categories");
+    setQuestionQueue([]); setHoveredChoice(null);
   };
-
-  const gs = "@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,700;1,600&family=EB+Garamond:wght@400;500;600;700&display=swap'); * { box-sizing: border-box; margin: 0; padding: 0; } button { cursor: pointer; } textarea { outline: none; } textarea:focus { border-color: " + C.accent + " !important; } input:focus { outline: none; border-color: " + C.accent + " !important; } @keyframes fadeUp { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:translateY(0); } } @keyframes spin { to { transform: rotate(360deg); } } ::-webkit-scrollbar { width: 5px; } ::-webkit-scrollbar-thumb { background: " + C.border + "; border-radius: 3px; }";
-
-  const Btn = ({ children, onClick, variant, disabled, full }) => {
-    const v = variant || "primary";
-    const d = disabled || false;
-    return (
-      <button onClick={onClick} disabled={d} style={{ background: v === "primary" ? (d ? C.border : C.accent) : v === "white" ? C.white : "transparent", color: v === "primary" ? C.white : v === "white" ? C.accent : C.textLight, border: v === "ghost" ? "1.5px solid " + C.borderDark : v === "white" ? "1.5px solid " + C.border : "none", borderRadius: 4, padding: "12px 24px", fontSize: 14, letterSpacing: 1.5, textTransform: "uppercase", fontFamily: FF, fontWeight: 700, cursor: d ? "default" : "pointer", width: full ? "100%" : "auto", opacity: d ? 0.5 : 1, transition: "all 0.15s" }}>{children}</button>
-    );
-  };
-
-  const Toggle = ({ on, onChange, label }) => (
-    <div style={{ display: "flex", alignItems: "center", gap: 12, cursor: "pointer" }} onClick={() => onChange(!on)}>
-      <div style={{ width: 44, height: 24, borderRadius: 12, background: on ? C.accent : C.border, position: "relative", transition: "background 0.2s", flexShrink: 0 }}>
-        <div style={{ width: 18, height: 18, borderRadius: "50%", background: C.white, position: "absolute", top: 3, left: on ? 23 : 3, transition: "left 0.2s", boxShadow: "0 1px 3px rgba(0,0,0,0.15)" }} />
-      </div>
-      <span style={{ fontSize: 15, fontWeight: 500, color: C.textMid, fontFamily: FF }}>{label}</span>
-    </div>
-  );
-
-  const Logo = () => (
-    <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 40 }}>
-      <div style={{ width: 36, height: 36, borderRadius: "50%", background: C.accent, color: C.white, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16, fontWeight: 700, fontFamily: FFD }}>D</div>
-      <div>
-        <p style={{ fontSize: 18, fontWeight: 700, color: C.text, fontFamily: FFD }}>Delphi</p>
-        <p style={{ fontSize: 11, color: C.textLight, letterSpacing: 2, textTransform: "uppercase" }}>Independent report for software buyers</p>
-      </div>
-    </div>
-  );
 
   const pageWrap = { minHeight: "100vh", background: C.bg, display: "flex", alignItems: "center", justifyContent: "center", padding: "40px 24px", fontFamily: FF };
 
-  // ─── SELECT ────────────────────────────────────────────────────────────────
+  // ─── SELECT ──────────────────────────────────────────────────────────────────
   if (step === "select") return (
     <div style={{ minHeight: "100vh", background: C.bg, display: "flex", alignItems: "flex-start", justifyContent: "center", padding: "60px 24px", fontFamily: FF }}>
-      <style>{gs}</style>
+      <style>{GS}</style>
       <div style={{ maxWidth: 820, width: "100%", animation: "fadeUp 0.4s ease" }}>
         <Logo />
         <h1 style={{ fontFamily: FFD, fontSize: "clamp(28px, 4vw, 44px)", fontWeight: 700, color: C.text, lineHeight: 1.1, letterSpacing: -1, marginBottom: 12 }}>What are you trying to figure out?</h1>
         <p style={{ fontSize: 17, fontWeight: 500, color: C.textMid, lineHeight: 1.8, marginBottom: 40 }}>Choose the report type that matches your situation.</p>
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20 }}>
           {[
-            { type: "evaluation", tag: "The Evaluation", title: "Find the right tool.", body: "You have a problem to solve. Delphi tells you which tool fits your situation, what it costs to implement, what your organization needs to prepare, and what to ask before you sign.", best: "First-time buyers, teams migrating platforms, anyone wanting an independent read before the sales cycle.", featured: true, btn: "Start Evaluation" },
-            { type: "stack_fit", tag: "The Stack Fit", title: "Know how it fits what you have.", body: "You are adding to an existing stack. Delphi assesses data flow, integration depth, process overlap, and whether the tool creates dependencies or conflicts in your environment.", best: "Teams with established stacks, ops leaders managing tool sprawl, anyone asking whether this will work with what we have.", featured: false, btn: "Start Stack Fit" },
+            { type: "evaluation", tag: "The Evaluation", title: "Find the right tool.", body: "You have a problem to solve. Delphi tells you which tool fits your situation, what it costs to implement, what your organization needs to prepare, and what to ask before you sign.", best: "First-time buyers, teams migrating platforms, anyone wanting an independent read before the sales cycle.", btn: "Start Evaluation", featured: true },
+            { type: "stack_fit", tag: "The Stack Fit", title: "Know how it fits what you have.", body: "You are adding to an existing stack. Delphi assesses data flow, integration depth, process overlap, and whether the tool creates dependencies or conflicts in your environment.", best: "Teams with established stacks, ops leaders managing tool sprawl, anyone asking whether this will work with what we have.", btn: "Start Stack Fit", featured: false },
           ].map(card => (
-            <div key={card.type} style={{ background: card.featured ? C.accent : C.white, border: "1.5px solid " + (card.featured ? C.accent : C.border), borderRadius: 10, padding: "36px 32px", display: "flex", flexDirection: "column", transition: "transform 0.2s, box-shadow 0.2s" }}
+            <div key={card.type}
+              style={{ background: card.featured ? C.accent : C.white, border: "1.5px solid " + (card.featured ? C.accent : C.border), borderRadius: 10, padding: "36px 32px", display: "flex", flexDirection: "column", transition: "transform 0.2s, box-shadow 0.2s", cursor: "pointer" }}
               onMouseEnter={e => { e.currentTarget.style.transform = "translateY(-3px)"; e.currentTarget.style.boxShadow = "0 12px 40px rgba(0,0,0,0.08)"; }}
               onMouseLeave={e => { e.currentTarget.style.transform = "none"; e.currentTarget.style.boxShadow = "none"; }}>
               <div style={{ fontSize: 11, letterSpacing: 2.5, textTransform: "uppercase", color: card.featured ? C.white : C.accent, background: card.featured ? "rgba(255,255,255,0.18)" : "rgba(61,107,33,0.08)", borderRadius: 20, padding: "4px 12px", marginBottom: 16, fontWeight: 700, alignSelf: "flex-start" }}>{card.tag}</div>
@@ -407,27 +1018,25 @@ const generateReport = async (finalAnswers) => {
     </div>
   );
 
-  // ─── CATEGORY SELECT ────────────────────────────────────────────────────────
+  // ─── CATEGORY SELECT ─────────────────────────────────────────────────────────
   if (step === "category_select") return (
     <div style={pageWrap}>
-      <style>{gs}</style>
+      <style>{GS}</style>
       <div style={{ maxWidth: 600, width: "100%", animation: "fadeUp 0.4s ease" }}>
         <Logo />
-        <div style={{ display: "inline-block", fontSize: 11, fontWeight: 700, letterSpacing: 2, textTransform: "uppercase", color: C.accent, background: "rgba(61,107,33,0.08)", borderRadius: 20, padding: "4px 12px", marginBottom: 16 }}>
+        <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: 2, textTransform: "uppercase", color: C.accent, background: "rgba(61,107,33,0.08)", borderRadius: 20, padding: "4px 12px", marginBottom: 16, display: "inline-block" }}>
           {reportType === "stack_fit" ? "The Stack Fit" : "The Evaluation"}
         </div>
-
         {categoryStep === "categories" ? (
           <>
-            <h2 style={{ fontFamily: FFD, fontSize: 28, fontWeight: 700, color: C.text, marginBottom: 12, lineHeight: 1.2 }}>
-              {reportType === "stack_fit" ? "What type of tool are you adding?" : "What category are you evaluating?"}
-            </h2>
-            <p style={{ fontSize: 16, fontWeight: 500, color: C.textMid, lineHeight: 1.75, marginBottom: 28 }}>Select all that apply — you can evaluate tools across multiple categories at the same time.</p>
+            <h2 style={{ fontFamily: FFD, fontSize: 28, fontWeight: 700, color: C.text, marginBottom: 12, lineHeight: 1.2 }}>What category are you evaluating?</h2>
+            <p style={{ fontSize: 16, fontWeight: 500, color: C.textMid, lineHeight: 1.75, marginBottom: 28 }}>Select all that apply.</p>
             <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 28 }}>
               {TOOL_CATEGORIES.map(cat => {
                 const sel = selectedCategories.includes(cat.id);
                 return (
-                  <button key={cat.id} onClick={() => toggleCategory(cat.id)} style={{ background: sel ? C.accent : C.white, border: "1.5px solid " + (sel ? C.accent : C.border), borderRadius: 4, padding: "14px 18px", textAlign: "left", fontSize: 16, fontWeight: 500, color: sel ? C.white : C.text, transition: "all 0.15s", display: "flex", alignItems: "center", gap: 12 }}>
+                  <button key={cat.id} onClick={() => toggleCategory(cat.id)}
+                    style={{ background: sel ? C.accent : C.white, border: "1.5px solid " + (sel ? C.accent : C.border), borderRadius: 4, padding: "14px 18px", textAlign: "left", fontSize: 16, fontWeight: 500, color: sel ? C.white : C.text, transition: "all 0.15s", display: "flex", alignItems: "center", gap: 12 }}>
                     <div style={{ width: 20, height: 20, borderRadius: 3, border: "2px solid " + (sel ? "rgba(255,255,255,0.6)" : C.borderDark), background: sel ? "rgba(255,255,255,0.25)" : "transparent", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, fontSize: 12, color: C.white, fontWeight: 700 }}>{sel ? "✓" : ""}</div>
                     {cat.label}
                   </button>
@@ -450,7 +1059,8 @@ const generateReport = async (finalAnswers) => {
                     {cat.tools.map(tool => {
                       const sel = selectedTools.includes(tool);
                       return (
-                        <button key={tool} onClick={() => toggleTool(tool)} style={{ background: sel ? C.accent : C.white, border: "1.5px solid " + (sel ? C.accent : C.border), borderRadius: 4, padding: "12px 18px", textAlign: "left", fontSize: 15, fontWeight: 500, color: sel ? C.white : C.text, transition: "all 0.15s", display: "flex", alignItems: "center", gap: 12 }}>
+                        <button key={tool} onClick={() => toggleTool(tool)}
+                          style={{ background: sel ? C.accent : C.white, border: "1.5px solid " + (sel ? C.accent : C.border), borderRadius: 4, padding: "12px 18px", textAlign: "left", fontSize: 15, fontWeight: 500, color: sel ? C.white : C.text, transition: "all 0.15s", display: "flex", alignItems: "center", gap: 12 }}>
                           <div style={{ width: 18, height: 18, borderRadius: 3, border: "2px solid " + (sel ? "rgba(255,255,255,0.6)" : C.borderDark), background: sel ? "rgba(255,255,255,0.25)" : "transparent", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, fontSize: 11, color: C.white, fontWeight: 700 }}>{sel ? "✓" : ""}</div>
                           {tool}
                         </button>
@@ -460,8 +1070,8 @@ const generateReport = async (finalAnswers) => {
                 </div>
               );
             })}
-            <div style={{ display: "flex", gap: 12, marginTop: 8 }}>
-              <button onClick={() => setCategoryStep("categories")} style={{ background: "none", border: "1.5px solid " + C.borderDark, borderRadius: 4, padding: "12px 24px", fontSize: 14, fontWeight: 700, letterSpacing: 1.5, textTransform: "uppercase", color: C.textMid, fontFamily: FF }}>Back</button>
+            <div style={{ display: "flex", gap: 12 }}>
+              <Btn variant="ghost" onClick={() => setCategoryStep("categories")}>Back</Btn>
               <Btn onClick={confirmSelection} disabled={selectedTools.length === 0}>Continue</Btn>
             </div>
           </>
@@ -470,36 +1080,41 @@ const generateReport = async (finalAnswers) => {
     </div>
   );
 
-  // ─── GENERATING ────────────────────────────────────────────────────────────
+  // ─── GENERATING ──────────────────────────────────────────────────────────────
   if (step === "generating") return (
     <div style={pageWrap}>
-      <style>{gs}</style>
-      <div style={{ textAlign: "center", maxWidth: 440, padding: "0 24px" }}>
+      <style>{GS}</style>
+      <div style={{ textAlign: "center", maxWidth: 480, padding: "0 24px" }}>
         <div style={{ width: 48, height: 48, border: "3px solid " + C.border, borderTop: "3px solid " + C.accent, borderRadius: "50%", margin: "0 auto 28px", animation: "spin 0.9s linear infinite" }} />
-        <p style={{ fontSize: 22, fontWeight: 700, color: C.text, marginBottom: 14, fontFamily: FFD }}>{reportType === "stack_fit" ? "Building your Stack Fit report" : "Building your evaluation report"}</p>
-        <p style={{ fontSize: 16, fontWeight: 500, color: C.textMid, lineHeight: 1.75 }}>{reportType === "stack_fit" ? "Analyzing your stack, integration patterns, and compatibility signals." : "Analyzing your situation against known implementation requirements and organizational readiness signals."}</p>
+        <p style={{ fontSize: 22, fontWeight: 700, color: C.text, marginBottom: 14, fontFamily: FFD }}>Building your report</p>
+        <p style={{ fontSize: 16, fontWeight: 500, color: C.textMid, lineHeight: 1.75, marginBottom: 12 }}>
+          {reportType === "stack_fit"
+            ? "Analyzing your stack, integration patterns, and compatibility signals."
+            : "Analyzing your situation against known implementation requirements and organizational readiness signals."}
+        </p>
+        <p style={{ fontSize: 14, fontWeight: 500, color: C.textLight, lineHeight: 1.6 }}>This takes about 45–60 seconds. We're pulling current information, not cached answers.</p>
       </div>
     </div>
   );
 
-  // ─── REPORT ────────────────────────────────────────────────────────────────
+  // ─── REPORT ──────────────────────────────────────────────────────────────────
   if (step === "report") {
     const section = reportSections[activeSection];
     return (
       <div style={{ minHeight: "100vh", background: C.bg, display: "flex", fontFamily: FF }}>
-        <style>{gs}</style>
+        <style>{GS}</style>
         <div style={{ width: 240, minWidth: 240, background: C.sidebar, borderRight: "1px solid " + C.border, padding: "32px 20px", display: "flex", flexDirection: "column", position: "sticky", top: 0, height: "100vh", overflowY: "auto" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 4 }}>
-            <div style={{ width: 34, height: 34, borderRadius: "50%", background: C.accent, color: C.white, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 15, fontWeight: 700, fontFamily: FFD }}>D</div>
-            <p style={{ fontSize: 16, fontWeight: 700, color: C.text, fontFamily: FFD }}>Delphi</p>
-          </div>
-          <p style={{ fontSize: 11, fontWeight: 700, color: C.textLight, letterSpacing: 1.5, textTransform: "uppercase", marginBottom: 24, marginLeft: 44 }}>{reportType === "stack_fit" ? "Stack Fit Report" : "Evaluation Report"}</p>
+          <Logo small />
+          <p style={{ fontSize: 11, fontWeight: 700, color: C.textLight, letterSpacing: 1.5, textTransform: "uppercase", marginBottom: 24, marginLeft: 44 }}>
+            {reportType === "stack_fit" ? "Stack Fit Report" : "Evaluation Report"}
+          </p>
           <div style={{ height: 1, background: C.border, marginBottom: 16 }} />
           <nav style={{ display: "flex", flexDirection: "column", gap: 4, flex: 1 }}>
             {reportSections.map((sec, i) => {
               const isActive = activeSection === i;
               return (
-                <button key={i} onClick={() => setActiveSection(i)} style={{ background: isActive ? C.accent : "transparent", border: "none", borderRadius: 4, padding: "10px 12px", textAlign: "left", cursor: "pointer", display: "flex", alignItems: "flex-start", gap: 10 }}>
+                <button key={i} onClick={() => setActiveSection(i)}
+                  style={{ background: isActive ? C.accent : "transparent", border: "none", borderRadius: 4, padding: "10px 12px", textAlign: "left", cursor: "pointer", display: "flex", alignItems: "flex-start", gap: 10 }}>
                   <span style={{ fontSize: 11, color: isActive ? C.white : C.accent, marginTop: 2, flexShrink: 0 }}>{sectionIcons[sec.title] || "○"}</span>
                   <span style={{ fontSize: 13, fontWeight: 600, lineHeight: 1.4, color: isActive ? C.white : C.textMid }}>{sec.title}</span>
                 </button>
@@ -512,82 +1127,83 @@ const generateReport = async (finalAnswers) => {
 
         <div style={{ flex: 1, padding: "40px 48px", maxWidth: 740, overflowY: "auto" }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 28, paddingBottom: 22, borderBottom: "1px solid " + C.border }}>
-            <h2 style={{ fontSize: 26, fontWeight: 700, color: C.text, fontFamily: FFD }}>{section && section.title}</h2>
+            <h2 style={{ fontSize: 26, fontWeight: 700, color: C.text, fontFamily: FFD }}>{section?.title}</h2>
             <span style={{ fontSize: 13, fontWeight: 500, color: C.textLight, marginTop: 6 }}>{activeSection + 1} / {reportSections.length}</span>
           </div>
-
           <div style={{ marginBottom: 32 }}>{section && renderContent(section.content)}</div>
-
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", paddingTop: 20, borderTop: "1px solid " + C.border, marginTop: 8 }}>
-            <button onClick={() => activeSection > 0 && setActiveSection(activeSection - 1)} style={{ background: "none", border: "none", color: C.textMid, fontSize: 15, fontWeight: 500, opacity: activeSection === 0 ? 0.3 : 1, cursor: activeSection === 0 ? "default" : "pointer", fontFamily: FF }}>← Previous</button>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", paddingTop: 20, borderTop: "1px solid " + C.border }}>
+            <button onClick={() => activeSection > 0 && setActiveSection(activeSection - 1)}
+              style={{ background: "none", border: "none", color: C.textMid, fontSize: 15, fontWeight: 500, opacity: activeSection === 0 ? 0.3 : 1, cursor: activeSection === 0 ? "default" : "pointer", fontFamily: FF }}>← Previous</button>
             <div style={{ display: "flex", gap: 7 }}>
-              {reportSections.map((_, i) => <div key={i} onClick={() => setActiveSection(i)} style={{ width: 7, height: 7, borderRadius: "50%", background: i === activeSection ? C.accent : C.border, cursor: "pointer", transition: "background 0.2s" }} />)}
+              {reportSections.map((_, i) => (
+                <div key={i} onClick={() => setActiveSection(i)}
+                  style={{ width: 7, height: 7, borderRadius: "50%", background: i === activeSection ? C.accent : C.border, cursor: "pointer", transition: "background 0.2s" }} />
+              ))}
             </div>
-            <button onClick={() => setActiveSection(Math.min(activeSection + 1, reportSections.length - 1))} style={{ background: "none", border: "none", color: C.textMid, fontSize: 15, fontWeight: 500, cursor: "pointer", fontFamily: FF }}>Next →</button>
+            <button onClick={() => setActiveSection(Math.min(activeSection + 1, reportSections.length - 1))}
+              style={{ background: "none", border: "none", color: C.textMid, fontSize: 15, fontWeight: 500, cursor: "pointer", fontFamily: FF }}>Next →</button>
           </div>
-
           <p style={{ fontSize: 13, fontWeight: 500, color: C.textLight, marginTop: 36, paddingTop: 20, borderTop: "1px solid " + C.border, lineHeight: 1.7 }}>Delphi is funded by subscribers, not vendors. No platform pays for placement, recommendation, or access. Ever.</p>
         </div>
       </div>
     );
   }
 
-  // ─── QUESTIONS ─────────────────────────────────────────────────────────────
+  // ─── QUESTIONS ───────────────────────────────────────────────────────────────
   return (
     <div style={pageWrap}>
-      <style>{gs}</style>
+      <style>{GS}</style>
       <div style={{ maxWidth: 600, width: "100%" }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 24 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
             <div style={{ width: 30, height: 30, borderRadius: "50%", background: C.accent, color: C.white, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13, fontWeight: 700, fontFamily: FFD }}>D</div>
             <span style={{ fontSize: 13, fontWeight: 700, letterSpacing: 1.5, textTransform: "uppercase", color: C.accent }}>{reportType === "stack_fit" ? "The Stack Fit" : "The Evaluation"}</span>
           </div>
-          <span style={{ fontSize: 13, fontWeight: 500, color: C.textLight }}>{currentQ + 1} / {questions.length}</span>
+          <span style={{ fontSize: 13, fontWeight: 500, color: C.textLight }}>{currentQ + 1} / {questionQueue.length}</span>
         </div>
 
         <div style={{ width: "100%", height: 3, background: C.border, borderRadius: 2, marginBottom: 36 }}>
           <div style={{ width: progress + "%", height: "100%", background: C.accent, borderRadius: 2, transition: "width 0.35s ease" }} />
         </div>
 
-        <p style={{ fontSize: 12, fontWeight: 700, letterSpacing: 2.5, textTransform: "uppercase", color: C.textLight, marginBottom: 16 }}>
-          {q && q.layer === 1 ? "Layer 1 — Your Situation" : "Layer 2 — Tool Assessment"}
-        </p>
-
-        <h2 style={{ fontSize: 24, fontWeight: 700, lineHeight: 1.5, color: C.text, marginBottom: 12, fontFamily: FFD }}>{q && q.text}</h2>
-        <p style={{ fontSize: 15, fontWeight: 500, color: C.textMid, lineHeight: 1.7, marginBottom: 28 }}>{q && q.hint}</p>
-
-        {q && q.type === "text" && (
+        {q && (
           <>
-            <textarea ref={inputRef} rows={4} value={currentInput} onChange={e => setCurrentInput(e.target.value)} onKeyDown={e => { if (e.key === "Enter" && e.metaKey && currentInput.trim()) submitAnswer(currentInput.trim()); }} placeholder="Type your answer here..." style={{ width: "100%", background: C.white, border: "1.5px solid " + C.border, borderRadius: 4, color: C.text, fontSize: 16, fontWeight: 500, padding: "14px 16px", resize: "vertical", lineHeight: 1.7, fontFamily: FF }} />
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 12 }}>
-              <span style={{ fontSize: 12, fontWeight: 500, color: C.border, fontFamily: FF }}>Command + Enter to continue</span>
-              <Btn onClick={() => currentInput.trim() && submitAnswer(currentInput.trim())} disabled={!currentInput.trim()}>Continue</Btn>
-            </div>
-            <button onClick={() => submitAnswer("Not provided")} style={{ background: "none", border: "none", color: C.textLight, fontSize: 13, fontWeight: 500, marginTop: 16, textDecoration: "underline", cursor: "pointer", display: "block", fontFamily: FF }}>Skip this question</button>
-          </>
-        )}
+            <p style={{ fontSize: 12, fontWeight: 700, letterSpacing: 2.5, textTransform: "uppercase", color: C.textLight, marginBottom: 16 }}>
+              {q.isBranch ? "Tell us more" : q.layer === 1 ? "Layer 1 — Your Situation" : "Layer 2 — Readiness Assessment"}
+            </p>
+            <h2 style={{ fontSize: 24, fontWeight: 700, lineHeight: 1.5, color: C.text, marginBottom: 12, fontFamily: FFD }}>{q.text}</h2>
+            <p style={{ fontSize: 15, fontWeight: 500, color: C.textMid, lineHeight: 1.7, marginBottom: 28 }}>{q.hint}</p>
 
-        {q && q.type === "choice" && (
-          <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-            {q.options.map(opt => (
-              <button key={opt} onClick={() => submitAnswer(opt)} onMouseEnter={() => setHoveredChoice(opt)} onMouseLeave={() => setHoveredChoice(null)} style={{ background: hoveredChoice === opt ? C.accent : C.white, border: "1.5px solid " + (hoveredChoice === opt ? C.accent : C.border), borderRadius: 4, color: hoveredChoice === opt ? C.white : C.text, fontSize: 16, fontWeight: 500, padding: "14px 18px", textAlign: "left", lineHeight: 1.4, cursor: "pointer", transition: "all 0.15s", fontFamily: FF }}>{opt}</button>
-            ))}
-          </div>
-        )}
+            {q.type === "text" && (
+              <>
+                <textarea ref={inputRef} rows={4} value={currentInput}
+                  onChange={e => setCurrentInput(e.target.value)}
+                  onKeyDown={e => { if (e.key === "Enter" && e.metaKey && currentInput.trim()) submitAnswer(currentInput.trim()); }}
+                  placeholder="Type your answer here..."
+                  style={{ width: "100%", background: C.white, border: "1.5px solid " + C.border, borderRadius: 4, color: C.text, fontSize: 16, fontWeight: 500, padding: "14px 16px", resize: "vertical", lineHeight: 1.7, fontFamily: FF }} />
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 12 }}>
+                  <span style={{ fontSize: 12, fontWeight: 500, color: C.borderDark, fontFamily: FF }}>Command + Enter to continue</span>
+                  <Btn onClick={() => currentInput.trim() && submitAnswer(currentInput.trim())} disabled={!currentInput.trim()}>Continue</Btn>
+                </div>
+                <button onClick={() => submitAnswer("Not provided")}
+                  style={{ background: "none", border: "none", color: C.textLight, fontSize: 13, fontWeight: 500, marginTop: 16, textDecoration: "underline", cursor: "pointer", display: "block", fontFamily: FF }}>
+                  Skip this question
+                </button>
+              </>
+            )}
 
-        {q && q.type === "multi" && (
-          <>
-            <div style={{ display: "flex", flexDirection: "column", gap: 12, marginBottom: 20 }}>
-              {q.options.map(opt => {
-                const sel = currentMulti.includes(opt);
-                return (
-                  <button key={opt} onClick={() => setCurrentMulti(sel ? currentMulti.filter(o => o !== opt) : [...currentMulti, opt])} style={{ background: sel ? C.accent : C.white, border: "1.5px solid " + (sel ? C.accent : C.border), borderRadius: 4, color: sel ? C.white : C.text, fontSize: 16, fontWeight: 500, padding: "14px 18px", textAlign: "left", lineHeight: 1.4, cursor: "pointer", transition: "all 0.15s", fontFamily: FF }}>
-                    {sel && <span style={{ marginRight: 10 }}>✓</span>}{opt}
+            {q.type === "choice" && (
+              <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                {q.options.map(opt => (
+                  <button key={opt} onClick={() => submitAnswer(opt)}
+                    onMouseEnter={() => setHoveredChoice(opt)}
+                    onMouseLeave={() => setHoveredChoice(null)}
+                    style={{ background: hoveredChoice === opt ? C.accent : C.white, border: "1.5px solid " + (hoveredChoice === opt ? C.accent : C.border), borderRadius: 4, color: hoveredChoice === opt ? C.white : C.text, fontSize: 16, fontWeight: 500, padding: "14px 18px", textAlign: "left", lineHeight: 1.4, cursor: "pointer", transition: "all 0.15s", fontFamily: FF }}>
+                    {opt}
                   </button>
-                );
-              })}
-            </div>
-            <Btn onClick={() => currentMulti.length > 0 && submitAnswer(currentMulti)} disabled={currentMulti.length === 0}>Continue</Btn>
+                ))}
+              </div>
+            )}
           </>
         )}
       </div>
