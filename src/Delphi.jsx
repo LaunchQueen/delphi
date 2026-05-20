@@ -569,28 +569,60 @@ Be direct, honest, and specific. You work for the buyer, not the vendor. Never h
 
 Use ONLY these exact section headers, in this order:
 ## What We Heard
-## Tool-by-Tool Assessment
-## What Your Organization Will Need
-## Questions to Ask Each Vendor
-## Red Flags to Watch For
+## Your Shortlist, Assessed
+## Readiness Score
+## What You Should Know
+## Questions to Ask in Your Next Demo
 ## Our Recommendation
 ## Sources
 
 SECTION REQUIREMENTS:
 
-**What We Heard** — Synthesize the buyer's situation in 3-4 sentences. This is a senior analyst's read of their real situation, not a playback of their answers.
+**What We Heard** — Write a 3-5 sentence read of this buyer's real situation. This is NOT a summary of their answers. It is a senior adviser speaking directly to someone who knows their business — reading between the lines, naming what actually matters, and setting the stage for the recommendation. Start from what they told you but arrive somewhere they haven't articulated yet. Make them feel like someone who knows this space deeply actually listened. Do not start with "Based on what you shared" or any similar filler opener. Just say it.
 
-**Tool-by-Tool Assessment** — For each tool: what it actually does well, what it struggles with, typical implementation timeline, real pricing if known, and what kind of org it fits best. Be specific.
+Immediately after the summary paragraph, write a recommendation table in this exact format:
+| Tool | Budget Fit | Readiness Match | Our Take |
+Include every tool on their shortlist. "Our Take" should be one sharp sentence — the bottom line on that tool for this specific buyer. This table is what an executive skims before reading the rest of the report. Make it worth skimming.
 
-**What Your Organization Will Need** — Based on their answers: what specifically will they need to prepare, invest in, or change. Tied directly to what they told you. No generic advice.
+**Your Shortlist, Assessed** — Write the detailed assessment for EVERY tool on the shortlist — not just the first one. Every single tool gets its own subsection with: what it actually does well, what it struggles with, typical implementation timeline, real pricing if known, integration requirements with their stated CRM and MAP, and what kind of org it fits best. If a tool exceeds budget, include it but label it clearly as above their stated budget range. Be specific. No generic vendor marketing language.
 
-**Questions to Ask Each Vendor** — 5-7 sharp questions vendors often dodge or answer vaguely. Make them specific to this category and this buyer's situation.
+**Readiness Score** — This is the most important section. Structure in this exact order:
+1. Write OVERALL READINESS: X/5 as the first line (where X is a number 1-5 based on their answers)
+2. Then write the dimensional summary table: | Dimension | Score | Status |
+3. Then write the How We Score Readiness methodology explanation
+4. Then write the detailed gap analysis for each dimension
 
-**Red Flags to Watch For** — Specific warning signs during demos and sales conversations for this category. Name names when warranted.
+How We Score Readiness:
+Your readiness score shows how prepared your organization is to implement and get value from this tool. Each of six dimensions is scored 1 to 5. Your overall score is the average.
+1 to 2: Serious gaps — address before purchasing
+3: Some gaps — manageable with the right preparation
+4 to 5: Well positioned — strong foundation for success
 
-**Our Recommendation** — One clear recommendation based on this specific buyer's situation. If none of the tools are a good fit, say so directly.
+The six dimensions:
+1. Data Readiness — do you have the data quality and structure this tool requires
+2. Ops Capacity — do you have people and time to implement and manage this tool
+3. Sales and Marketing Alignment — are the teams aligned on goals and process
+4. Change Management — is your organization ready to change the processes this tool requires
+5. Integration Readiness — does your existing stack support the integrations this tool needs
+6. Executive Sponsorship — is there a named leader who owns this initiative
 
-**Sources** — List the key reference sources for this report. Include vendor documentation pages, G2 and Gartner Peer Insights profiles, and category-specific research sources. Format as a simple list with URLs. These are starting points for the buyer's own verification — not footnotes.
+Your score shows where you have alignment and where you have gaps. Each gap includes what it means in practice and what to do about it.
+
+**What You Should Know** — The things vendors won't tell you. Specific, practical, honest. No generic advice.
+
+**Questions to Ask in Your Next Demo** — 5-7 sharp questions that vendors often dodge or answer vaguely. Specific to this category and this buyer's situation.
+
+**Our Recommendation** — One tool. One decision. Pick the tool that fits this buyer's actual situation — their budget, their team, their readiness — right now. Not a phased approach. Not "start with X and upgrade to Y later." That is not a recommendation, that is a cop-out that will cost them twice as much money and create organizational fatigue. If the tools on their shortlist don't fit their budget or readiness, say that directly and explain what needs to be true before they buy anything. Never recommend a tool as a stepping stone to a different tool — if the stepping stone tool isn't right for them long term, don't recommend it.
+
+**Sources** — List key reference sources for this report. Format each source as a plain label on one line followed by the plain URL on the next line. Do NOT use markdown link syntax like [text](url). Just write the name, then the URL underneath it. Example:
+G2 ABM Category Reviews
+https://www.g2.com/categories/account-based-marketing
+
+ABSOLUTE RULES:
+- Never use the word "honest" or "honestly"
+- Never write consultant shapes everything below or any similar filler phrase
+- Everything must be specific to what this buyer told you — no generic advice
+- Write in plain, direct language. No filler. No inflation. No hedging.
 
 Tone: Direct. Honest. Independent. No filler. No hedging.`;
 
@@ -602,26 +634,30 @@ Use ONLY these exact section headers, in this order:
 ## What We Heard
 ## Stack Compatibility Assessment
 ## Integration Readiness
-## What Your Team Will Need to Do
+## What You Should Know
 ## Questions to Ask Before You Integrate
 ## Our Compatibility Verdict
 ## Sources
 
 SECTION REQUIREMENTS:
 
-**What We Heard** — Synthesize the buyer's current stack and situation in 3-4 sentences.
+**What We Heard** — Write a 3-5 sentence read of this buyer's real stack situation. Not a summary of their answers — a senior adviser's take on what the stack tells you about their readiness, their risks, and what's actually going to matter when they try to add something new. Read between the lines. Make them feel like someone who knows this space actually understood what they were describing.
 
-**Stack Compatibility Assessment** — For each tool on the shortlist: compatibility with their current stack, score each integration dimension 1-5, flag known integration failures or common problems.
+Immediately after the summary paragraph, write a compatibility table in this exact format:
+| Tool | Stack Compatibility | Integration Complexity | Risk Level | Our Take |
+Include every tool on their shortlist. "Our Take" should be one sharp sentence — the bottom line on whether this tool fits their stack right now. This table is what an executive skims first.
 
-**Integration Readiness** — Assess on five dimensions: Integration Ownership Clarity, Current Stack Health, Data Model Maturity, Team Capacity, Historical Integration Track Record. Score 1-5 each, explain, say what to do about it.
+**Stack Compatibility Assessment** — Open with a comparison table: Tool | CRM Compatibility | MAP Compatibility | Integration Type | Complexity | Risk Level. Then for each tool on the shortlist: assess compatibility with their current stack, score each integration dimension 1-5, and flag any known integration failures or common problems.
 
-**What Your Team Will Need to Do** — Specific concrete actions before, during, and after implementation. Tied directly to their answers.
+**Integration Readiness** — Assess the buyer's organization on five dimensions: Integration Ownership Clarity, Current Stack Health, Data Model Maturity, Team Capacity for New Integrations, Historical Integration Track Record. For each: score 1-5, write DIMENSION NAME: X/5, explain what it means, and say what they should do about it.
 
-**Questions to Ask Before You Integrate** — 5-7 sharp integration-specific questions vendors avoid answering clearly.
+**What You Should Know** — The things vendors won't tell you about integrations in this category. Specific and practical.
 
-**Our Compatibility Verdict** — Direct verdict on whether each tool is a realistic fit. If no, say so and explain why.
+**Questions to Ask Before You Integrate** — 5-7 sharp questions about integration specifically. Questions vendors often avoid answering clearly.
 
-**Sources** — List key reference sources: vendor integration documentation, known compatibility guides, G2 and Gartner Peer Insights profiles. Format as a simple list with URLs.
+**Our Compatibility Verdict** — A direct verdict on whether each tool is a realistic fit given their stack and team capacity. If the answer is no for a tool, say so clearly and explain why.
+
+**Sources** — List key reference sources: vendor integration documentation, known compatibility guides, G2 and Gartner Peer Insights profiles. Format each source as a plain label on one line followed by the plain URL on the next line. Do NOT use markdown link syntax like [text](url). Just write the name, then the URL underneath it.
 
 Tone: Direct. Honest. Independent. No filler.`;
 
@@ -749,6 +785,23 @@ function renderContent(content) {
       }
     }
 
+    // Markdown link syntax [label](url) — render as clickable link
+    if (line.trim().match(/^\[.+\]\(https?:\/\/.+\)/)) {
+      const match = line.trim().match(/^\[(.+)\]\((https?:\/\/.+)\)/);
+      if (match) {
+        elements.push(
+          <div key={i} style={{ display: "flex", gap: 10, marginBottom: 8 }}>
+            <span style={{ color: C.accent, flexShrink: 0 }}>—</span>
+            <a href={match[2]} target="_blank" rel="noopener noreferrer"
+              style={{ color: C.accent, fontSize: 15, fontFamily: FF, wordBreak: "break-all", textDecoration: "underline" }}>
+              {match[1]}
+            </a>
+          </div>
+        );
+        i++; continue;
+      }
+    }
+
     // URL detection for Sources section
     if (line.trim().match(/^https?:\/\//)) {
       const url = line.trim();
@@ -776,6 +829,29 @@ function renderContent(content) {
         </div>
       );
       i++; continue;
+    }
+
+    // Score card — OVERALL READINESS: X/5
+    if (/^OVERALL (READINESS|COMPATIBILITY):/i.test(line)) {
+      const match = line.match(/(\d(?:\.\d)?)\s*\/\s*5/);
+      const score = match ? parseFloat(match[1]) : null;
+      if (score !== null) {
+        const color = score <= 2 ? C.red : score <= 3 ? C.amber : C.accent;
+        const label = score <= 2 ? "Needs attention before purchasing" : score <= 3 ? "Proceed with preparation" : "Well positioned";
+        elements.push(
+          <div key={i} style={{ background: color, borderRadius: 8, padding: "24px 28px", margin: "16px 0 24px", display: "flex", alignItems: "center", gap: 20 }}>
+            <div style={{ textAlign: "center", flexShrink: 0 }}>
+              <div style={{ fontSize: 52, fontWeight: 700, color: C.white, lineHeight: 1, fontFamily: FFD }}>{score}</div>
+              <div style={{ fontSize: 12, color: "rgba(255,255,255,0.8)", fontWeight: 600, letterSpacing: 1 }}>OUT OF 5</div>
+            </div>
+            <div>
+              <div style={{ fontSize: 18, fontWeight: 700, color: C.white, marginBottom: 4, fontFamily: FFD }}>{label}</div>
+              <div style={{ fontSize: 14, fontWeight: 500, color: "rgba(255,255,255,0.85)", lineHeight: 1.5 }}>The dimensional breakdown below shows where you have alignment and where you have gaps.</div>
+            </div>
+          </div>
+        );
+        i++; continue;
+      }
     }
 
     if (line.startsWith("### ")) {
@@ -813,12 +889,12 @@ function renderContent(content) {
 
 // ─── SECTION ICONS ────────────────────────────────────────────────────────────
 const EVAL_ICONS = {
-  "What We Heard": "◎", "Tool-by-Tool Assessment": "◈", "What Your Organization Will Need": "◐",
-  "Questions to Ask Each Vendor": "◇", "Red Flags to Watch For": "◆", "Our Recommendation": "●", "Sources": "○"
+  "What We Heard": "◎", "Your Shortlist, Assessed": "◈", "Readiness Score": "◐",
+  "What You Should Know": "◆", "Questions to Ask in Your Next Demo": "◇", "Our Recommendation": "●", "Sources": "○"
 };
 const STACK_ICONS = {
   "What We Heard": "◎", "Stack Compatibility Assessment": "◈", "Integration Readiness": "◐",
-  "What Your Team Will Need to Do": "◆", "Questions to Ask Before You Integrate": "◇", "Our Compatibility Verdict": "●", "Sources": "○"
+  "What You Should Know": "◆", "Questions to Ask Before You Integrate": "◇", "Our Compatibility Verdict": "●", "Sources": "○"
 };
 
 // ─── SHARED UI COMPONENTS ─────────────────────────────────────────────────────
