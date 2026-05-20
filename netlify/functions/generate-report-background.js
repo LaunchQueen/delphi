@@ -1,3 +1,7 @@
+import { getStore } from "@netlify/blobs";
+
+const ANTHROPIC_URL = "https://api.anthropic.com/v1/messages";
+
 const store = () => getStore({
   name: "reports",
   siteID: process.env.NETLIFY_SITE_ID,
