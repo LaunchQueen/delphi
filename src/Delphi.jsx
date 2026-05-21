@@ -1130,14 +1130,18 @@ export default function Delphi({ paymentStatus, startCheckout, onHome }) {
   const generateReport = async (finalAnswers) => {
     setStep("generating");
     try {
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 290000);
       const res = await fetch("/api/generate-report", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        signal: controller.signal,
         body: JSON.stringify({
           system: reportType === "stack_fit" ? STACK_PROMPT : EVAL_PROMPT,
           prompt: reportType === "stack_fit" ? buildStackPrompt(finalAnswers) : buildEvalPrompt(finalAnswers),
         }),
       });
+      clearTimeout(timeout);
       const data = await res.json();
       if (!data.text) throw new Error("empty");
       const sections = parseReport(data.text, reportType);
