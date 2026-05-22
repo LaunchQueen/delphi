@@ -584,6 +584,7 @@ READING THE BUYER'S ANSWERS:
 - Never flag problems the buyer has already told you are solved or nearly solved.
 - Never make assumptions about what a buyer does not have. Work only from what they told you.
 - If a buyer says they have dedicated resources for something, do not flag that thing as a resource risk.
+- If a buyer describes a sequenced plan — selecting a tool, then signing, then beginning implementation after a known dependency resolves — recognize that as organized planning, not a risk. Do not flag the sequencing as a problem.
 
 TONE:
 - Matter-of-fact. State facts without assigning emotional weight.
@@ -631,11 +632,11 @@ Immediately after the summary paragraph, write:
 4. How We Score Readiness methodology
 5. Detailed analysis per dimension
 
-How We Score Readiness:
-Each of six dimensions is scored 1 to 5. Your overall score is the average.
-1 to 2: Address this before go-live
-3: Manageable with the right preparation
-4 to 5: Strong foundation
+How We Score Readiness — write this as a compact reference table immediately after the dimensional summary table:
+| Score | What It Means |
+| 1–2 | Address before go-live |
+| 3 | Manageable with preparation |
+| 4–5 | Strong foundation |
 
 The six dimensions:
 1. Data Readiness — does your data quality and structure meet what this tool requires
@@ -647,7 +648,19 @@ The six dimensions:
 
 For each dimension: state the score, describe the current situation factually, explain what the tool requires from this dimension, give one concrete action if there is a gap. Account for stated timelines.
 
-**What You Should Know** — Vendor-specific gotchas and hidden requirements for the tools on the shortlist only. Things the vendor's sales team will not volunteer. Every point must be directly tied to a specific tool on the shortlist and this buyer's specific situation. No general ABM education. No implementation advice that applies to any tool. No references to tools not on the shortlist.
+**What You Should Know** — Vendor-specific gotchas and hidden requirements for the tools on the shortlist only. Things the vendor's sales team will not volunteer.
+
+Structure this section with thematic headers based on what you find. Examples of appropriate headers: Cost of Ownership, Integration Considerations, Implementation Considerations, Contract Considerations, Data Requirements. Use whatever headers fit the actual content — do not force content into headers that don't fit.
+
+Every point must be:
+- Directly tied to a specific tool on the shortlist and this buyer's specific situation
+- A fact the vendor will not proactively share
+- Attributed to a named source inline where possible. If citing Vendr, name it as "Vendr (vendr.com)" and link it.
+- Not a problem the buyer already told you is solved
+- Not a reference to any tool not on the shortlist
+- Not general ABM education or implementation advice that applies to any tool
+
+Do not invent stack problems. If the buyer said Marketo is pulling from Salesforce and writing back — that is working. Do not describe it as unstable or still syncing.
 
 **Questions to Ask in Your Next Demo** — 5-7 questions structured as:
 
@@ -971,25 +984,46 @@ function renderContent(content) {
       i++; continue;
     }
 
-    // Field labels in shortlist sections — "What it does well:", "Implementation timeline:", etc.
-    const FIELD_LABELS = ["What it does well:", "What it does not do well:", "Implementation timeline:", "Pricing:", "Integration requirements:", "Bottom line:", "Ask All Vendors:", "Who to ask:"];
+    // Field labels in shortlist sections — rendered as bold labels on their own line
+    const FIELD_LABELS = ["What it does well:", "What it does not do well:", "Implementation timeline:", "Pricing:", "Integration requirements:", "Bottom line:"];
     const matchedLabel = FIELD_LABELS.find(label => line.trim().startsWith(label));
     if (matchedLabel) {
       const rest = line.trim().slice(matchedLabel.length).trim();
       elements.push(
-        <div key={i} style={{ marginTop: 16, marginBottom: 6 }}>
-          <span style={{ fontSize: 12, fontWeight: 700, letterSpacing: 1.5, textTransform: "uppercase", color: C.accent, fontFamily: FF }}>{matchedLabel.replace(":", "")} </span>
-          {rest && <span style={{ fontSize: 16, fontWeight: 500, color: C.textMid, fontFamily: FF }}>{rest}</span>}
+        <div key={i} style={{ marginTop: 18, marginBottom: 4 }}>
+          <p style={{ fontSize: 13, fontWeight: 700, letterSpacing: 1, textTransform: "uppercase", color: C.accent, margin: "0 0 4px", fontFamily: FF }}>{matchedLabel.replace(":", "")}</p>
+          {rest && <p style={{ fontSize: 16, fontWeight: 500, color: C.textMid, margin: 0, lineHeight: 1.75, fontFamily: FF }}>{rest}</p>}
         </div>
+      );
+      i++; continue;
+    }
+
+    // "Ask All Vendors:" section header
+    if (line.trim() === "Ask All Vendors:") {
+      elements.push(
+        <p key={i} style={{ fontSize: 13, fontWeight: 700, letterSpacing: 1.5, textTransform: "uppercase", color: C.accent, margin: "28px 0 12px", fontFamily: FF }}>Ask All Vendors</p>
       );
       i++; continue;
     }
 
     // "Ask [Vendor] specifically:" dynamic label
     if (line.trim().match(/^Ask .+ specifically:/)) {
+      const label = line.trim().replace(":", "");
       elements.push(
-        <p key={i} style={{ fontSize: 12, fontWeight: 700, letterSpacing: 1.5, textTransform: "uppercase", color: C.accent, margin: "20px 0 8px", fontFamily: FF }}>{line.trim()}</p>
+        <p key={i} style={{ fontSize: 13, fontWeight: 700, letterSpacing: 1.5, textTransform: "uppercase", color: C.accent, margin: "28px 0 12px", fontFamily: FF }}>{label}</p>
       );
+      i++; continue;
+    }
+
+    // Vendor section header in shortlist: "Tool | Score | Budget | Readiness"
+    if (line.trim().match(/^.+\|\s*\d/) && !line.trim().startsWith("|")) {
+      elements.push(
+        <div key={i} style={{ background: C.accent, borderRadius: "6px 6px 0 0", padding: "12px 18px", marginTop: 32 }}>
+          <p style={{ fontSize: 15, fontWeight: 700, color: C.white, margin: 0, fontFamily: FF }}>{line.trim()}</p>
+        </div>
+      );
+      // Open a visual card for this vendor section
+      elements.push(<div key={`card-${i}`} style={{ border: "1px solid " + C.border, borderTop: "none", borderRadius: "0 0 6px 6px", padding: "16px 20px 20px", marginBottom: 8 }}></div>);
       i++; continue;
     }
     if (line.match(/^\*\*(.+)\*\*$/)) {
@@ -1005,11 +1039,13 @@ function renderContent(content) {
       );
       i++; continue;
     }
-    if (/^\d+\./.test(line)) {
+    if (/^\d+\./.test(line) && !line.trim().match(/^.+\|\s*\d/)) {
+      const num = line.match(/^\d+/)[0];
+      const text = line.replace(/^\d+\.\s*/, "").replace(/\*\*(.*?)\*\*/g, "$1");
       elements.push(
-        <div key={i} style={{ display: "flex", gap: 12, marginBottom: 10 }}>
-          <span style={{ color: C.accent, flexShrink: 0, minWidth: 20, fontSize: 14, fontFamily: FF }}>{line.match(/^\d+/)[0]}.</span>
-          <p style={{ fontSize: 16, fontWeight: 500, lineHeight: 1.8, color: C.textMid, margin: 0, fontFamily: FF }}>{line.replace(/^\d+\.\s/, "").replace(/\*\*(.*?)\*\*/g, "$1")}</p>
+        <div key={i} style={{ display: "flex", gap: 16, marginBottom: 12, alignItems: "flex-start" }}>
+          <span style={{ color: C.accent, flexShrink: 0, fontSize: 15, fontWeight: 700, fontFamily: FF, minWidth: 22, lineHeight: 1.75 }}>{num}.</span>
+          <p style={{ fontSize: 16, fontWeight: 500, lineHeight: 1.75, color: C.textMid, margin: 0, fontFamily: FF }}>{text}</p>
         </div>
       );
       i++; continue;
@@ -1324,7 +1360,7 @@ export default function Delphi({ paymentStatus, startCheckout, onHome }) {
           <button onClick={restart} style={{ background: "none", border: "1px solid " + C.border, borderRadius: 4, color: C.textLight, fontSize: 12, fontWeight: 700, padding: "9px 12px", letterSpacing: 1.5, textTransform: "uppercase", fontFamily: FF }}>New Report</button>
         </div>
 
-        <div style={{ flex: 1, padding: "40px 48px", maxWidth: 740, overflowY: "auto" }}>
+        <div style={{ flex: 1, padding: "40px 56px 40px 48px", maxWidth: 780, overflowY: "auto" }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 28, paddingBottom: 22, borderBottom: "1px solid " + C.border }}>
             <h2 style={{ fontSize: 26, fontWeight: 700, color: C.text, fontFamily: FFD }}>{section?.title}</h2>
             <span style={{ fontSize: 13, fontWeight: 500, color: C.textLight, marginTop: 6 }}>{activeSection + 1} / {reportSections.length}</span>
@@ -1347,6 +1383,7 @@ export default function Delphi({ paymentStatus, startCheckout, onHome }) {
             )}
           </div>
           <p style={{ fontSize: 13, fontWeight: 500, color: C.textLight, marginTop: 36, paddingTop: 20, borderTop: "1px solid " + C.border, lineHeight: 1.7 }}>Delphi is funded by subscribers, not vendors. No platform pays for placement, recommendation, or access. Ever.</p>
+          <p style={{ fontSize: 12, fontWeight: 400, color: C.textLight, marginTop: 12, lineHeight: 1.7 }}>Delphi reports are generated using AI and publicly available information. They are for informational purposes only and do not constitute professional, legal, or financial advice. Vendor pricing, product capabilities, and market positioning change frequently — verify all claims directly with vendors before making any purchasing decision. Delphi is not responsible for outcomes resulting from decisions made based on this report.</p>
         </div>
       </div>
     );
