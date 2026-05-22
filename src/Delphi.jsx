@@ -940,10 +940,12 @@ function renderContent(content, sectionTitle) {
     }
 
     // ── VENDOR HEADER: "ToolName | Score | Budget | Readiness" ───────
-    if (!isQuestionsSection && line.trim().match(/^[A-Za-z0-9\s]+\s*\|\s*\d\/5/) && !line.trim().startsWith("|")) {
+    if (!isQuestionsSection && line.trim().match(/^[A-Za-z0-9\s]+\s*\|\s*\d+\/5/i) && !line.trim().startsWith("|")) {
       if (inVendorCard) flushVendorCard(i);
       cardHeader = line.trim();
-      cardIsRecommended = elements.length === 0 || (elements.length > 0 && cardHeader !== null && elements.filter(e => e && e.key && e.key.toString().startsWith("vendor-")).length === 0);
+      // First vendor card is recommended
+      const existingCards = elements.filter(e => e && e.key && String(e.key).startsWith("vendor-"));
+      cardIsRecommended = existingCards.length === 0;
       inVendorCard = true;
       i++; continue;
     }
@@ -985,13 +987,14 @@ function renderContent(content, sectionTitle) {
 
     // ── QUESTIONS SECTION LOGIC ──────────────────────────────────────
     if (isQuestionsSection) {
-      // Group headers
-      const isAskAll = line.trim() === "Ask All Vendors:" || line.trim() === "Ask All Vendors";
-      const isAskVendor = line.trim().match(/^Ask .+ specifically:?$/);
+      // Group headers — handle plain text and **bold** variants
+      const cleanLine = line.trim().replace(/^\*+/, "").replace(/\*+$/, "");
+      const isAskAll = cleanLine === "Ask All Vendors:" || cleanLine === "Ask All Vendors";
+      const isAskVendor = cleanLine.match(/^Ask .+ specifically:?$/) !== null;
       if (isAskAll || isAskVendor) {
         if (inQuestionGroup) flushQuestionGroup(i);
         questionCounter = 0;
-        questionGroupHeader = line.trim().replace(/:$/, "");
+        questionGroupHeader = cleanLine.replace(/:$/, "");
         inQuestionGroup = true;
         i++; continue;
       }
@@ -1004,9 +1007,12 @@ function renderContent(content, sectionTitle) {
         let j = i + 1;
         while (j < lines.length && !lines[j].trim()) j++;
         let guidance = null;
-        if (j < lines.length && lines[j].trim().startsWith("What to listen for:")) {
-          guidance = lines[j].trim().replace("What to listen for:", "").trim();
-          j++;
+        if (j < lines.length) {
+          const nextLine = lines[j].trim().replace(/^\*+/, "").replace(/\*+$/, "");
+          if (nextLine.startsWith("What to listen for:")) {
+            guidance = nextLine.replace("What to listen for:", "").trim();
+            j++;
+          }
         }
         const isLast = (() => {
           let k = j;
