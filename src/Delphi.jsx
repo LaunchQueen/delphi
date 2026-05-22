@@ -688,8 +688,23 @@ For each tool NOT recommended, write one sentence:
 [Tool] is [genuine strength] but is not the best fit for your scenario because [specific reason tied to this buyer's situation].
 No phased approaches. No "revisit in X months." One clear sentence per non-recommended tool.
 
-**Sources** — Use web search to find real URLs. Only include URLs you retrieved in this session. Do not fabricate URLs. If you cannot find a real URL for something, omit it.
-Include: G2 product-specific review pages, Gartner Magic Quadrant or Forrester Wave for this category, vendor knowledge bases and implementation guides.
+**Sources** — Use web search to find real URLs. Only include URLs you retrieved in this session. Do not fabricate URLs. If you cannot find a real URL, omit it.
+
+Search specifically for:
+- G2 product review pages: search "site:g2.com [toolname] reviews"
+- Gartner Magic Quadrant or Forrester Wave for this category
+- Vendor knowledge base / documentation. Known starting points:
+  - Demandbase: support.demandbase.com or docs.demandbase.com
+  - 6sense: support.6sense.com or docs.6sense.com
+  - Terminus: support.terminus.com or help.terminus.com
+  - Outreach: support.outreach.io or university.outreach.io
+  - Salesloft: support.salesloft.com or help.salesloft.com
+  - Gong: help.gong.io or support.gong.io
+  - ZoomInfo: university.zoominfo.com or help.zoominfo.com
+  - Apollo: knowledge.apollo.io or help.apollo.io
+  - HubSpot: knowledge.hubspot.com
+  - Marketo: experienceleague.adobe.com/docs/marketo
+
 Do not include: marketing pages, pricing pages, homepage URLs.
 Note at the top: G2 user reviews were referenced in this assessment.
 Format: plain label on one line, plain URL on next line. No markdown link syntax.`;
@@ -851,29 +866,35 @@ function renderContent(content, sectionTitle) {
   // State for vendor card grouping
   let inVendorCard = false;
   let cardContent = [];
-  let cardHeader = null;
+  let cardToolName = null;
+  let cardMeta = null;
   let cardIsRecommended = false;
   let questionCounter = 0;
   let inQuestionGroup = false;
   let questionGroupItems = [];
   let questionGroupHeader = null;
+  let vendorCardCount = 0;
 
   const flushVendorCard = (key) => {
-    if (!cardHeader) return;
+    if (!cardToolName) return;
     elements.push(
       <div key={`vendor-${key}`} style={{ marginBottom: 28 }}>
-        <div style={{ background: C.accent, borderRadius: "6px 6px 0 0", padding: "12px 20px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-          <span style={{ fontSize: 16, fontWeight: 700, color: C.white, fontFamily: FFD }}>{cardHeader}</span>
+        <div style={{ background: C.accent, borderRadius: "6px 6px 0 0", padding: "14px 20px", display: "flex", alignItems: "flex-start", justifyContent: "space-between" }}>
+          <div>
+            <p style={{ fontSize: 18, fontWeight: 700, color: C.white, fontFamily: FFD, margin: "0 0 4px" }}>{cardToolName}</p>
+            {cardMeta && <p style={{ fontSize: 13, color: "rgba(255,255,255,0.75)", margin: 0, fontFamily: FF }}>{cardMeta}</p>}
+          </div>
           {cardIsRecommended && (
-            <span style={{ background: "rgba(255,255,255,0.2)", borderRadius: 4, padding: "3px 10px", fontSize: 11, color: C.white, letterSpacing: 1.5, textTransform: "uppercase", fontWeight: 700 }}>Recommended</span>
+            <span style={{ background: "rgba(255,255,255,0.2)", borderRadius: 4, padding: "3px 10px", fontSize: 11, color: C.white, letterSpacing: 1.5, textTransform: "uppercase", fontWeight: 700, flexShrink: 0, marginLeft: 12 }}>Recommended</span>
           )}
         </div>
-        <div style={{ border: "0.5px solid " + C.border, borderTop: "none", borderRadius: "0 0 6px 6px", padding: "4px 0" }}>
+        <div style={{ border: "1px solid " + C.border, borderTop: "none", borderRadius: "0 0 6px 6px", padding: "4px 0" }}>
           {cardContent}
         </div>
       </div>
     );
-    cardHeader = null;
+    cardToolName = null;
+    cardMeta = null;
     cardContent = [];
     cardIsRecommended = false;
     inVendorCard = false;
@@ -917,6 +938,24 @@ function renderContent(content, sectionTitle) {
       if (rows.length >= 2) {
         const headers = rows[0].split("|").map(h => h.trim()).filter(Boolean);
         const data = rows.slice(1).map(r => r.split("|").map(c => c.trim()).filter(Boolean));
+
+        // Compact legend for How We Score Readiness table
+        const isLegendTable = headers.length === 2 && headers[0].toLowerCase().includes("score") && headers[1].toLowerCase().includes("mean");
+        if (isLegendTable) {
+          elements.push(
+            <div key={i} style={{ display: "flex", gap: 16, flexWrap: "wrap", margin: "8px 0 20px", padding: "10px 14px", background: C.card, borderRadius: 6, border: "1px solid " + C.border }}>
+              {data.map((row, j) => (
+                <div key={j} style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                  <span style={{ fontSize: 13, fontWeight: 700, color: C.accent, fontFamily: FF }}>{row[0]}</span>
+                  <span style={{ fontSize: 13, color: C.textMid, fontFamily: FF }}>— {row[1]}</span>
+                  {j < data.length - 1 && <span style={{ color: C.border, marginLeft: 8 }}>·</span>}
+                </div>
+              ))}
+            </div>
+          );
+          i = j; continue;
+        }
+
         elements.push(
           <div key={i} style={{ overflowX: "auto", margin: "12px 0" }}>
             <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 14, fontFamily: FF }}>
@@ -940,12 +979,13 @@ function renderContent(content, sectionTitle) {
     }
 
     // ── VENDOR HEADER: "ToolName | Score | Budget | Readiness" ───────
-    if (!isQuestionsSection && line.trim().match(/^[A-Za-z0-9\s]+\s*\|\s*\d+\/5/i) && !line.trim().startsWith("|")) {
+    if (!isQuestionsSection && line.trim().match(/^[A-Za-z0-9][A-Za-z0-9\s.]*\s*\|\s*\d+\/5/i) && !line.trim().startsWith("|")) {
       if (inVendorCard) flushVendorCard(i);
-      cardHeader = line.trim();
-      // First vendor card is recommended
-      const existingCards = elements.filter(e => e && e.key && String(e.key).startsWith("vendor-"));
-      cardIsRecommended = existingCards.length === 0;
+      const parts = line.trim().split("|").map(p => p.trim());
+      cardToolName = parts[0];
+      cardMeta = parts.slice(1).join(" · ");
+      cardIsRecommended = vendorCardCount === 0;
+      vendorCardCount++;
       inVendorCard = true;
       i++; continue;
     }
@@ -1025,7 +1065,7 @@ function renderContent(content, sectionTitle) {
               <span style={{ fontSize: 15, fontWeight: 700, color: C.accent, flexShrink: 0, minWidth: 22, lineHeight: 1.75 }}>{questionCounter}.</span>
               <div style={{ flex: 1 }}>
                 <p style={{ fontSize: 15, color: C.text, margin: "0 0 6px", lineHeight: 1.75, fontFamily: FF }}>{questionText}</p>
-                {guidance && <p style={{ fontSize: 13, color: C.textLight, margin: 0, lineHeight: 1.6, fontStyle: "italic", fontFamily: FF }}>{guidance}</p>}
+                {guidance && <p style={{ fontSize: 15, color: C.textLight, margin: 0, lineHeight: 1.6, fontStyle: "italic", fontFamily: FF }}>{guidance}</p>}
               </div>
             </div>
           </div>
@@ -1433,7 +1473,7 @@ export default function Delphi({ paymentStatus, startCheckout, onHome }) {
         </div>
 
         <div style={{ flex: 1, padding: "40px 56px 40px 48px", maxWidth: 780, overflowY: "auto" }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 28, paddingBottom: 22, borderBottom: "1px solid " + C.border }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 28, paddingBottom: 22, borderBottom: "2px solid " + C.borderDark }}>
             <h2 style={{ fontSize: 26, fontWeight: 700, color: C.text, fontFamily: FFD }}>{section?.title}</h2>
             <span style={{ fontSize: 13, fontWeight: 500, color: C.textLight, marginTop: 6 }}>{activeSection + 1} / {reportSections.length}</span>
           </div>
