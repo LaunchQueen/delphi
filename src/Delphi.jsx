@@ -616,14 +616,16 @@ Immediately after the summary paragraph, write:
 - Our Take is one sharp sentence per tool
 - This table is what an executive reads first
 
-**Your Shortlist, Assessed** — Order tools from most recommended to least. For each tool:
-- Open with: Tool name | Score | Budget Fit | Readiness Match
-- What it does well — specific to this buyer's situation only. If a capability is irrelevant to their situation, omit it.
-- What it does not do well — only genuine weaknesses relevant to this buyer. "Requires X" is not a weakness — it is a requirement. State requirements as requirements, not weaknesses.
-- Implementation timeline: X to Y weeks — driven by [specific dependency]. Use weeks, not days.
-- Pricing: state only if verified via web search, flagged as approximate. Otherwise: pricing requires a direct quote from the vendor.
-- Integration requirements with their stated CRM and MAP only.
-- Bottom line: one direct sentence on fit for this buyer.
+**Your Shortlist, Assessed** — Order tools from most recommended to least. For each tool, open with a header line in EXACTLY this format (the renderer depends on it):
+ToolName | X/5 | Budget fit description | Readiness match description
+
+Then write the assessment using these exact field labels on their own lines:
+What it does well:
+What it does not do well:
+Implementation timeline:
+Pricing:
+Integration requirements:
+Bottom line:
 
 **Readiness Score** — Structure in this exact order:
 1. Opening paragraph: 2-3 sentences on what the Readiness Score measures and why this page matters. End after "implement successfully." Do not editorialize further.
@@ -665,18 +667,18 @@ Do not invent stack problems. If the buyer said Marketo is pulling from Salesfor
 **Questions to Ask in Your Next Demo** — 5-7 questions structured as:
 
 Ask All Vendors:
+1. [Question — no quotes]
+What to listen for: [one sentence of guidance, italic tone]
+
+Ask [Vendor A] specifically:
 1. [Question]
 What to listen for: [one sentence]
 
-Ask [Vendor A] specifically:
-2. [Question]
-What to listen for: [one sentence]
-
 Ask [Vendor B] specifically:
-3. [Question]
+1. [Question]
 What to listen for: [one sentence]
 
-No quotes around questions. Numbers align with questions only, not with "What to listen for."
+Numbers restart at 1 for each vendor group. No quotes around questions.
 
 **Our Recommendation** —
 We recommend [Tool Name].
@@ -841,19 +843,71 @@ function parseReport(text, type = "evaluation") {
   return sections;
 }
 
-function renderContent(content) {
+function renderContent(content, sectionTitle) {
   const lines = content.join("\n").split("\n");
   const elements = [];
   let i = 0;
 
+  // State for vendor card grouping
+  let inVendorCard = false;
+  let cardContent = [];
+  let cardHeader = null;
+  let cardIsRecommended = false;
+  let questionCounter = 0;
+  let inQuestionGroup = false;
+  let questionGroupItems = [];
+  let questionGroupHeader = null;
+
+  const flushVendorCard = (key) => {
+    if (!cardHeader) return;
+    elements.push(
+      <div key={`vendor-${key}`} style={{ marginBottom: 28 }}>
+        <div style={{ background: C.accent, borderRadius: "6px 6px 0 0", padding: "12px 20px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+          <span style={{ fontSize: 16, fontWeight: 700, color: C.white, fontFamily: FFD }}>{cardHeader}</span>
+          {cardIsRecommended && (
+            <span style={{ background: "rgba(255,255,255,0.2)", borderRadius: 4, padding: "3px 10px", fontSize: 11, color: C.white, letterSpacing: 1.5, textTransform: "uppercase", fontWeight: 700 }}>Recommended</span>
+          )}
+        </div>
+        <div style={{ border: "0.5px solid " + C.border, borderTop: "none", borderRadius: "0 0 6px 6px", padding: "4px 0" }}>
+          {cardContent}
+        </div>
+      </div>
+    );
+    cardHeader = null;
+    cardContent = [];
+    cardIsRecommended = false;
+    inVendorCard = false;
+  };
+
+  const flushQuestionGroup = (key) => {
+    if (!questionGroupHeader) return;
+    questionCounter = 0;
+    elements.push(
+      <div key={`qgroup-${key}`} style={{ marginBottom: 24 }}>
+        <div style={{ background: C.accent, borderRadius: "6px 6px 0 0", padding: "10px 18px" }}>
+          <span style={{ fontSize: 12, fontWeight: 700, letterSpacing: 1.5, textTransform: "uppercase", color: C.white }}>{questionGroupHeader}</span>
+        </div>
+        <div style={{ border: "0.5px solid " + C.border, borderTop: "none", borderRadius: "0 0 6px 6px", overflow: "hidden" }}>
+          {questionGroupItems}
+        </div>
+      </div>
+    );
+    questionGroupHeader = null;
+    questionGroupItems = [];
+    inQuestionGroup = false;
+  };
+
+  const isQuestionsSection = sectionTitle && (sectionTitle.includes("Questions to Ask") || sectionTitle.includes("Questions to ask"));
+
   while (i < lines.length) {
     const line = lines[i];
     if (!line.trim()) { i++; continue; }
-
     const clean = line.replace(/\*\*(.*?)\*\*/g, "$1");
 
-    // Table
+    // ── TABLE ────────────────────────────────────────────────────────
     if (line.trim().startsWith("|")) {
+      if (inVendorCard) flushVendorCard(i);
+      if (inQuestionGroup) flushQuestionGroup(i);
       const rows = [];
       let j = i;
       while (j < lines.length && lines[j].trim().startsWith("|")) {
@@ -885,53 +939,119 @@ function renderContent(content) {
       }
     }
 
-    // Markdown link syntax [label](url) — render as clickable link
-    if (line.trim().match(/^\[.+\]\(https?:\/\/.+\)/)) {
-      const match = line.trim().match(/^\[(.+)\]\((https?:\/\/.+)\)/);
-      if (match) {
-        elements.push(
-          <div key={i} style={{ display: "flex", gap: 10, marginBottom: 8 }}>
-            <span style={{ color: C.accent, flexShrink: 0 }}>—</span>
-            <a href={match[2]} target="_blank" rel="noopener noreferrer"
-              style={{ color: C.accent, fontSize: 15, fontFamily: FF, wordBreak: "break-all", textDecoration: "underline" }}>
-              {match[1]}
-            </a>
+    // ── VENDOR HEADER: "ToolName | Score | Budget | Readiness" ───────
+    if (!isQuestionsSection && line.trim().match(/^[A-Za-z0-9\s]+\s*\|\s*\d\/5/) && !line.trim().startsWith("|")) {
+      if (inVendorCard) flushVendorCard(i);
+      cardHeader = line.trim();
+      cardIsRecommended = elements.length === 0 || (elements.length > 0 && cardHeader !== null && elements.filter(e => e && e.key && e.key.toString().startsWith("vendor-")).length === 0);
+      inVendorCard = true;
+      i++; continue;
+    }
+
+    // ── FIELD LABELS inside vendor card ─────────────────────────────
+    if (inVendorCard) {
+      const FIELD_LABELS = ["What it does well:", "What it does not do well:", "Implementation timeline:", "Pricing:", "Integration requirements:", "Bottom line:"];
+      const matchedLabel = FIELD_LABELS.find(label => line.trim().startsWith(label));
+      if (matchedLabel) {
+        const rest = line.trim().slice(matchedLabel.length).trim();
+        const isBottomLine = matchedLabel === "Bottom line:";
+        cardContent.push(
+          <div key={`field-${i}`} style={{
+            padding: isBottomLine ? "14px 20px" : "12px 20px 4px",
+            borderTop: isBottomLine ? "0.5px solid " + C.border : "none",
+            marginTop: isBottomLine ? 4 : 0,
+          }}>
+            <p style={{ fontSize: 11, fontWeight: 700, letterSpacing: 1.5, textTransform: "uppercase", color: C.accent, margin: "0 0 4px", fontFamily: FF }}>{matchedLabel.replace(":", "")}</p>
+            {rest && <p style={{ fontSize: 15, color: C.textMid, margin: 0, lineHeight: 1.75, fontFamily: FF, fontStyle: isBottomLine ? "italic" : "normal" }}>{rest}</p>}
           </div>
         );
         i++; continue;
       }
-    }
-
-    // URL detection for Sources section
-    if (line.trim().match(/^https?:\/\//)) {
-      const url = line.trim();
-      elements.push(
-        <div key={i} style={{ marginBottom: 8 }}>
-          <a href={url} target="_blank" rel="noopener noreferrer"
-            style={{ color: C.accent, fontSize: 15, fontFamily: FF, wordBreak: "break-all", textDecoration: "underline" }}>
-            {url}
-          </a>
-        </div>
+      // Regular content inside card
+      if (line.startsWith("- ") || line.startsWith("• ")) {
+        cardContent.push(
+          <div key={`bullet-${i}`} style={{ display: "flex", gap: 10, padding: "2px 20px" }}>
+            <span style={{ color: C.accent, flexShrink: 0 }}>—</span>
+            <p style={{ fontSize: 15, color: C.textMid, margin: 0, lineHeight: 1.75, fontFamily: FF }}>{line.replace(/^[-•]\s/, "")}</p>
+          </div>
+        );
+        i++; continue;
+      }
+      cardContent.push(
+        <p key={`cp-${i}`} style={{ fontSize: 15, color: C.textMid, margin: 0, lineHeight: 1.75, fontFamily: FF, padding: "2px 20px" }}>{clean}</p>
       );
       i++; continue;
     }
 
-    // Source lines with label
+    // ── QUESTIONS SECTION LOGIC ──────────────────────────────────────
+    if (isQuestionsSection) {
+      // Group headers
+      const isAskAll = line.trim() === "Ask All Vendors:" || line.trim() === "Ask All Vendors";
+      const isAskVendor = line.trim().match(/^Ask .+ specifically:?$/);
+      if (isAskAll || isAskVendor) {
+        if (inQuestionGroup) flushQuestionGroup(i);
+        questionCounter = 0;
+        questionGroupHeader = line.trim().replace(/:$/, "");
+        inQuestionGroup = true;
+        i++; continue;
+      }
+
+      // Numbered question inside a group
+      if (inQuestionGroup && /^\d+\./.test(line.trim())) {
+        questionCounter++;
+        const questionText = line.trim().replace(/^\d+\.\s*/, "");
+        // Look ahead for "What to listen for:" on next non-empty line
+        let j = i + 1;
+        while (j < lines.length && !lines[j].trim()) j++;
+        let guidance = null;
+        if (j < lines.length && lines[j].trim().startsWith("What to listen for:")) {
+          guidance = lines[j].trim().replace("What to listen for:", "").trim();
+          j++;
+        }
+        const isLast = (() => {
+          let k = j;
+          while (k < lines.length && !lines[k].trim()) k++;
+          return k >= lines.length || lines[k].trim().match(/^Ask /) || lines[k].trim() === "";
+        })();
+        questionGroupItems.push(
+          <div key={`q-${i}`} style={{ padding: "14px 20px", borderBottom: "0.5px solid " + C.border }}>
+            <div style={{ display: "flex", gap: 14, alignItems: "flex-start" }}>
+              <span style={{ fontSize: 15, fontWeight: 700, color: C.accent, flexShrink: 0, minWidth: 22, lineHeight: 1.75 }}>{questionCounter}.</span>
+              <div style={{ flex: 1 }}>
+                <p style={{ fontSize: 15, color: C.text, margin: "0 0 6px", lineHeight: 1.75, fontFamily: FF }}>{questionText}</p>
+                {guidance && <p style={{ fontSize: 13, color: C.textLight, margin: 0, lineHeight: 1.6, fontStyle: "italic", fontFamily: FF }}>{guidance}</p>}
+              </div>
+            </div>
+          </div>
+        );
+        i = guidance !== null ? j : i + 1;
+        continue;
+      }
+
+      if (inQuestionGroup) {
+        i++; continue;
+      }
+    }
+
+    // ── URLS ─────────────────────────────────────────────────────────
+    if (line.trim().match(/^\[.+\]\(https?:\/\/.+\)/)) {
+      const match = line.trim().match(/^\[(.+)\]\((https?:\/\/.+)\)/);
+      if (match) {
+        elements.push(<div key={i} style={{ display: "flex", gap: 10, marginBottom: 8 }}><span style={{ color: C.accent, flexShrink: 0 }}>—</span><a href={match[2]} target="_blank" rel="noopener noreferrer" style={{ color: C.accent, fontSize: 15, fontFamily: FF, wordBreak: "break-all", textDecoration: "underline" }}>{match[1]}</a></div>);
+        i++; continue;
+      }
+    }
+    if (line.trim().match(/^https?:\/\//)) {
+      elements.push(<div key={i} style={{ marginBottom: 8 }}><a href={line.trim()} target="_blank" rel="noopener noreferrer" style={{ color: C.accent, fontSize: 15, fontFamily: FF, wordBreak: "break-all", textDecoration: "underline" }}>{line.trim()}</a></div>);
+      i++; continue;
+    }
     if (line.trim().match(/^[-•]\s*https?:\/\//)) {
       const url = line.trim().replace(/^[-•]\s*/, "");
-      elements.push(
-        <div key={i} style={{ display: "flex", gap: 10, marginBottom: 8 }}>
-          <span style={{ color: C.accent, flexShrink: 0 }}>—</span>
-          <a href={url} target="_blank" rel="noopener noreferrer"
-            style={{ color: C.accent, fontSize: 15, fontFamily: FF, wordBreak: "break-all", textDecoration: "underline" }}>
-            {url}
-          </a>
-        </div>
-      );
+      elements.push(<div key={i} style={{ display: "flex", gap: 10, marginBottom: 8 }}><span style={{ color: C.accent, flexShrink: 0 }}>—</span><a href={url} target="_blank" rel="noopener noreferrer" style={{ color: C.accent, fontSize: 15, fontFamily: FF, wordBreak: "break-all", textDecoration: "underline" }}>{url}</a></div>);
       i++; continue;
     }
 
-    // Score card — OVERALL READINESS: X/5
+    // ── SCORE CARD ───────────────────────────────────────────────────
     if (/^OVERALL (READINESS|COMPATIBILITY):/i.test(line)) {
       const match = line.match(/(\d(?:\.\d)?)\s*\/\s*5/);
       const score = match ? parseFloat(match[1]) : null;
@@ -954,106 +1074,52 @@ function renderContent(content) {
       }
     }
 
-    // ### subheader — but if it starts with a number, render as a bold dimension header not uppercase
+    // ── SUBHEADERS ───────────────────────────────────────────────────
     if (line.startsWith("### ")) {
       const content = line.replace("### ", "").trim();
-      const isNumbered = /^\d+\./.test(content);
-      elements.push(
-        <p key={i} style={{
-          fontSize: isNumbered ? 16 : 13,
-          fontWeight: 700,
-          letterSpacing: isNumbered ? 0 : 1.5,
-          textTransform: isNumbered ? "none" : "uppercase",
-          color: C.accent,
-          margin: "20px 0 8px",
-          fontFamily: FF
-        }}>{content}</p>
-      );
+      elements.push(<p key={i} style={{ fontSize: 13, fontWeight: 700, letterSpacing: 1.5, textTransform: "uppercase", color: C.accent, margin: "24px 0 8px", fontFamily: FF }}>{content}</p>);
       i++; continue;
     }
 
-    // "What to listen for:" label — render with distinct style
-    if (line.trim().startsWith("What to listen for:")) {
-      const text = line.replace("What to listen for:", "").trim();
-      elements.push(
-        <div key={i} style={{ background: C.card, borderLeft: "3px solid " + C.accent, padding: "8px 14px", marginBottom: 16, borderRadius: "0 4px 4px 0" }}>
-          <span style={{ fontSize: 12, fontWeight: 700, letterSpacing: 1.5, textTransform: "uppercase", color: C.accent, fontFamily: FF }}>What to listen for: </span>
-          <span style={{ fontSize: 15, fontWeight: 500, color: C.textMid, fontFamily: FF }}>{text}</span>
-        </div>
-      );
+    // ── WHAT YOU SHOULD KNOW thematic headers (bold lines) ───────────
+    if (line.match(/^\*\*(.+)\*\*$/) && !line.includes("|")) {
+      elements.push(<p key={i} style={{ fontSize: 15, fontWeight: 700, color: C.text, margin: "20px 0 8px", lineHeight: 1.6, fontFamily: FF, borderBottom: "0.5px solid " + C.border, paddingBottom: 6 }}>{clean}</p>);
       i++; continue;
     }
 
-    // Field labels in shortlist sections — rendered as bold labels on their own line
-    const FIELD_LABELS = ["What it does well:", "What it does not do well:", "Implementation timeline:", "Pricing:", "Integration requirements:", "Bottom line:"];
-    const matchedLabel = FIELD_LABELS.find(label => line.trim().startsWith(label));
-    if (matchedLabel) {
-      const rest = line.trim().slice(matchedLabel.length).trim();
-      elements.push(
-        <div key={i} style={{ marginTop: 18, marginBottom: 4 }}>
-          <p style={{ fontSize: 13, fontWeight: 700, letterSpacing: 1, textTransform: "uppercase", color: C.accent, margin: "0 0 4px", fontFamily: FF }}>{matchedLabel.replace(":", "")}</p>
-          {rest && <p style={{ fontSize: 16, fontWeight: 500, color: C.textMid, margin: 0, lineHeight: 1.75, fontFamily: FF }}>{rest}</p>}
-        </div>
-      );
-      i++; continue;
-    }
-
-    // "Ask All Vendors:" section header
-    if (line.trim() === "Ask All Vendors:") {
-      elements.push(
-        <p key={i} style={{ fontSize: 13, fontWeight: 700, letterSpacing: 1.5, textTransform: "uppercase", color: C.accent, margin: "28px 0 12px", fontFamily: FF }}>Ask All Vendors</p>
-      );
-      i++; continue;
-    }
-
-    // "Ask [Vendor] specifically:" dynamic label
-    if (line.trim().match(/^Ask .+ specifically:/)) {
-      const label = line.trim().replace(":", "");
-      elements.push(
-        <p key={i} style={{ fontSize: 13, fontWeight: 700, letterSpacing: 1.5, textTransform: "uppercase", color: C.accent, margin: "28px 0 12px", fontFamily: FF }}>{label}</p>
-      );
-      i++; continue;
-    }
-
-    // Vendor section header in shortlist: "Tool | Score | Budget | Readiness"
-    if (line.trim().match(/^.+\|\s*\d/) && !line.trim().startsWith("|")) {
-      elements.push(
-        <div key={i} style={{ background: C.accent, borderRadius: "6px 6px 0 0", padding: "12px 18px", marginTop: 32 }}>
-          <p style={{ fontSize: 15, fontWeight: 700, color: C.white, margin: 0, fontFamily: FF }}>{line.trim()}</p>
-        </div>
-      );
-      // Open a visual card for this vendor section
-      elements.push(<div key={`card-${i}`} style={{ border: "1px solid " + C.border, borderTop: "none", borderRadius: "0 0 6px 6px", padding: "16px 20px 20px", marginBottom: 8 }}></div>);
-      i++; continue;
-    }
-    if (line.match(/^\*\*(.+)\*\*$/)) {
-      elements.push(<p key={i} style={{ fontSize: 17, fontWeight: 700, color: C.text, margin: "0 0 10px", lineHeight: 1.6, fontFamily: FF }}>{clean}</p>);
-      i++; continue;
-    }
+    // ── BULLETS ──────────────────────────────────────────────────────
     if (line.startsWith("- ") || line.startsWith("• ")) {
       elements.push(
         <div key={i} style={{ display: "flex", gap: 12, marginBottom: 10 }}>
           <span style={{ color: C.accent, flexShrink: 0, marginTop: 4, fontSize: 14 }}>—</span>
-          <p style={{ fontSize: 16, fontWeight: 500, lineHeight: 1.8, color: C.textMid, margin: 0, fontFamily: FF }}>{line.replace(/^[-•]\s/, "").replace(/\*\*(.*?)\*\*/g, "$1")}</p>
+          <p style={{ fontSize: 15, fontWeight: 500, lineHeight: 1.8, color: C.textMid, margin: 0, fontFamily: FF }}>{line.replace(/^[-•]\s/, "").replace(/\*\*(.*?)\*\*/g, "$1")}</p>
         </div>
       );
       i++; continue;
     }
-    if (/^\d+\./.test(line) && !line.trim().match(/^.+\|\s*\d/)) {
+
+    // ── NUMBERED LIST ────────────────────────────────────────────────
+    if (/^\d+\./.test(line)) {
       const num = line.match(/^\d+/)[0];
       const text = line.replace(/^\d+\.\s*/, "").replace(/\*\*(.*?)\*\*/g, "$1");
       elements.push(
         <div key={i} style={{ display: "flex", gap: 16, marginBottom: 12, alignItems: "flex-start" }}>
           <span style={{ color: C.accent, flexShrink: 0, fontSize: 15, fontWeight: 700, fontFamily: FF, minWidth: 22, lineHeight: 1.75 }}>{num}.</span>
-          <p style={{ fontSize: 16, fontWeight: 500, lineHeight: 1.75, color: C.textMid, margin: 0, fontFamily: FF }}>{text}</p>
+          <p style={{ fontSize: 15, fontWeight: 500, lineHeight: 1.75, color: C.textMid, margin: 0, fontFamily: FF }}>{text}</p>
         </div>
       );
       i++; continue;
     }
 
+    // ── DEFAULT PARAGRAPH ────────────────────────────────────────────
     elements.push(<p key={i} style={{ fontSize: 16, fontWeight: 500, lineHeight: 1.9, color: C.textMid, marginBottom: 14, fontFamily: FF }}>{clean}</p>);
     i++;
   }
+
+  // Flush any open groups
+  if (inVendorCard) flushVendorCard("end");
+  if (inQuestionGroup) flushQuestionGroup("end");
+
   return elements;
 }
 
@@ -1365,7 +1431,7 @@ export default function Delphi({ paymentStatus, startCheckout, onHome }) {
             <h2 style={{ fontSize: 26, fontWeight: 700, color: C.text, fontFamily: FFD }}>{section?.title}</h2>
             <span style={{ fontSize: 13, fontWeight: 500, color: C.textLight, marginTop: 6 }}>{activeSection + 1} / {reportSections.length}</span>
           </div>
-          <div style={{ marginBottom: 32 }}>{section && renderContent(section.content)}</div>
+          <div style={{ marginBottom: 32 }}>{section && renderContent(section.content, section.title)}</div>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", paddingTop: 20, borderTop: "1px solid " + C.border }}>
             <button onClick={() => activeSection > 0 && setActiveSection(activeSection - 1)}
               style={{ background: "none", border: "none", color: C.textMid, fontSize: 15, fontWeight: 500, opacity: activeSection === 0 ? 0.3 : 1, cursor: activeSection === 0 ? "default" : "pointer", fontFamily: FF }}>← Previous</button>
