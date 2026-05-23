@@ -722,7 +722,7 @@ Search specifically for tools on the buyer's shortlist:
   - Clearbit: clearbit.com/docs or developer.clearbit.com
   - Cognism: help.cognism.com
   - Lusha: help.lusha.com
-  - Groove: help.groovehq.com
+  - Groove: help.groove.co or support.groove.co (not groove.co marketing site)
   - Clari: help.clari.com
   - Mediafly: help.mediafly.com
   - Pardot: help.salesforce.com/s/articleView?id=sf.pardot_overview.htm
@@ -861,18 +861,55 @@ function buildStackPrompt(answers) {
 }
 
 // ─── REPORT PARSING & RENDERING ───────────────────────────────────────────────
+
+// Clean model output — join orphaned sentence fragments caused by web search citation stripping
+function cleanModelText(text) {
+  // Remove citation markers like [1], [2], [Source], etc.
+  let cleaned = text.replace(/\[\d+\]/g, "").replace(/\[Source[^\]]*\]/gi, "");
+  
+  // Join lines that are clearly continuations (start with lowercase, comma, or conjunction)
+  const lines = cleaned.split("\n");
+  const joined = [];
+  let i = 0;
+  while (i < lines.length) {
+    const line = lines[i];
+    const trimmed = line.trim();
+    // Check if next non-empty line is a continuation
+    let j = i + 1;
+    while (j < lines.length && !lines[j].trim()) j++;
+    const next = j < lines.length ? lines[j].trim() : null;
+    
+    if (next && trimmed && !trimmed.endsWith(".") && !trimmed.endsWith(":") && !trimmed.endsWith("?") && !trimmed.endsWith("!") && !next.startsWith("#") && !next.startsWith("|") && !next.startsWith("-") && !next.startsWith("•") && /^[a-z,;]/.test(next)) {
+      // Join this line with the next
+      joined.push(trimmed + " " + next);
+      i = j + 1;
+    } else {
+      joined.push(line);
+      i++;
+    }
+  }
+  
+  // Remove orphaned lines that are just punctuation or connectors
+  return joined
+    .filter(line => {
+      const t = line.trim();
+      return t !== "." && t !== "," && t !== ", " && t !== "and" && t !== "or" && t !== "but";
+    })
+    .join("\n");
+}
+
 const VALID_EVAL_SECTIONS = new Set(["What We Heard", "Your Shortlist, Assessed", "Readiness Score", "What You Should Know", "Questions to Ask in the Demo", "Our Recommendation", "Sources"]);
 const VALID_STACK_SECTIONS = new Set(["What We Heard", "Stack Compatibility Assessment", "Integration Readiness", "What You Should Know", "Questions to Ask Before You Integrate", "Our Compatibility Verdict", "Sources"]);
 
 function parseReport(text, type = "evaluation") {
   const validSections = type === "stack_fit" ? VALID_STACK_SECTIONS : VALID_EVAL_SECTIONS;
+  const cleaned = cleanModelText(text);
   const sections = [];
   let current = null;
-  for (const line of text.split("\n")) {
+  for (const line of cleaned.split("\n")) {
     if (line.startsWith("## ")) {
       const title = line.replace("## ", "").trim();
       if (current && current.content.some(l => l.trim())) sections.push(current);
-      // Only start a new section if it's a valid known section header
       if (validSections.has(title)) {
         current = { title, content: [] };
       } else {
@@ -1477,20 +1514,33 @@ export default function Delphi({ paymentStatus, startCheckout, onHome }) {
                     <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
                       <button
                         onClick={() => {
-                          if (otherVal.trim()) toggleTool(otherToolName);
+                          if (otherVal.trim()) {
+                            toggleTool(otherToolName);
+                          } else {
+                            // Focus the input if no value typed yet
+                            document.getElementById(`other-input-${catId}`)?.focus();
+                          }
                         }}
                         style={{ background: otherSelected ? C.accent : C.white, border: "1.5px solid " + (otherSelected ? C.accent : C.border), borderRadius: 4, padding: "12px 18px", textAlign: "left", fontSize: 15, fontWeight: 500, color: otherSelected ? C.white : C.text, transition: "all 0.15s", display: "flex", alignItems: "center", gap: 12, flexShrink: 0 }}>
                         <div style={{ width: 18, height: 18, borderRadius: 3, border: "2px solid " + (otherSelected ? "rgba(255,255,255,0.6)" : C.borderDark), background: otherSelected ? "rgba(255,255,255,0.25)" : "transparent", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, fontSize: 11, color: C.white, fontWeight: 700 }}>{otherSelected ? "✓" : ""}</div>
                         Other
                       </button>
                       <input
+                        id={`other-input-${catId}`}
                         type="text"
-                        placeholder="Tool name"
+                        placeholder="Type tool name, then select"
                         value={otherVal}
                         onChange={e => {
-                          // Remove old other tool if name changes
                           if (otherSelected) setSelectedTools(prev => prev.filter(t => t !== otherToolName));
                           setOtherToolInputs(prev => ({ ...prev, [catId]: e.target.value }));
+                        }}
+                        onKeyDown={e => {
+                          if (e.key === "Enter" && e.target.value.trim()) {
+                            const newName = `Other: ${e.target.value.trim()}`;
+                            if (!selectedTools.includes(newName)) {
+                              setSelectedTools(prev => [...prev, newName]);
+                            }
+                          }
                         }}
                         style={{ flex: 1, border: "1.5px solid " + C.border, borderRadius: 4, padding: "12px 14px", fontSize: 15, fontFamily: FF, color: C.text, background: C.white }}
                       />
@@ -1644,4 +1694,3 @@ export default function Delphi({ paymentStatus, startCheckout, onHome }) {
     </div>
   );
 }
-
