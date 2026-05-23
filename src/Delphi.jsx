@@ -619,13 +619,25 @@ Immediately after the summary paragraph, write:
 **Your Shortlist, Assessed** — Order tools from most recommended to least. For each tool, open with a header line in EXACTLY this format (the renderer depends on it):
 ToolName | X/5 | Budget fit description | Readiness match description
 
-Then write the assessment using these exact field labels on their own lines:
+Then write the assessment using these exact field labels on their own lines followed immediately by the content on the next line. Use plain prose only — no bullet points, no dashes, no lists inside any field. The renderer handles all formatting.
+
 What it does well:
+[2-3 sentences of plain prose specific to this buyer's situation]
+
 What it does not do well:
+[2-3 sentences of plain prose — only weaknesses relevant to this buyer. Requirements are not weaknesses.]
+
 Implementation timeline:
+[X to Y weeks — driven by specific dependency explained in plain prose]
+
 Pricing:
+[Verified price or "Requires direct quote from vendor." Plain prose only.]
+
 Integration requirements:
+[Plain prose about their specific CRM and MAP only]
+
 Bottom line:
+[One direct sentence on fit for this buyer]
 
 **Readiness Score** — Structure in this exact order:
 1. Opening paragraph: 2-3 sentences on what the Readiness Score measures and why this page matters. End after "implement successfully." Do not editorialize further.
@@ -704,6 +716,14 @@ Search specifically for:
   - Apollo: knowledge.apollo.io or help.apollo.io
   - HubSpot: knowledge.hubspot.com
   - Marketo: experienceleague.adobe.com/docs/marketo
+  - Clearbit: clearbit.com/docs or developer.clearbit.com
+  - Cognism: help.cognism.com or cognism.com/blog/help
+  - Lusha: help.lusha.com
+  - Groove: help.groovehq.com
+  - Clari: help.clari.com or support.clari.com
+  - Mediafly: help.mediafly.com
+  - Pardot: help.salesforce.com/s/articleView?id=sf.pardot_overview.htm
+  - Eloqua: docs.oracle.com/en/cloud/saas/marketing/eloqua-user
 
 Do not include: marketing pages, pricing pages, homepage URLs.
 Note at the top: G2 user reviews were referenced in this assessment.
@@ -865,7 +885,7 @@ function renderContent(content, sectionTitle) {
 
   // State for vendor card grouping
   let inVendorCard = false;
-  let cardContent = [];
+  let cardRawLines = [];
   let cardToolName = null;
   let cardMeta = null;
   let cardIsRecommended = false;
@@ -877,6 +897,58 @@ function renderContent(content, sectionTitle) {
 
   const flushVendorCard = (key) => {
     if (!cardToolName) return;
+
+    // Reorganize card content into two-column grid
+    const fieldOrder = ["What it does well", "What it does not do well", "Implementation timeline", "Pricing", "Integration requirements", "Bottom line"];
+    const fieldData = {};
+    let currentField = null;
+    let currentText = [];
+
+    cardRawLines.forEach(line => {
+      const FIELD_LABELS = ["What it does well:", "What it does not do well:", "Implementation timeline:", "Pricing:", "Integration requirements:", "Bottom line:"];
+      const matched = FIELD_LABELS.find(l => line.trim().startsWith(l));
+      if (matched) {
+        if (currentField) fieldData[currentField] = currentText.join(" ").trim().replace(/^\.\s*/, "");
+        currentField = matched.replace(":", "");
+        currentText = [line.trim().slice(matched.length).trim()];
+      } else if (currentField && line.trim()) {
+        // Strip leading period artifact
+        const cleaned = line.trim().replace(/^\.\s+/, "").replace(/^[-•]\s+/, "");
+        if (cleaned) currentText.push(cleaned);
+      }
+    });
+    if (currentField) fieldData[currentField] = currentText.join(" ").trim().replace(/^\.\s*/, "");
+
+    const gridFields = [
+      ["What it does well", "What it does not do well"],
+      ["Implementation timeline", "Pricing"],
+    ];
+
+    const gridContent = gridFields.map((pair, pi) => (
+      <div key={`grid-${pi}`} style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0 24px", borderBottom: "1px solid " + C.border, padding: "14px 20px" }}>
+        {pair.map(field => (
+          <div key={field}>
+            <p style={{ fontSize: 11, fontWeight: 700, letterSpacing: 1.5, textTransform: "uppercase", color: C.accent, margin: "0 0 6px", fontFamily: FF }}>{field}</p>
+            <p style={{ fontSize: 15, color: C.textMid, margin: 0, lineHeight: 1.75, fontFamily: FF }}>{fieldData[field] || "—"}</p>
+          </div>
+        ))}
+      </div>
+    ));
+
+    const integrationContent = fieldData["Integration requirements"] ? (
+      <div style={{ padding: "14px 20px", borderBottom: "1px solid " + C.border }}>
+        <p style={{ fontSize: 11, fontWeight: 700, letterSpacing: 1.5, textTransform: "uppercase", color: C.accent, margin: "0 0 6px", fontFamily: FF }}>Integration requirements</p>
+        <p style={{ fontSize: 15, color: C.textMid, margin: 0, lineHeight: 1.75, fontFamily: FF }}>{fieldData["Integration requirements"]}</p>
+      </div>
+    ) : null;
+
+    const bottomLine = fieldData["Bottom line"] ? (
+      <div style={{ padding: "14px 20px" }}>
+        <p style={{ fontSize: 11, fontWeight: 700, letterSpacing: 1.5, textTransform: "uppercase", color: C.accent, margin: "0 0 6px", fontFamily: FF }}>Bottom line</p>
+        <p style={{ fontSize: 15, color: C.textMid, margin: 0, lineHeight: 1.75, fontFamily: FF, fontStyle: "italic" }}>{fieldData["Bottom line"]}</p>
+      </div>
+    ) : null;
+
     elements.push(
       <div key={`vendor-${key}`} style={{ marginBottom: 28 }}>
         <div style={{ background: C.accent, borderRadius: "6px 6px 0 0", padding: "14px 20px", display: "flex", alignItems: "flex-start", justifyContent: "space-between" }}>
@@ -888,14 +960,16 @@ function renderContent(content, sectionTitle) {
             <span style={{ background: "rgba(255,255,255,0.2)", borderRadius: 4, padding: "3px 10px", fontSize: 11, color: C.white, letterSpacing: 1.5, textTransform: "uppercase", fontWeight: 700, flexShrink: 0, marginLeft: 12 }}>Recommended</span>
           )}
         </div>
-        <div style={{ border: "1px solid " + C.border, borderTop: "none", borderRadius: "0 0 6px 6px", padding: "4px 0" }}>
-          {cardContent}
+        <div style={{ border: "1px solid " + C.border, borderTop: "none", borderRadius: "0 0 6px 6px" }}>
+          {gridContent}
+          {integrationContent}
+          {bottomLine}
         </div>
       </div>
     );
     cardToolName = null;
     cardMeta = null;
-    cardContent = [];
+    cardRawLines = [];
     cardIsRecommended = false;
     inVendorCard = false;
   };
@@ -990,38 +1064,9 @@ function renderContent(content, sectionTitle) {
       i++; continue;
     }
 
-    // ── FIELD LABELS inside vendor card ─────────────────────────────
+    // ── FIELD LABELS and content inside vendor card ──────────────────
     if (inVendorCard) {
-      const FIELD_LABELS = ["What it does well:", "What it does not do well:", "Implementation timeline:", "Pricing:", "Integration requirements:", "Bottom line:"];
-      const matchedLabel = FIELD_LABELS.find(label => line.trim().startsWith(label));
-      if (matchedLabel) {
-        const rest = line.trim().slice(matchedLabel.length).trim();
-        const isBottomLine = matchedLabel === "Bottom line:";
-        cardContent.push(
-          <div key={`field-${i}`} style={{
-            padding: isBottomLine ? "14px 20px" : "12px 20px 4px",
-            borderTop: isBottomLine ? "0.5px solid " + C.border : "none",
-            marginTop: isBottomLine ? 4 : 0,
-          }}>
-            <p style={{ fontSize: 11, fontWeight: 700, letterSpacing: 1.5, textTransform: "uppercase", color: C.accent, margin: "0 0 4px", fontFamily: FF }}>{matchedLabel.replace(":", "")}</p>
-            {rest && <p style={{ fontSize: 15, color: C.textMid, margin: 0, lineHeight: 1.75, fontFamily: FF, fontStyle: isBottomLine ? "italic" : "normal" }}>{rest}</p>}
-          </div>
-        );
-        i++; continue;
-      }
-      // Regular content inside card
-      if (line.startsWith("- ") || line.startsWith("• ")) {
-        cardContent.push(
-          <div key={`bullet-${i}`} style={{ display: "flex", gap: 10, padding: "2px 20px" }}>
-            <span style={{ color: C.accent, flexShrink: 0 }}>—</span>
-            <p style={{ fontSize: 15, color: C.textMid, margin: 0, lineHeight: 1.75, fontFamily: FF }}>{line.replace(/^[-•]\s/, "")}</p>
-          </div>
-        );
-        i++; continue;
-      }
-      cardContent.push(
-        <p key={`cp-${i}`} style={{ fontSize: 15, color: C.textMid, margin: 0, lineHeight: 1.75, fontFamily: FF, padding: "2px 20px" }}>{clean}</p>
-      );
+      cardRawLines.push(line);
       i++; continue;
     }
 
