@@ -616,8 +616,10 @@ Immediately after the summary paragraph, write:
 - Our Take is one sharp sentence per tool
 - This table is what an executive reads first
 
-**Your Shortlist, Assessed** — Order tools from most recommended to least. For each tool, open with a header line in EXACTLY this format (the renderer depends on it):
-ToolName | X/5 | Budget fit description | Readiness match description
+**Your Shortlist, Assessed** — Order tools from most recommended to least. For each tool, open with a header line in EXACTLY this format — do not add any other text, numbers, or characters to this line:
+ToolName | X/5 | Budget: [one word or short phrase] | Readiness: [one word or short phrase]
+
+Example: Salesloft | 4/5 | Budget: Strong fit | Readiness: Excellent match
 
 Then write the assessment using these exact field labels on their own lines followed immediately by the content on the next line. Use plain prose only — no bullet points, no dashes, no lists inside any field. The renderer handles all formatting.
 
@@ -1111,13 +1113,19 @@ function renderContent(content, sectionTitle) {
     }
 
     // ── VENDOR HEADER: "ToolName | Score | Budget | Readiness" ───────
-    // Also catches "### ToolName | Score..." format
-    const vendorHeaderLine = line.trim().startsWith("### ") ? line.trim().replace("### ", "") : line.trim();
-    if (!isQuestionsSection && vendorHeaderLine.match(/^[A-Za-z0-9][A-Za-z0-9\s.()\-]+\s*\|\s*\d+\/5/i) && !line.trim().startsWith("|")) {
+    const rawHeaderLine = line.trim().startsWith("### ") ? line.trim().replace("### ", "") : line.trim();
+    // Match any line with a tool name followed by | X/5
+    if (!isQuestionsSection && !rawHeaderLine.startsWith("|") && rawHeaderLine.match(/\|\s*\d+\/5/i)) {
       if (inVendorCard) flushVendorCard(i);
-      const parts = vendorHeaderLine.split("|").map(p => p.trim());
-      cardToolName = parts[0].trim();
-      cardMeta = parts.slice(1).filter(p => p).join(" · ");
+      // Split on | and clean each part
+      const parts = rawHeaderLine.split("|").map(p => p.trim()).filter(p => p);
+      cardToolName = parts[0];
+      // Build meta from remaining parts, stripping verbose budget text
+      cardMeta = parts.slice(1).map(p => {
+        // Shorten long budget descriptions
+        p = p.replace(/Budget:\s*/i, "").replace(/Readiness:\s*/i, "");
+        return p;
+      }).join(" · ");
       cardIsRecommended = vendorCardCount === 0;
       vendorCardCount++;
       inVendorCard = true;
@@ -1245,6 +1253,18 @@ function renderContent(content, sectionTitle) {
         );
         i++; continue;
       }
+    }
+
+    // ── READINESS DIMENSION HEADERS: "Dimension Name | X/5" ─────────
+    if (!isQuestionsSection && !inVendorCard && line.trim().match(/^[A-Za-z\s]+\|\s*\d+\/5$/) && !line.trim().startsWith("|")) {
+      const parts = line.trim().split("|").map(p => p.trim());
+      elements.push(
+        <div key={i} style={{ borderBottom: "1px solid " + C.border, paddingBottom: 6, marginTop: 28, marginBottom: 8, display: "flex", alignItems: "baseline", gap: 12 }}>
+          <p style={{ fontSize: 16, fontWeight: 700, color: C.text, margin: 0, fontFamily: FFD }}>{parts[0]}</p>
+          <p style={{ fontSize: 14, fontWeight: 600, color: C.accent, margin: 0, fontFamily: FF }}>{parts[1]}</p>
+        </div>
+      );
+      i++; continue;
     }
 
     // ── SUBHEADERS ───────────────────────────────────────────────────
