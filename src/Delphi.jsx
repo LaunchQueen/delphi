@@ -701,14 +701,24 @@ We recommend [Tool Name].
 For each tool NOT recommended, write one sentence:
 [Tool] is [genuine strength] but is not the best fit for your scenario because [specific reason tied to this buyer's situation].
 
-**Sources** — ONLY include sources for tools the buyer explicitly listed on their shortlist. Do not include sources for any other tool, even if mentioned in passing.
+**Sources** — ONLY include sources for tools the buyer explicitly listed on their shortlist. Do not include sources for any other tool.
 
 Use web search to find real URLs. Only include URLs you retrieved in this session. Do not fabricate URLs. If you cannot find a real URL, omit it.
 
-Search specifically for tools on the buyer's shortlist:
-- G2 product review page: search "site:g2.com [toolname] reviews"
-- Gartner Magic Quadrant or Forrester Wave for the relevant category
-- Vendor knowledge base / documentation. Known starting points:
+Format the section with exactly two headers followed by their links:
+
+G2 Reviews
+[tool name] G2 Reviews
+[url]
+
+Vendor Documentation
+[tool name] Knowledge Base
+[url]
+
+Search for tools on the buyer's shortlist:
+- G2: search "site:g2.com [toolname] reviews"
+- Gartner Magic Quadrant or Forrester Wave for the category
+- Vendor documentation starting points:
   - Demandbase: support.demandbase.com or docs.demandbase.com
   - 6sense: support.6sense.com or docs.6sense.com
   - Terminus: support.terminus.com or help.terminus.com
@@ -718,11 +728,11 @@ Search specifically for tools on the buyer's shortlist:
   - ZoomInfo: university.zoominfo.com or help.zoominfo.com
   - Apollo: knowledge.apollo.io or help.apollo.io
   - HubSpot: knowledge.hubspot.com
-  - Marketo: experienceleague.adobe.com/docs/marketo
+  - Marketo: experienceleague.adobe.com/en/docs/marketo
   - Clearbit: clearbit.com/docs or developer.clearbit.com
   - Cognism: help.cognism.com
   - Lusha: help.lusha.com
-  - Groove: help.groove.co or support.groove.co (not groove.co marketing site)
+  - Groove: help.groove.co or support.groove.co
   - Clari: help.clari.com
   - Mediafly: help.mediafly.com
   - Pardot: help.salesforce.com/s/articleView?id=sf.pardot_overview.htm
@@ -733,8 +743,7 @@ Search specifically for tools on the buyer's shortlist:
   - Microsoft Dynamics: learn.microsoft.com/dynamics365
   - Salesforce CRM: help.salesforce.com
 
-Do not include: marketing pages, pricing pages, homepage URLs, or any tool not on the buyer's shortlist.
-Note at the top: G2 user reviews were referenced in this assessment.
+Do not include marketing pages, pricing pages, homepage URLs, or any tool not on the buyer's shortlist.
 Format: plain label on one line, plain URL on next line. No markdown link syntax.`;
 
 const STACK_PROMPT = `You are Delphi, an independent software implementation analyst for B2B SaaS buyers. You have no financial relationship with any vendor. A buyer has a shortlist and needs to understand what their existing stack and team will need to do to make each tool work.
@@ -1175,6 +1184,14 @@ function renderContent(content, sectionTitle) {
       }
     }
 
+    // ── SOURCES CATEGORY HEADERS ─────────────────────────────────────
+    if (sectionTitle === "Sources" && (line.trim() === "G2 Reviews" || line.trim() === "Vendor Documentation" || line.trim() === "Analyst Reports")) {
+      elements.push(
+        <p key={i} style={{ fontSize: 12, fontWeight: 700, letterSpacing: 2, textTransform: "uppercase", color: C.accent, margin: "20px 0 10px", fontFamily: FF }}>{line.trim()}</p>
+      );
+      i++; continue;
+    }
+
     // ── URLS — handle inline label+URL on same line ──────────────────
     if (line.trim().match(/^\[.+\]\(https?:\/\/.+\)/)) {
       const match = line.trim().match(/^\[(.+)\]\((https?:\/\/.+)\)/);
@@ -1402,7 +1419,9 @@ export default function Delphi({ paymentStatus, startCheckout, onHome }) {
     const shortlistKey = reportType === "stack_fit" ? "stack_shortlist" : "shortlist";
     const labels = selectedCategories.map(id => TOOL_CATEGORIES.find(x => x.id === id)?.label).filter(Boolean);
     const queue = buildQuestionQueue(selectedCategories);
-    setAnswers({ categories: labels, [shortlistKey]: selectedTools });
+    // Strip "Other: " prefix so model sees clean tool names
+    const cleanedTools = selectedTools.map(t => t.startsWith("Other: ") ? t.replace("Other: ", "").trim() : t);
+    setAnswers({ categories: labels, [shortlistKey]: cleanedTools });
     setQuestionQueue(queue);
     setCurrentQ(0);
     setStep("questions");
