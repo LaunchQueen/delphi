@@ -867,20 +867,24 @@ function cleanModelText(text) {
   // Remove citation markers like [1], [2], [Source], etc.
   let cleaned = text.replace(/\[\d+\]/g, "").replace(/\[Source[^\]]*\]/gi, "");
   
-  // Join lines that are clearly continuations (start with lowercase, comma, or conjunction)
+  // Join lines that are clearly continuations
   const lines = cleaned.split("\n");
   const joined = [];
   let i = 0;
   while (i < lines.length) {
     const line = lines[i];
     const trimmed = line.trim();
-    // Check if next non-empty line is a continuation
+    
+    // Look at next non-empty line
     let j = i + 1;
     while (j < lines.length && !lines[j].trim()) j++;
     const next = j < lines.length ? lines[j].trim() : null;
     
-    if (next && trimmed && !trimmed.endsWith(".") && !trimmed.endsWith(":") && !trimmed.endsWith("?") && !trimmed.endsWith("!") && !next.startsWith("#") && !next.startsWith("|") && !next.startsWith("-") && !next.startsWith("•") && /^[a-z,;]/.test(next)) {
-      // Join this line with the next
+    // Join if: current line doesn't end sentence AND next line starts with lowercase/punctuation
+    const currentEndsIncomplete = trimmed && !trimmed.match(/[.!?:]$/) && !trimmed.startsWith("#") && !trimmed.startsWith("|") && !trimmed.match(/^\d+\/5/);
+    const nextIsContinuation = next && /^[a-z,;.]/.test(next) && !next.startsWith("##") && !next.startsWith("###") && !next.startsWith("|");
+    
+    if (currentEndsIncomplete && nextIsContinuation) {
       joined.push(trimmed + " " + next);
       i = j + 1;
     } else {
@@ -889,11 +893,11 @@ function cleanModelText(text) {
     }
   }
   
-  // Remove orphaned lines that are just punctuation or connectors
+  // Remove orphaned punctuation-only lines
   return joined
     .filter(line => {
       const t = line.trim();
-      return t !== "." && t !== "," && t !== ", " && t !== "and" && t !== "or" && t !== "but";
+      return !t.match(/^[.,;]\s*$/) && t !== "and" && t !== "or" && t !== "but" && t !== "with";
     })
     .join("\n");
 }
@@ -1171,22 +1175,36 @@ function renderContent(content, sectionTitle) {
       }
     }
 
-    // ── URLS ─────────────────────────────────────────────────────────
+    // ── URLS — handle inline label+URL on same line ──────────────────
     if (line.trim().match(/^\[.+\]\(https?:\/\/.+\)/)) {
       const match = line.trim().match(/^\[(.+)\]\((https?:\/\/.+)\)/);
       if (match) {
-        elements.push(<div key={i} style={{ display: "flex", gap: 10, marginBottom: 8 }}><span style={{ color: C.accent, flexShrink: 0 }}>—</span><a href={match[2]} target="_blank" rel="noopener noreferrer" style={{ color: C.accent, fontSize: 15, fontFamily: FF, wordBreak: "break-all", textDecoration: "underline" }}>{match[1]}</a></div>);
+        elements.push(<div key={i} style={{ marginBottom: 10 }}><a href={match[2]} target="_blank" rel="noopener noreferrer" style={{ color: C.accent, fontSize: 15, fontFamily: FF, wordBreak: "break-all", textDecoration: "underline" }}>{match[1]}</a></div>);
         i++; continue;
       }
     }
+    // Plain URL on its own line
     if (line.trim().match(/^https?:\/\//)) {
-      elements.push(<div key={i} style={{ marginBottom: 8 }}><a href={line.trim()} target="_blank" rel="noopener noreferrer" style={{ color: C.accent, fontSize: 15, fontFamily: FF, wordBreak: "break-all", textDecoration: "underline" }}>{line.trim()}</a></div>);
+      elements.push(<div key={i} style={{ marginBottom: 10 }}><a href={line.trim()} target="_blank" rel="noopener noreferrer" style={{ color: C.accent, fontSize: 15, fontFamily: FF, wordBreak: "break-all", textDecoration: "underline" }}>{line.trim()}</a></div>);
       i++; continue;
     }
+    // "- https://..." bullet URL
     if (line.trim().match(/^[-•]\s*https?:\/\//)) {
       const url = line.trim().replace(/^[-•]\s*/, "");
-      elements.push(<div key={i} style={{ display: "flex", gap: 10, marginBottom: 8 }}><span style={{ color: C.accent, flexShrink: 0 }}>—</span><a href={url} target="_blank" rel="noopener noreferrer" style={{ color: C.accent, fontSize: 15, fontFamily: FF, wordBreak: "break-all", textDecoration: "underline" }}>{url}</a></div>);
+      elements.push(<div key={i} style={{ marginBottom: 10 }}><a href={url} target="_blank" rel="noopener noreferrer" style={{ color: C.accent, fontSize: 15, fontFamily: FF, wordBreak: "break-all", textDecoration: "underline" }}>{url}</a></div>);
       i++; continue;
+    }
+    // "Label text https://url" — label and URL on same line (model sometimes does this)
+    if (line.trim().match(/\s+https?:\/\/\S+$/)) {
+      const urlMatch = line.trim().match(/^(.+?)\s+(https?:\/\/\S+)$/);
+      if (urlMatch) {
+        elements.push(
+          <div key={i} style={{ marginBottom: 10 }}>
+            <a href={urlMatch[2]} target="_blank" rel="noopener noreferrer" style={{ color: C.accent, fontSize: 15, fontFamily: FF, textDecoration: "underline" }}>{urlMatch[1]}</a>
+          </div>
+        );
+        i++; continue;
+      }
     }
 
     // ── SCORE CARD ───────────────────────────────────────────────────
@@ -1197,13 +1215,13 @@ function renderContent(content, sectionTitle) {
         const color = score <= 2 ? C.red : score <= 3 ? C.amber : C.accent;
         const label = score <= 2 ? "Needs attention before purchasing" : score <= 3 ? "Proceed with preparation" : "Well positioned";
         elements.push(
-          <div key={i} style={{ background: color, borderRadius: 8, padding: "24px 28px", margin: "16px 0 24px", display: "flex", alignItems: "center", gap: 20 }}>
-            <div style={{ textAlign: "center", flexShrink: 0 }}>
-              <div style={{ fontSize: 52, fontWeight: 700, color: C.white, lineHeight: 1, fontFamily: FFD }}>{score}</div>
-              <div style={{ fontSize: 12, color: "rgba(255,255,255,0.8)", fontWeight: 600, letterSpacing: 1 }}>OUT OF 5</div>
+          <div key={i} style={{ background: color, borderRadius: 8, padding: "20px 24px", margin: "16px 0 24px", display: "flex", alignItems: "center", gap: 24 }}>
+            <div style={{ textAlign: "center", flexShrink: 0, minWidth: 80 }}>
+              <div style={{ fontSize: 64, fontWeight: 700, color: C.white, lineHeight: 1, fontFamily: FFD }}>{score}</div>
+              <div style={{ fontSize: 11, color: "rgba(255,255,255,0.8)", fontWeight: 600, letterSpacing: 1, marginTop: 4 }}>OUT OF 5</div>
             </div>
-            <div>
-              <div style={{ fontSize: 18, fontWeight: 700, color: C.white, marginBottom: 4, fontFamily: FFD }}>{label}</div>
+            <div style={{ borderLeft: "1px solid rgba(255,255,255,0.3)", paddingLeft: 24 }}>
+              <div style={{ fontSize: 20, fontWeight: 700, color: C.white, marginBottom: 6, fontFamily: FFD }}>{label}</div>
               <div style={{ fontSize: 14, fontWeight: 500, color: "rgba(255,255,255,0.85)", lineHeight: 1.5 }}>The dimensional breakdown below shows where you have alignment and where you have gaps.</div>
             </div>
           </div>
@@ -1219,10 +1237,32 @@ function renderContent(content, sectionTitle) {
       i++; continue;
     }
 
-    // ── WHAT YOU SHOULD KNOW thematic headers (bold lines) ───────────
-    if (line.match(/^\*\*(.+)\*\*$/) && !line.includes("|")) {
-      elements.push(<p key={i} style={{ fontSize: 15, fontWeight: 700, color: C.text, margin: "20px 0 8px", lineHeight: 1.6, fontFamily: FF, borderBottom: "0.5px solid " + C.border, paddingBottom: 6 }}>{clean}</p>);
-      i++; continue;
+    // ── WHAT YOU SHOULD KNOW thematic headers (bold lines with colon) ─
+    if (line.match(/^\*\*(.+:)\*\*$/) || (line.match(/^\*\*(.+)\*\*$/) && !line.includes("|"))) {
+      const isSubItem = line.match(/^\*\*(.+:)\*\*$/);
+      const label = clean.replace(/:$/, "");
+      if (isSubItem) {
+        // Collect following prose until next bold line or section break
+        let j = i + 1;
+        const bodyLines = [];
+        while (j < lines.length && lines[j].trim() && !lines[j].match(/^\*\*/) && !lines[j].startsWith("##") && !lines[j].startsWith("###")) {
+          bodyLines.push(lines[j].trim().replace(/^\.\s*/, ""));
+          j++;
+        }
+        const body = bodyLines.filter(Boolean).join(" ");
+        elements.push(
+          <div key={i} style={{ border: "1px solid " + C.border, borderRadius: 6, padding: "14px 18px", marginBottom: 14 }}>
+            <p style={{ fontSize: 13, fontWeight: 700, color: C.accent, margin: "0 0 8px", fontFamily: FF, letterSpacing: 0.5 }}>{label}</p>
+            {body && <p style={{ fontSize: 15, color: C.textMid, margin: 0, lineHeight: 1.75, fontFamily: FF }}>{body}</p>}
+          </div>
+        );
+        i = j;
+      } else {
+        // Section header (no colon) — keep as bold heading with rule
+        elements.push(<p key={i} style={{ fontSize: 15, fontWeight: 700, color: C.text, margin: "20px 0 8px", lineHeight: 1.6, fontFamily: FF, borderBottom: "0.5px solid " + C.border, paddingBottom: 6 }}>{label}</p>);
+        i++;
+      }
+      continue;
     }
 
     // ── BULLETS ──────────────────────────────────────────────────────
