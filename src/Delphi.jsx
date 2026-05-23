@@ -631,7 +631,7 @@ Implementation timeline:
 [X to Y weeks — driven by specific dependency explained in plain prose]
 
 Pricing:
-[Verified price or "Requires direct quote from vendor." Plain prose only.]
+[Verified price or "Requires direct quote from vendor." Plain prose only. Do NOT repeat pricing information anywhere else in the assessment — pricing belongs only in this field.]
 
 Integration requirements:
 [Plain prose about their specific CRM and MAP only]
@@ -664,23 +664,25 @@ For each dimension: state the score, describe the current situation factually, e
 
 **What You Should Know** — Vendor-specific gotchas and hidden requirements for the tools on the shortlist only. Things the vendor's sales team will not volunteer.
 
-Structure this section with thematic headers based on what you find. Examples of appropriate headers: Cost of Ownership, Integration Considerations, Implementation Considerations, Contract Considerations, Data Requirements. Use whatever headers fit the actual content — do not force content into headers that don't fit.
+Structure this section with thematic headers based on what you find. Examples: Cost of Ownership, Integration Considerations, Implementation Considerations, Contract Considerations, Data Requirements.
 
 Every point must be:
-- Directly tied to a specific tool on the shortlist and this buyer's specific situation
+- Directly tied to a specific tool on the shortlist and this buyer's situation
 - A fact the vendor will not proactively share
-- Attributed to a named source inline where possible. If citing Vendr, name it as "Vendr (vendr.com)" and link it.
+- Attributed to a named source inline where possible
 - Not a problem the buyer already told you is solved
 - Not a reference to any tool not on the shortlist
-- Not general ABM education or implementation advice that applies to any tool
+- Not general category education
 
-Do not invent stack problems. If the buyer said Marketo is pulling from Salesforce and writing back — that is working. Do not describe it as unstable or still syncing.
+Each point must be distinct — do not repeat the same information in different words. If you've said it once, do not say it again under a different header.
 
-**Questions to Ask in Your Next Demo** — 5-7 questions structured as:
+Do not invent stack problems. If the buyer said a system is working — it is working.
+
+**Questions to Ask in the Demo** — 5-7 questions structured as:
 
 Ask All Vendors:
 1. [Question — no quotes]
-What to listen for: [one sentence of guidance, italic tone]
+What to listen for: [one sentence of guidance]
 
 Ask [Vendor A] specifically:
 1. [Question]
@@ -698,13 +700,14 @@ We recommend [Tool Name].
 
 For each tool NOT recommended, write one sentence:
 [Tool] is [genuine strength] but is not the best fit for your scenario because [specific reason tied to this buyer's situation].
-No phased approaches. No "revisit in X months." One clear sentence per non-recommended tool.
 
-**Sources** — Use web search to find real URLs. Only include URLs you retrieved in this session. Do not fabricate URLs. If you cannot find a real URL, omit it.
+**Sources** — ONLY include sources for tools the buyer explicitly listed on their shortlist. Do not include sources for any other tool, even if mentioned in passing.
 
-Search specifically for:
-- G2 product review pages: search "site:g2.com [toolname] reviews"
-- Gartner Magic Quadrant or Forrester Wave for this category
+Use web search to find real URLs. Only include URLs you retrieved in this session. Do not fabricate URLs. If you cannot find a real URL, omit it.
+
+Search specifically for tools on the buyer's shortlist:
+- G2 product review page: search "site:g2.com [toolname] reviews"
+- Gartner Magic Quadrant or Forrester Wave for the relevant category
 - Vendor knowledge base / documentation. Known starting points:
   - Demandbase: support.demandbase.com or docs.demandbase.com
   - 6sense: support.6sense.com or docs.6sense.com
@@ -717,15 +720,20 @@ Search specifically for:
   - HubSpot: knowledge.hubspot.com
   - Marketo: experienceleague.adobe.com/docs/marketo
   - Clearbit: clearbit.com/docs or developer.clearbit.com
-  - Cognism: help.cognism.com or cognism.com/blog/help
+  - Cognism: help.cognism.com
   - Lusha: help.lusha.com
   - Groove: help.groovehq.com
-  - Clari: help.clari.com or support.clari.com
+  - Clari: help.clari.com
   - Mediafly: help.mediafly.com
   - Pardot: help.salesforce.com/s/articleView?id=sf.pardot_overview.htm
   - Eloqua: docs.oracle.com/en/cloud/saas/marketing/eloqua-user
+  - Rollworks: help.rollworks.com
+  - Chorus: help.chorus.ai
+  - Pipedrive: support.pipedrive.com
+  - Microsoft Dynamics: learn.microsoft.com/dynamics365
+  - Salesforce CRM: help.salesforce.com
 
-Do not include: marketing pages, pricing pages, homepage URLs.
+Do not include: marketing pages, pricing pages, homepage URLs, or any tool not on the buyer's shortlist.
 Note at the top: G2 user reviews were referenced in this assessment.
 Format: plain label on one line, plain URL on next line. No markdown link syntax.`;
 
@@ -853,7 +861,7 @@ function buildStackPrompt(answers) {
 }
 
 // ─── REPORT PARSING & RENDERING ───────────────────────────────────────────────
-const VALID_EVAL_SECTIONS = new Set(["What We Heard", "Your Shortlist, Assessed", "Readiness Score", "What You Should Know", "Questions to Ask in Your Next Demo", "Our Recommendation", "Sources"]);
+const VALID_EVAL_SECTIONS = new Set(["What We Heard", "Your Shortlist, Assessed", "Readiness Score", "What You Should Know", "Questions to Ask in the Demo", "Our Recommendation", "Sources"]);
 const VALID_STACK_SECTIONS = new Set(["What We Heard", "Stack Compatibility Assessment", "Integration Readiness", "What You Should Know", "Questions to Ask Before You Integrate", "Our Compatibility Verdict", "Sources"]);
 
 function parseReport(text, type = "evaluation") {
@@ -1053,11 +1061,13 @@ function renderContent(content, sectionTitle) {
     }
 
     // ── VENDOR HEADER: "ToolName | Score | Budget | Readiness" ───────
-    if (!isQuestionsSection && line.trim().match(/^[A-Za-z0-9][A-Za-z0-9\s.]*\s*\|\s*\d+\/5/i) && !line.trim().startsWith("|")) {
+    // Also catches "### ToolName | Score..." format
+    const vendorHeaderLine = line.trim().startsWith("### ") ? line.trim().replace("### ", "") : line.trim();
+    if (!isQuestionsSection && vendorHeaderLine.match(/^[A-Za-z0-9][A-Za-z0-9\s.()\-]+\s*\|\s*\d+\/5/i) && !line.trim().startsWith("|")) {
       if (inVendorCard) flushVendorCard(i);
-      const parts = line.trim().split("|").map(p => p.trim());
-      cardToolName = parts[0];
-      cardMeta = parts.slice(1).join(" · ");
+      const parts = vendorHeaderLine.split("|").map(p => p.trim());
+      cardToolName = parts[0].trim();
+      cardMeta = parts.slice(1).filter(p => p).join(" · ");
       cardIsRecommended = vendorCardCount === 0;
       vendorCardCount++;
       inVendorCard = true;
@@ -1217,7 +1227,7 @@ function renderContent(content, sectionTitle) {
 // ─── SECTION ICONS ────────────────────────────────────────────────────────────
 const EVAL_ICONS = {
   "What We Heard": "◎", "Your Shortlist, Assessed": "◈", "Readiness Score": "◐",
-  "What You Should Know": "◆", "Questions to Ask in Your Next Demo": "◇", "Our Recommendation": "●", "Sources": "○"
+  "What You Should Know": "◆", "Questions to Ask in the Demo": "◇", "Our Recommendation": "●", "Sources": "○"
 };
 const STACK_ICONS = {
   "What We Heard": "◎", "Stack Compatibility Assessment": "◈", "Integration Readiness": "◐",
@@ -1256,6 +1266,7 @@ export default function Delphi({ paymentStatus, startCheckout, onHome }) {
   const [step, setStep] = useState("select");
   const [selectedCategories, setSelectedCategories] = useState([]);
   const [selectedTools, setSelectedTools] = useState([]);
+  const [otherToolInputs, setOtherToolInputs] = useState({});
   const [categoryStep, setCategoryStep] = useState("categories");
   const [questionQueue, setQuestionQueue] = useState([]);
   const [currentQ, setCurrentQ] = useState(0);
@@ -1375,7 +1386,7 @@ export default function Delphi({ paymentStatus, startCheckout, onHome }) {
     setStep("select"); setReportType(null); setCurrentQ(0); setAnswers({});
     setCurrentInput(""); setReportSections([]); setActiveSection(0);
     setSelectedCategories([]); setSelectedTools([]); setCategoryStep("categories");
-    setQuestionQueue([]); setHoveredChoice(null);
+    setQuestionQueue([]); setHoveredChoice(null); setOtherToolInputs({});
   };
 
   const pageWrap = { minHeight: "100vh", background: C.bg, display: "flex", alignItems: "center", justifyContent: "center", padding: "40px 24px", fontFamily: FF };
@@ -1444,6 +1455,10 @@ export default function Delphi({ paymentStatus, startCheckout, onHome }) {
             {selectedCategories.map(catId => {
               const cat = TOOL_CATEGORIES.find(c => c.id === catId);
               if (!cat) return null;
+              const otherKey = `other_${catId}`;
+              const otherVal = otherToolInputs[catId] || "";
+              const otherToolName = `Other: ${otherVal.trim()}`;
+              const otherSelected = otherVal.trim() && selectedTools.includes(otherToolName);
               return (
                 <div key={catId} style={{ marginBottom: 28 }}>
                   <p style={{ fontSize: 12, fontWeight: 700, letterSpacing: 2, textTransform: "uppercase", color: C.accent, marginBottom: 12 }}>{cat.label}</p>
@@ -1458,6 +1473,28 @@ export default function Delphi({ paymentStatus, startCheckout, onHome }) {
                         </button>
                       );
                     })}
+                    {/* Other option */}
+                    <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                      <button
+                        onClick={() => {
+                          if (otherVal.trim()) toggleTool(otherToolName);
+                        }}
+                        style={{ background: otherSelected ? C.accent : C.white, border: "1.5px solid " + (otherSelected ? C.accent : C.border), borderRadius: 4, padding: "12px 18px", textAlign: "left", fontSize: 15, fontWeight: 500, color: otherSelected ? C.white : C.text, transition: "all 0.15s", display: "flex", alignItems: "center", gap: 12, flexShrink: 0 }}>
+                        <div style={{ width: 18, height: 18, borderRadius: 3, border: "2px solid " + (otherSelected ? "rgba(255,255,255,0.6)" : C.borderDark), background: otherSelected ? "rgba(255,255,255,0.25)" : "transparent", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, fontSize: 11, color: C.white, fontWeight: 700 }}>{otherSelected ? "✓" : ""}</div>
+                        Other
+                      </button>
+                      <input
+                        type="text"
+                        placeholder="Tool name"
+                        value={otherVal}
+                        onChange={e => {
+                          // Remove old other tool if name changes
+                          if (otherSelected) setSelectedTools(prev => prev.filter(t => t !== otherToolName));
+                          setOtherToolInputs(prev => ({ ...prev, [catId]: e.target.value }));
+                        }}
+                        style={{ flex: 1, border: "1.5px solid " + C.border, borderRadius: 4, padding: "12px 14px", fontSize: 15, fontFamily: FF, color: C.text, background: C.white }}
+                      />
+                    </div>
                   </div>
                 </div>
               );
@@ -1607,3 +1644,4 @@ export default function Delphi({ paymentStatus, startCheckout, onHome }) {
     </div>
   );
 }
+
