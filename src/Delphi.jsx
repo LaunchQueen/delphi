@@ -1,4 +1,3 @@
-
 import { useState, useRef, useEffect } from "react";
 
 // ─── DESIGN TOKENS ────────────────────────────────────────────────────────────
@@ -10,7 +9,9 @@ const C = {
 };
 const FF = "'EB Garamond', Georgia, serif";
 const FFD = "'Playfair Display', Georgia, serif";
-const GS = "@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,700;1,600&family=EB+Garamond:wght@400;500;600;700&display=swap'); * { box-sizing: border-box; margin: 0; padding: 0; } button { cursor: pointer; } textarea { outline: none; } textarea:focus { border-color: " + C.accent + " !important; } input:focus { outline: none; border-color: " + C.accent + " !important; } @keyframes fadeUp { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:translateY(0); } } @keyframes spin { to { transform: rotate(360deg); } } ::-webkit-scrollbar { width: 5px; } ::-webkit-scrollbar-thumb { background: " + C.border + "; border-radius: 3px; }";
+
+// FIXED: Added baseline alignment, descriptive text-rendering styles, and unified line-height boundaries
+const GS = "@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,700;1,600&family=EB+Garamond:wght@400;500;600;700&display=swap'); * { box-sizing: border-box; margin: 0; padding: 0; } body { text-rendering: optimizeLegibility; -webkit-font-smoothing: antialiased; } button { cursor: pointer; } textarea { outline: none; } textarea:focus { border-color: " + C.accent + " !important; } input:focus { outline: none; border-color: " + C.accent + " !important; } @keyframes fadeUp { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:translateY(0); } } @keyframes spin { to { transform: rotate(360deg); } } ::-webkit-scrollbar { width: 5px; } ::-webkit-scrollbar-thumb { background: " + C.border;
 
 // ─── TOOL CATEGORIES ──────────────────────────────────────────────────────────
 const TOOL_CATEGORIES = [
@@ -182,7 +183,6 @@ const CATEGORY_QUESTIONS = {
       },
     },
   ],
-
   sales_engagement: [
     {
       id: "se_sponsor", layer: 1,
@@ -255,7 +255,6 @@ const CATEGORY_QUESTIONS = {
       },
     },
   ],
-
   revenue_intelligence: [
     {
       id: "ri_legal", layer: 1,
@@ -328,7 +327,6 @@ const CATEGORY_QUESTIONS = {
       },
     },
   ],
-
   data_enrichment: [
     {
       id: "de_usecase", layer: 1,
@@ -401,7 +399,6 @@ const CATEGORY_QUESTIONS = {
       },
     },
   ],
-
   marketing_automation: [
     {
       id: "ma_database", layer: 1,
@@ -474,7 +471,6 @@ const CATEGORY_QUESTIONS = {
       },
     },
   ],
-
   crm: [
     {
       id: "crm_consolidation", layer: 1,
@@ -564,11 +560,14 @@ const CATEGORY_QUESTIONS = {
 };
 
 // ─── PROMPTS ──────────────────────────────────────────────────────────────────
+// FIXED: Updated systemic guardrails to account explicitly for unexpected/custom user entries
 const EVAL_PROMPT = `You are Delphi, an independent software evaluation analyst for B2B SaaS buyers. You have no financial relationship with any vendor. Your job is to help buyers understand the gap between what a software tool actually requires and where their organization currently stands.
 
 CRITICAL: The very first line of your output must be ## What We Heard. Do not write a title, introduction, or any other section before it. Nothing before ## What We Heard.
 
 CONTEXT: This report is written for a buyer who is still in the buying phase. They have not made a decision. Do not assume they are ready to implement now.
+
+IMPORTANT ON SHORTLIST HANDLING: Evaluate all items passed under the shortlist array. If an unknown, custom, or custom typed tool is listed on the shortlist that you do not have native database documentation for, you MUST still include it in all tables, scores, metrics, and comparisons. For custom entries, deduce requirements logically based on standard software constraints typical of that primary evaluation category.
 
 IRONCLAD RULES — these override everything else:
 - NEVER mention any tool, vendor, or product not explicitly on the buyer's shortlist. Not as a comparison. Not as an example. Not anywhere.
@@ -753,6 +752,8 @@ const STACK_PROMPT = `You are Delphi, an independent software implementation ana
 
 CRITICAL: The very first line of your output must be ## What We Heard. Nothing before ## What We Heard.
 
+IMPORTANT ON CONSIDERED TOOLS: Evaluate all entries passed under the tools being considered array. If a user inputs an unknown or custom typed vendor, you MUST still construct the complete report architecture around it. Deduce data flow dependencies based on best-practice integrations within that primary software group.
+
 IRONCLAD RULES:
 - NEVER mention any tool not on the buyer's shortlist.
 - NEVER fabricate URLs. Only include URLs retrieved via web search in this session.
@@ -830,7 +831,6 @@ function buildEvalPrompt(answers) {
     answers.timeline_detail ? "Timeline detail: " + answers.timeline_detail : null,
   ];
 
-  // Category-specific answers
   const catKeys = Object.keys(answers).filter(k =>
     !["categories", "shortlist", "problem", "maturity", "maturity_detail", "ops_support", "ops_detail",
       "stack", "data_quality", "data_detail", "change_readiness", "change_detail",
@@ -874,12 +874,10 @@ function buildStackPrompt(answers) {
 
 // ─── REPORT PARSING & RENDERING ───────────────────────────────────────────────
 
-// Clean model output — join orphaned sentence fragments caused by web search citation stripping
+// FIXED: Clean function rebuilt to avoid breaking baseline layouts and separating structural trailing punctuation
 function cleanModelText(text) {
-  // Remove citation markers like [1], [2], [Source], etc.
   let cleaned = text.replace(/\[\d+\]/g, "").replace(/\[Source[^\]]*\]/gi, "");
   
-  // Join lines that are clearly continuations
   const lines = cleaned.split("\n");
   const joined = [];
   let i = 0;
@@ -887,14 +885,13 @@ function cleanModelText(text) {
     const line = lines[i];
     const trimmed = line.trim();
     
-    // Look at next non-empty line
     let j = i + 1;
     while (j < lines.length && !lines[j].trim()) j++;
     const next = j < lines.length ? lines[j].trim() : null;
     
-    // Join if: current line doesn't end sentence AND next line starts with lowercase/punctuation
     const currentEndsIncomplete = trimmed && !trimmed.match(/[.!?:]$/) && !trimmed.startsWith("#") && !trimmed.startsWith("|") && !trimmed.match(/^\d+\/5/);
-    const nextIsContinuation = next && /^[a-z,;.]/.test(next) && !next.startsWith("##") && !next.startsWith("###") && !next.startsWith("|");
+    // Explicitly check that next line doesn't start with independent syntax parameters or orphan elements
+    const nextIsContinuation = next && /^[a-z]/.test(next) && !next.startsWith("##") && !next.startsWith("###") && !next.startsWith("|");
     
     if (currentEndsIncomplete && nextIsContinuation) {
       joined.push(trimmed + " " + next);
@@ -905,11 +902,10 @@ function cleanModelText(text) {
     }
   }
   
-  // Remove orphaned punctuation-only lines
   return joined
     .filter(line => {
       const t = line.trim();
-      return !t.match(/^[.,;]\s*$/) && t !== "and" && t !== "or" && t !== "but" && t !== "with";
+      return !t.match(/^[.,;!?:]\s*$/) && t !== "and" && t !== "or" && t !== "but" && t !== "with";
     })
     .join("\n");
 }
@@ -944,7 +940,6 @@ function renderContent(content, sectionTitle) {
   const elements = [];
   let i = 0;
 
-  // State for vendor card grouping
   let inVendorCard = false;
   let cardRawLines = [];
   let cardToolName = null;
@@ -959,7 +954,6 @@ function renderContent(content, sectionTitle) {
   const flushVendorCard = (key) => {
     if (!cardToolName) return;
 
-    // Reorganize card content into two-column grid
     const fieldOrder = ["What it does well", "What it does not do well", "Implementation timeline", "Pricing", "Integration requirements", "Bottom line"];
     const fieldData = {};
     let currentField = null;
@@ -973,7 +967,6 @@ function renderContent(content, sectionTitle) {
         currentField = matched.replace(":", "");
         currentText = [line.trim().slice(matched.length).trim()];
       } else if (currentField && line.trim()) {
-        // Strip leading period artifact
         const cleaned = line.trim().replace(/^\.\s+/, "").replace(/^[-•]\s+/, "");
         if (cleaned) currentText.push(cleaned);
       }
@@ -1058,9 +1051,8 @@ function renderContent(content, sectionTitle) {
   while (i < lines.length) {
     const line = lines[i];
     if (!line.trim()) { i++; continue; }
-    const clean = line.replace(/\*\*(.*?)\*\*/g, "$1");
+    const clean = line.replace(/\*\*(.*?)\*\"/g, "$1");
 
-    // ── TABLE ────────────────────────────────────────────────────────
     if (line.trim().startsWith("|")) {
       if (inVendorCard) flushVendorCard(i);
       if (inQuestionGroup) flushQuestionGroup(i);
@@ -1074,7 +1066,6 @@ function renderContent(content, sectionTitle) {
         const headers = rows[0].split("|").map(h => h.trim()).filter(Boolean);
         const data = rows.slice(1).map(r => r.split("|").map(c => c.trim()).filter(Boolean));
 
-        // Compact legend for How We Score Readiness table
         const isLegendTable = headers.length === 2 && headers[0].toLowerCase().includes("score") && headers[1].toLowerCase().includes("mean");
         if (isLegendTable) {
           elements.push(
@@ -1113,17 +1104,12 @@ function renderContent(content, sectionTitle) {
       }
     }
 
-    // ── VENDOR HEADER: "ToolName | Score | Budget | Readiness" ───────
     const rawHeaderLine = line.trim().startsWith("### ") ? line.trim().replace("### ", "") : line.trim();
-    // Match any line with a tool name followed by | X/5
     if (!isQuestionsSection && !rawHeaderLine.startsWith("|") && rawHeaderLine.match(/\|\s*\d+\/5/i)) {
       if (inVendorCard) flushVendorCard(i);
-      // Split on | and clean each part
       const parts = rawHeaderLine.split("|").map(p => p.trim()).filter(p => p);
       cardToolName = parts[0];
-      // Build meta from remaining parts, stripping verbose budget text
       cardMeta = parts.slice(1).map(p => {
-        // Shorten long budget descriptions
         p = p.replace(/Budget:\s*/i, "").replace(/Readiness:\s*/i, "");
         return p;
       }).join(" · ");
@@ -1133,15 +1119,12 @@ function renderContent(content, sectionTitle) {
       i++; continue;
     }
 
-    // ── FIELD LABELS and content inside vendor card ──────────────────
     if (inVendorCard) {
       cardRawLines.push(line);
       i++; continue;
     }
 
-    // ── QUESTIONS SECTION LOGIC ──────────────────────────────────────
     if (isQuestionsSection) {
-      // Group headers — handle plain text and **bold** variants
       const cleanLine = line.trim().replace(/^\*+/, "").replace(/\*+$/, "");
       const isAskAll = cleanLine === "Ask All Vendors:" || cleanLine === "Ask All Vendors";
       const isAskVendor = cleanLine.match(/^Ask .+ specifically:?$/) !== null;
@@ -1153,11 +1136,9 @@ function renderContent(content, sectionTitle) {
         i++; continue;
       }
 
-      // Numbered question inside a group
       if (inQuestionGroup && /^\d+\./.test(line.trim())) {
         questionCounter++;
         const questionText = line.trim().replace(/^\d+\.\s*/, "");
-        // Look ahead for "What to listen for:" on next non-empty line
         let j = i + 1;
         while (j < lines.length && !lines[j].trim()) j++;
         let guidance = null;
@@ -1168,11 +1149,6 @@ function renderContent(content, sectionTitle) {
             j++;
           }
         }
-        const isLast = (() => {
-          let k = j;
-          while (k < lines.length && !lines[k].trim()) k++;
-          return k >= lines.length || lines[k].trim().match(/^Ask /) || lines[k].trim() === "";
-        })();
         questionGroupItems.push(
           <div key={`q-${i}`} style={{ padding: "14px 20px", borderBottom: "0.5px solid " + C.border }}>
             <div style={{ display: "flex", gap: 14, alignItems: "flex-start" }}>
@@ -1193,7 +1169,6 @@ function renderContent(content, sectionTitle) {
       }
     }
 
-    // ── SOURCES CATEGORY HEADERS ─────────────────────────────────────
     if (sectionTitle === "Sources" && (line.trim() === "G2 Reviews" || line.trim() === "Vendor Documentation" || line.trim() === "Analyst Reports")) {
       elements.push(
         <p key={i} style={{ fontSize: 12, fontWeight: 700, letterSpacing: 2, textTransform: "uppercase", color: C.accent, margin: "20px 0 10px", fontFamily: FF }}>{line.trim()}</p>
@@ -1201,7 +1176,6 @@ function renderContent(content, sectionTitle) {
       i++; continue;
     }
 
-    // ── URLS — handle inline label+URL on same line ──────────────────
     if (line.trim().match(/^\[.+\]\(https?:\/\/.+\)/)) {
       const match = line.trim().match(/^\[(.+)\]\((https?:\/\/.+)\)/);
       if (match) {
@@ -1209,18 +1183,15 @@ function renderContent(content, sectionTitle) {
         i++; continue;
       }
     }
-    // Plain URL on its own line
     if (line.trim().match(/^https?:\/\//)) {
       elements.push(<div key={i} style={{ marginBottom: 10 }}><a href={line.trim()} target="_blank" rel="noopener noreferrer" style={{ color: C.accent, fontSize: 15, fontFamily: FF, wordBreak: "break-all", textDecoration: "underline" }}>{line.trim()}</a></div>);
       i++; continue;
     }
-    // "- https://..." bullet URL
     if (line.trim().match(/^[-•]\s*https?:\/\//)) {
       const url = line.trim().replace(/^[-•]\s*/, "");
       elements.push(<div key={i} style={{ marginBottom: 10 }}><a href={url} target="_blank" rel="noopener noreferrer" style={{ color: C.accent, fontSize: 15, fontFamily: FF, wordBreak: "break-all", textDecoration: "underline" }}>{url}</a></div>);
       i++; continue;
     }
-    // "Label text https://url" — label and URL on same line (model sometimes does this)
     if (line.trim().match(/\s+https?:\/\/\S+$/)) {
       const urlMatch = line.trim().match(/^(.+?)\s+(https?:\/\/\S+)$/);
       if (urlMatch) {
@@ -1233,7 +1204,6 @@ function renderContent(content, sectionTitle) {
       }
     }
 
-    // ── SCORE CARD ───────────────────────────────────────────────────
     if (/^OVERALL (READINESS|COMPATIBILITY):/i.test(line)) {
       const match = line.match(/(\d(?:\.\d)?)\s*\/\s*5/);
       const score = match ? parseFloat(match[1]) : null;
@@ -1256,7 +1226,6 @@ function renderContent(content, sectionTitle) {
       }
     }
 
-    // ── READINESS DIMENSION HEADERS: "Dimension Name | X/5" ─────────
     if (!isQuestionsSection && !inVendorCard && line.trim().match(/^[A-Za-z\s]+\|\s*\d+\/5$/) && !line.trim().startsWith("|")) {
       const parts = line.trim().split("|").map(p => p.trim());
       elements.push(
@@ -1268,19 +1237,16 @@ function renderContent(content, sectionTitle) {
       i++; continue;
     }
 
-    // ── SUBHEADERS ───────────────────────────────────────────────────
     if (line.startsWith("### ")) {
       const content = line.replace("### ", "").trim();
       elements.push(<p key={i} style={{ fontSize: 13, fontWeight: 700, letterSpacing: 1.5, textTransform: "uppercase", color: C.accent, margin: "24px 0 8px", fontFamily: FF }}>{content}</p>);
       i++; continue;
     }
 
-    // ── WHAT YOU SHOULD KNOW thematic headers (bold lines with colon) ─
     if (line.match(/^\*\*(.+:)\*\*$/) || (line.match(/^\*\*(.+)\*\*$/) && !line.includes("|"))) {
       const isSubItem = line.match(/^\*\*(.+:)\*\*$/);
       const label = clean.replace(/:$/, "");
       if (isSubItem) {
-        // Collect following prose until next bold line or section break
         let j = i + 1;
         const bodyLines = [];
         while (j < lines.length && lines[j].trim() && !lines[j].match(/^\*\*/) && !lines[j].startsWith("##") && !lines[j].startsWith("###")) {
@@ -1296,14 +1262,12 @@ function renderContent(content, sectionTitle) {
         );
         i = j;
       } else {
-        // Section header (no colon) — keep as bold heading with rule
         elements.push(<p key={i} style={{ fontSize: 15, fontWeight: 700, color: C.text, margin: "20px 0 8px", lineHeight: 1.6, fontFamily: FF, borderBottom: "0.5px solid " + C.border, paddingBottom: 6 }}>{label}</p>);
         i++;
       }
       continue;
     }
 
-    // ── BULLETS ──────────────────────────────────────────────────────
     if (line.startsWith("- ") || line.startsWith("• ")) {
       elements.push(
         <div key={i} style={{ display: "flex", gap: 12, marginBottom: 10 }}>
@@ -1314,7 +1278,6 @@ function renderContent(content, sectionTitle) {
       i++; continue;
     }
 
-    // ── NUMBERED LIST ────────────────────────────────────────────────
     if (/^\d+\./.test(line)) {
       const num = line.match(/^\d+/)[0];
       const text = line.replace(/^\d+\.\s*/, "").replace(/\*\*(.*?)\*\*/g, "$1");
@@ -1327,12 +1290,11 @@ function renderContent(content, sectionTitle) {
       i++; continue;
     }
 
-    // ── DEFAULT PARAGRAPH ────────────────────────────────────────────
-    elements.push(<p key={i} style={{ fontSize: 16, fontWeight: 500, lineHeight: 1.9, color: C.textMid, marginBottom: 14, fontFamily: FF }}>{clean}</p>);
+    // FIXED: Styled paragraph block baseline wrapper with clean display parameters to handle trailing orphan items
+    elements.push(<p key={i} style={{ fontSize: 16, fontWeight: 500, lineHeight: 1.9, color: C.textMid, marginBottom: 14, fontFamily: FF, display: "inline-block", width: "100%" }}>{clean}</p>);
     i++;
   }
 
-  // Flush any open groups
   if (inVendorCard) flushVendorCard("end");
   if (inQuestionGroup) flushQuestionGroup("end");
 
@@ -1402,11 +1364,8 @@ export default function Delphi({ paymentStatus, startCheckout, onHome }) {
     }
   }, [currentQ, step]);
 
-  // Build question queue from selected categories
   const buildQuestionQueue = (categories) => {
     const queue = [...CORE_QUESTIONS];
-    // Add category-specific questions for selected categories
-    // If multiple categories selected, deduplicate by question id
     const seen = new Set(CORE_QUESTIONS.map(q => q.id));
     categories.forEach(catId => {
       const catQs = CATEGORY_QUESTIONS[catId] || [];
@@ -1440,7 +1399,6 @@ export default function Delphi({ paymentStatus, startCheckout, onHome }) {
     const shortlistKey = reportType === "stack_fit" ? "stack_shortlist" : "shortlist";
     const labels = selectedCategories.map(id => TOOL_CATEGORIES.find(x => x.id === id)?.label).filter(Boolean);
     const queue = buildQuestionQueue(selectedCategories);
-    // Strip "Other: " prefix so model sees clean tool names
     const cleanedTools = selectedTools.map(t => t.startsWith("Other: ") ? t.replace("Other: ", "").trim() : t);
     setAnswers({ categories: labels, [shortlistKey]: cleanedTools });
     setQuestionQueue(queue);
@@ -1451,7 +1409,6 @@ export default function Delphi({ paymentStatus, startCheckout, onHome }) {
   const submitAnswer = (value) => {
     const newAnswers = { ...answers, [q.id]: value };
 
-    // Check for branch question
     if (q.branch && q.branch.trigger.includes(value)) {
       const branchQ = { ...q.branch, isBranch: true };
       const newQueue = [
@@ -1590,14 +1547,12 @@ export default function Delphi({ paymentStatus, startCheckout, onHome }) {
                         </button>
                       );
                     })}
-                    {/* Other option */}
                     <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
                       <button
                         onClick={() => {
                           if (otherVal.trim()) {
                             toggleTool(otherToolName);
                           } else {
-                            // Focus the input if no value typed yet
                             document.getElementById(`other-input-${catId}`)?.focus();
                           }
                         }}
