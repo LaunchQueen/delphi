@@ -1122,12 +1122,21 @@ function renderContent(content, sectionTitle) {
       }
     }
 
-    const rawHeaderLine = line.trim().startsWith("### ") ? line.trim().replace("### ", "") : line.trim();
+ const rawHeaderLine = line.trim().startsWith("### ") ? line.trim().replace("### ", "") : line.trim();
     if (!isQuestionsSection && !rawHeaderLine.startsWith("|") && (rawHeaderLine.includes("|") && rawHeaderLine.match(/\d+\/5/))) {
       if (inVendorCard) flushVendorCard(i);
       const parts = rawHeaderLine.split("|").map(p => p.trim());
       cardToolName = parts[0].replace(/\*\*/g, "");
-      cardMeta = parts.slice(1).map(p => p.replace(/Budget:\s*/i, "").replace(/Readiness:\s*/i, "").replace(/Stack Compatibility:\s*/i, "").replace(/Integration Complexity:\s*/i, "")).join(" · ");
+      
+      // FIXED: Safely wraps the tags in an active .map loop so JavaScript doesn't crash the browser
+      cardMeta = parts.slice(1).map(p => {
+        return p.replace(/Budget:\s*/i, "")
+                .replace(/Readiness:\s*/i, "")
+                .replace(/Stack Compatibility:\s*/i, "")
+                .replace(/Integration Complexity:\s*/i, "")
+                .replace(/\*\*/g, "");
+      }).join(" · ");
+      
       cardIsRecommended = vendorCardCount === 0;
       vendorCardCount++;
       inVendorCard = true;
