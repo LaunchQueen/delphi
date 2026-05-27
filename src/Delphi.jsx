@@ -790,25 +790,69 @@ SECTION REQUIREMENTS:
 Immediately after the summary paragraph:
 | Tool | Score | Stack Compatibility | Integration Complexity | Our Take |
 
-**Stack Compatibility Assessment** — Order most to least compatible. For each tool: Tool name | Score | Stack Compatibility | Integration Complexity.
+**Stack Compatibility Assessment** — Order most to least compatible. For each tool, open with a header line in EXACTLY this format:
+ToolName | X/5 | Stack Compatibility: [one word] | Integration Complexity: [one word]
 
-**Integration Readiness** — Five dimensions: Integration Ownership Clarity, Current Stack Health, Data Model Maturity, Team Capacity for New Integrations, Historical Integration Track Record.
+Then write the assessment using these exact field labels. Use plain prose only — no bullet points.
 
-For each dimension write the header in EXACTLY this format:
+What it does well:
+[2-3 sentences]
+
+What it does not do well:
+[2-3 sentences]
+
+Implementation timeline:
+[X to Y weeks]
+
+Pricing:
+[Verified price or "Requires direct quote from vendor."]
+
+Integration requirements:
+[Plain prose]
+
+Bottom line:
+[One direct sentence]
+
+**Integration Readiness** — Structure in this exact order:
+1. Opening paragraph: 2-3 sentences on what Integration Readiness measures. End after "implement successfully."
+2. OVERALL COMPATIBILITY: X/5
+3. | Dimension | Score | Status |
+4. | Score | What It Means |
+   | 1-2 | Address before go-live |
+   | 3 | Manageable with preparation |
+   | 4-5 | Strong foundation |
+
+For each dimension, write the header in EXACTLY this format on its own line — no bold, no asterisks, no colon:
 Dimension Name | X/5
 
-Then write analysis in plain prose.
+Then write analysis in plain prose on the following lines.
 
-**What You Should Know** — Vendor-specific integration gotchas only.
+The five dimensions:
+1. Integration Ownership Clarity
+2. Current Stack Health
+3. Data Model Maturity
+4. Team Capacity for New Integrations
+5. Historical Integration Track Record
+
+**What You Should Know** — Vendor-specific integration gotchas only. No general advice. No tools not on the shortlist.
 
 **Questions to Ask Before You Integrate** —
 Ask All Vendors:
 1. [Question]
 What to listen for: [one sentence]
 
+Ask [Vendor] specifically:
+1. [Question]
+What to listen for: [one sentence]
+
+Numbers restart at 1 for each vendor group.
+
 **Our Compatibility Verdict** —
 We recommend [Tool] for integration.
-[Two to four sentences.]
+[Two to four sentences: why this tool fits this buyer's specific stack.]
+
+For each tool NOT recommended, write one sentence:
+[Tool] is [genuine strength] but is not the best stack fit because [specific reason tied to their stack].
 
 **Sources** — Real URLs only. Plain label, plain URL, one per line.`;
 
@@ -1111,12 +1155,20 @@ function renderContent(content, sectionTitle) {
     }
 
     // ── VENDOR HEADER: "ToolName | X/5 | ..." ───────────────────────
+    // Only fire for Shortlist/Compatibility Assessment sections, not Integration Readiness dimensions
+    const isVendorCardSection = sectionTitle === "Your Shortlist, Assessed" || sectionTitle === "Stack Compatibility Assessment";
     const rawHeaderLine = line.trim().startsWith("### ") ? line.trim().replace("### ", "") : line.trim();
-    if (!isQuestionsSection && !rawHeaderLine.startsWith("|") && rawHeaderLine.match(/\|\s*\d+\/5/i)) {
+    if (isVendorCardSection && !isQuestionsSection && !rawHeaderLine.startsWith("|") && rawHeaderLine.match(/\|\s*\d+\/5/i)) {
       if (inVendorCard) flushVendorCard(i);
       const parts = rawHeaderLine.split("|").map(p => p.trim()).filter(p => p);
-      cardToolName = parts[0];
-      cardMeta = parts.slice(1).map(p => p.replace(/Budget:\s*/i, "").replace(/Readiness:\s*/i, "")).join(" · ");
+      cardToolName = parts[0].replace(/\*\*/g, "");
+      cardMeta = parts.slice(1).map(p =>
+        p.replace(/Budget:\s*/i, "")
+         .replace(/Readiness:\s*/i, "")
+         .replace(/Stack Compatibility:\s*/i, "")
+         .replace(/Integration Complexity:\s*/i, "")
+         .replace(/\*\*/g, "")
+      ).join(" · ");
       cardIsRecommended = vendorCardCount === 0;
       vendorCardCount++;
       inVendorCard = true;
@@ -1224,11 +1276,12 @@ function renderContent(content, sectionTitle) {
       }
     }
 
-    // ── FIX 3: READINESS DIMENSION HEADERS ───────────────────────────
-    // Handles: "Data Readiness | 4/5", "Data Readiness: 4/5", "**Ops Capacity | 5/5**", "**Ops Capacity: 5/5**"
-    if (!isQuestionsSection && !inVendorCard) {
+    // ── FIX 3: READINESS / INTEGRATION READINESS DIMENSION HEADERS ───
+    // Handles: "Data Readiness | 4/5", "Data Readiness: 4/5", "**Ops Capacity | 5/5**"
+    // Fires for Readiness Score AND Integration Readiness sections
+    const isDimensionSection = sectionTitle === "Readiness Score" || sectionTitle === "Integration Readiness";
+    if (isDimensionSection && !isQuestionsSection && !inVendorCard) {
       const stripped = line.trim().replace(/^\*+/, "").replace(/\*+$/, "");
-      // Match "Word(s) | X/5" or "Word(s): X/5" — but not table rows starting with |
       const dimMatch = stripped.match(/^([A-Za-z][A-Za-z\s]{2,}?)\s*[|:]\s*(\d+\/5)$/);
       if (dimMatch && !stripped.startsWith("|")) {
         const dimName = dimMatch[1].trim();
@@ -1274,6 +1327,13 @@ function renderContent(content, sectionTitle) {
         i++;
       }
       continue;
+    }
+
+    // Strip stray leading ** that didn't match a proper bold block (leaked asterisks)
+    if (line.trim().startsWith("**") && !line.trim().endsWith("**")) {
+      const stripped = line.replace(/^\*\*/, "").trim();
+      elements.push(<p key={i} style={{ fontSize: 16, fontWeight: 500, lineHeight: 1.9, color: C.textMid, marginBottom: 14, fontFamily: FF }}>{stripped.replace(/\*\*/g, "")}</p>);
+      i++; continue;
     }
 
     // ── BULLETS ──────────────────────────────────────────────────────
