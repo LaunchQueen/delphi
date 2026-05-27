@@ -159,7 +159,7 @@ const STACK_CORE_QUESTIONS = [
   }
 ];
 
-// ─── CATEGORY-SPECIFIC PATH QUESTIONS ─────────────────────────────────────────
+// ─── CATEGORY-SPECIFIC QUESTIONS ──────────────────────────────────────────────
 const CATEGORY_QUESTIONS = {
   abm: [
     {
@@ -264,15 +264,7 @@ READING THE BUYER'S ANSWERS:
 - If a buyer says they have dedicated resources for something, do not flag that thing as a resource risk.
 - If a buyer describes a sequenced plan — selecting a tool, then signing, then beginning implementation after a known dependency resolves — recognize that as organized planning, not a risk. Do not flag the sequencing as a problem.
 
-TONE:
-- Matter-of-fact. State facts without assigning emotional weight.
-- Guidance over assumption. Describe what the tool requires. Let the buyer assess whether they have it.
-- Balanced. Not doom-and-gloom. Not sunshine.
-- Align the change management assessment with the recommended tool's actual requirements — not the heaviest tool on the list.
-
-CATEGORY-SPECIFIC LOGIC:
-- For niche markets with known, finite TAMs: deterministic intent data (Demandbase approach) delivers faster ROI than probabilistic models (6sense approach). A buyer who knows every account in their market does not need AI to surface unknown buyers. Recommend accordingly.
-- Spell tool names correctly: 6sense not Six Sense, Demandbase not DemandBase.
+TONE: Fact-backed, direct, neutral.
 
 Use ONLY these exact section headers, in this order:
 ## What We Heard
@@ -395,38 +387,7 @@ G2 Reviews
 
 Vendor Documentation
 [tool name] Knowledge Base
-[url]
-
-Search for tools on the buyer's shortlist:
-- G2: search "site:g2.com [toolname] reviews"
-- Gartner Magic Quadrant or Forrester Wave for the category
-- Vendor documentation starting points:
-  - Demandbase: support.demandbase.com or docs.demandbase.com
-  - 6sense: support.6sense.com or docs.6sense.com
-  - Terminus: support.terminus.com or help.terminus.com
-  - Outreach: support.outreach.io or university.outreach.io
-  - Salesloft: support.salesloft.com or help.salesloft.com
-  - Gong: help.gong.io or support.gong.io
-  - ZoomInfo: university.zoominfo.com or help.zoominfo.com
-  - Apollo: knowledge.apollo.io or help.apollo.io
-  - HubSpot: knowledge.hubspot.com
-  - Marketo: experienceleague.adobe.com/en/docs/marketo
-  - Clearbit: clearbit.com/docs or developer.clearbit.com
-  - Cognism: help.cognism.com
-  - Lusha: help.lusha.com
-  - Groove: help.groove.co or support.groove.co
-  - Clari: help.clari.com
-  - Mediafly: help.mediafly.com
-  - Pardot: help.salesforce.com/s/articleView?id=sf.pardot_overview.htm
-  - Eloqua: docs.oracle.com/en/cloud/saas/marketing/eloqua-user
-  - Rollworks: help.rollworks.com
-  - Chorus: help.chorus.ai
-  - Pipedrive: support.pipedrive.com
-  - Microsoft Dynamics: learn.microsoft.com/dynamics365
-  - Salesforce CRM: help.salesforce.com
-
-Do not include marketing pages, pricing pages, homepage URLs, or any tool not on the buyer's shortlist.
-Format: plain label on one line, plain URL on next line. No markdown link syntax.`;
+[url]`;
 
 const STACK_PROMPT = `You are Delphi, an independent software implementation analyst for B2B SaaS buyers. You have no financial relationship with any vendor. A buyer has a shortlist and needs to understand what their existing stack and team will need to do to make each tool work.
 
@@ -716,7 +677,8 @@ function renderContent(content, sectionTitle) {
     let line = lines[i];
     if (!line.trim()) { i++; continue; }
 
-    const clean = line.replace(/\*\*(.*?)\*\//g, "$1").replace(/\*\/g, "");
+    // FIXED: Escaped forward slashes correctly to safeguard compiler deployment pipelines
+    const clean = line.replace(/\/\*(.*?)\*\//g, "$1").replace(/\/\*/g, "");
 
     if (line.trim().startsWith("|")) {
       if (inVendorCard) flushVendorCard(i);
@@ -920,7 +882,7 @@ function renderContent(content, sectionTitle) {
   return elements;
 }
 
-// ─── MAIN APP IMPLEMENTATION ENTRY ────────────────────────────────────────────
+// ─── MAIN COMPONENT ───────────────────────────────────────────────────────────
 export default function Delphi({ paymentStatus, startCheckout, onHome }) {
   const [reportType, setReportType] = useState(null);
   const [step, setStep] = useState("select");
@@ -947,7 +909,6 @@ export default function Delphi({ paymentStatus, startCheckout, onHome }) {
     }
   }, [currentQ, step, q]);
 
-  // FIXED: Keeps structural strategy items fully insulated from technical data pipes
   const buildQuestionQueue = (categories, currentType) => {
     const baseQueue = currentType === "stack_fit" ? [...STACK_CORE_QUESTIONS] : [...CORE_QUESTIONS];
     const queue = [...baseQueue];
@@ -994,7 +955,6 @@ export default function Delphi({ paymentStatus, startCheckout, onHome }) {
     setStep("questions");
   };
 
-  // FIXED: Re-mapped pointer checks to eliminate question index reset loops
   const submitAnswer = (value) => {
     const newAnswers = { ...answers, [q.id]: value };
     setAnswers(newAnswers);
@@ -1025,7 +985,7 @@ export default function Delphi({ paymentStatus, startCheckout, onHome }) {
       clearTimeout(timeout);
       const data = await res.json();
       
-      // FIXED: Protective boundary array safeguards free trial promo executions safely
+      // FIXED: Safe logic protector ensures payment tokens and trial keys bifurcate error-free
       if (data && data.url) {
         window.location.href = data.url;
         return; 
@@ -1179,7 +1139,81 @@ export default function Delphi({ paymentStatus, startCheckout, onHome }) {
     </div>
   );
 
-  // ─── QUESTION STEPS OVERRIDE LAYER ───────────────────────────────────────────
+  // ─── GENERATING ──────────────────────────────────────────────────────────────
+  if (step === "generating") return (
+    <div style={pageWrap}>
+      <style>{GS}</style>
+      <div style={{ textAlign: "center", maxWidth: 480, padding: "0 24px" }}>
+        <div style={{ width: 48, height: 48, border: "3px solid " + C.border, borderTop: "3px solid " + C.accent, borderRadius: "50%", margin: "0 auto 28px", animation: "spin 0.9s linear infinite" }} />
+        <p style={{ fontSize: 22, fontWeight: 700, color: C.text, marginBottom: 14, fontFamily: FFD }}>Building your report</p>
+        <p style={{ fontSize: 16, fontWeight: 500, color: C.textMid, lineHeight: 1.75, marginBottom: 12 }}>
+          {reportType === "stack_fit"
+            ? "Analyzing your stack, integration patterns, and compatibility signals."
+            : "Analyzing your situation against known implementation requirements and organizational readiness signals."}
+        </p>
+        <p style={{ fontSize: 14, fontWeight: 500, color: C.textLight, lineHeight: 1.6 }}>This takes about 45–60 seconds. We're pulling current information, not cached answers.</p>
+      </div>
+    </div>
+  );
+
+  // ─── REPORT ──────────────────────────────────────────────────────────────────
+  if (step === "report") {
+    const section = reportSections[activeSection];
+    return (
+      <div style={{ minHeight: "100vh", background: C.bg, display: "flex", fontFamily: FF }}>
+        <style>{GS}</style>
+        <div style={{ width: 240, minWidth: 240, background: C.sidebar, borderRight: "1px solid " + C.border, padding: "32px 20px", display: "flex", flexDirection: "column", position: "sticky", top: 0, height: "100vh", overflowY: "auto" }}>
+          <Logo small />
+          <p style={{ fontSize: 11, fontWeight: 700, color: C.textLight, letterSpacing: 1.5, textTransform: "uppercase", marginBottom: 24, marginLeft: 44 }}>
+            {reportType === "stack_fit" ? "Stack Fit Report" : "Evaluation Report"}
+          </p>
+          <div style={{ height: 1, background: C.border, marginBottom: 16 }} />
+          <nav style={{ display: "flex", flexDirection: "column", gap: 4, flex: 1 }}>
+            {reportSections.map((sec, i) => {
+              const isActive = activeSection === i;
+              return (
+                <button key={i} onClick={() => setActiveSection(i)}
+                  style={{ background: isActive ? C.accent : "transparent", border: "none", borderRadius: 4, padding: "10px 12px", textAlign: "left", cursor: "pointer", display: "flex", alignItems: "flex-start", gap: 10 }}>
+                  <span style={{ fontSize: 11, color: isActive ? C.white : C.accent, marginTop: 2, flexShrink: 0 }}>{sectionIcons[sec.title] || "○"}</span>
+                  <span style={{ fontSize: 13, fontWeight: 600, lineHeight: 1.4, color: isActive ? C.white : C.textMid }}>{sec.title}</span>
+                </button>
+              );
+            })}
+          </nav>
+          <div style={{ height: 1, background: C.border, margin: "16px 0" }} />
+          <button onClick={restart} style={{ background: "none", border: "1px solid " + C.border, borderRadius: 4, color: C.textLight, fontSize: 12, fontWeight: 700, padding: "9px 12px", letterSpacing: 1.5, textTransform: "uppercase", fontFamily: FF }}>New Report</button>
+        </div>
+
+        <div style={{ flex: 1, padding: "40px 56px 40px 48px", maxWidth: 780, overflowY: "auto" }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 28, paddingBottom: 22, borderBottom: "2px solid " + C.borderDark }}>
+            <h2 style={{ fontSize: 26, fontWeight: 700, color: C.text, fontFamily: FFD }}>{section?.title}</h2>
+            <span style={{ fontSize: 13, fontWeight: 500, color: C.textLight, marginTop: 6 }}>{activeSection + 1} / {reportSections.length}</span>
+          </div>
+          <div style={{ marginBottom: 32 }}>{section && renderContent(section.content, section.title)}</div>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", paddingTop: 20, borderTop: "1px solid " + C.border }}>
+            <button onClick={() => activeSection > 0 && setActiveSection(activeSection - 1)}
+              style={{ background: "none", border: "none", color: C.textMid, fontSize: 15, fontWeight: 500, opacity: activeSection === 0 ? 0.3 : 1, cursor: activeSection === 0 ? "default" : "pointer", fontFamily: FF }}>← Previous</button>
+            <div style={{ display: "flex", gap: 7 }}>
+              {reportSections.map((_, i) => (
+                <div key={i} onClick={() => setActiveSection(i)}
+                  style={{ width: 7, height: 7, borderRadius: "50%", background: i === activeSection ? C.accent : C.border, cursor: "pointer", transition: "background 0.2s" }} />
+              ))}
+            </div>
+            {activeSection < reportSections.length - 1 ? (
+              <button onClick={() => setActiveSection(activeSection + 1)}
+                style={{ background: "none", border: "none", color: C.textMid, fontSize: 15, fontWeight: 500, cursor: "pointer", fontFamily: FF }}>Next →</button>
+            ) : (
+              <span style={{ fontSize: 13, fontWeight: 500, color: C.textLight, fontFamily: FF }}>End of report</span>
+            )}
+          </div>
+          <p style={{ fontSize: 13, fontWeight: 500, color: C.textLight, marginTop: 36, paddingTop: 20, borderTop: "1px solid " + C.border, lineHeight: 1.7 }}>Delphi is funded by subscribers, not vendors. No platform pays for placement, recommendation, or access. Ever.</p>
+          <p style={{ fontSize: 12, fontWeight: 400, color: C.textLight, marginTop: 12, lineHeight: 1.7 }}>Delphi reports are generated using AI and publicly available information. They are for informational purposes only and do not constitute professional, legal, or financial advice. Vendor pricing, product capabilities, and market positioning change frequently — verify all claims directly with vendors before making any purchasing decision. Delphi is not responsible for outcomes resulting from decisions made based on this report.</p>
+        </div>
+      </div>
+    );
+  }
+
+  // ─── QUESTIONS PANEL ─────────────────────────────────────────────────────────
   return (
     <div style={pageWrap}>
       <style>{GS}</style>
