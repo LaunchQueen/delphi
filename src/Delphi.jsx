@@ -1462,3 +1462,291 @@ export default function Delphi({ paymentStatus, startCheckout, onHome }) {
         headers: { "Content-Type": "application/json" },
         signal: controller.signal,
         body: JSON.stringify({
+          system: reportType === "stack_fit" ? STACK_PROMPT : EVAL_PROMPT,
+          prompt: reportType === "stack_fit" ? buildStackPrompt(finalAnswers) : buildEvalPrompt(finalAnswers),
+        }),
+      });
+      clearTimeout(timeout);
+      const data = await res.json();
+      if (!data.text) throw new Error("empty");
+      const sections = parseReport(data.text, reportType);
+      setReportSections(sections.length ? sections : [{ title: "What We Heard", content: ["Unable to parse report. Please try again."] }]);
+      setStep("report");
+    } catch {
+      setReportSections([{ title: "What We Heard", content: ["Unable to generate your report. Please try again."] }]);
+      setStep("report");
+    }
+  };
+
+  const restart = () => {
+    setStep("select"); setReportType(null); setCurrentQ(0); setAnswers({});
+    setCurrentInput(""); setReportSections([]); setActiveSection(0);
+    setSelectedCategories([]); setSelectedTools([]); setCategoryStep("categories");
+    setQuestionQueue([]); setHoveredChoice(null); setOtherToolInputs({});
+  };
+
+  const pageWrap = { minHeight: "100vh", background: C.bg, display: "flex", alignItems: "center", justifyContent: "center", padding: "40px 24px", fontFamily: FF };
+
+  // ─── SELECT ──────────────────────────────────────────────────────────────────
+  if (step === "select") return (
+    <div style={{ minHeight: "100vh", background: C.bg, display: "flex", alignItems: "flex-start", justifyContent: "center", padding: "60px 24px", fontFamily: FF }}>
+      <style>{GS}</style>
+      <div style={{ maxWidth: 820, width: "100%", animation: "fadeUp 0.4s ease" }}>
+        <Logo />
+        <h1 style={{ fontFamily: FFD, fontSize: "clamp(28px, 4vw, 44px)", fontWeight: 700, color: C.text, lineHeight: 1.1, letterSpacing: -1, marginBottom: 12 }}>What are you trying to figure out?</h1>
+        <p style={{ fontSize: 17, fontWeight: 500, color: C.textMid, lineHeight: 1.8, marginBottom: 40 }}>Choose the report type that matches your situation.</p>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20 }}>
+          {[
+            { type: "evaluation", tag: "The Evaluation", title: "Find the right tool.", body: "You have a problem to solve. Delphi tells you which tool fits your situation, what it costs to implement, what your organization needs to prepare, and what to ask before you sign.", best: "First-time buyers, teams migrating platforms, anyone wanting an independent read before the sales cycle.", btn: "Start Evaluation", featured: true },
+            { type: "stack_fit", tag: "The Stack Fit", title: "Know how it fits what you have.", body: "You are adding to an existing stack. Delphi assesses data flow, integration depth, process overlap, and whether the tool creates dependencies or conflicts in your environment.", best: "Teams with established stacks, ops leaders managing tool sprawl, anyone asking whether this will work with what we have.", btn: "Start Stack Fit", featured: false },
+          ].map(card => (
+            <div key={card.type}
+              style={{ background: card.featured ? C.accent : C.white, border: "1.5px solid " + (card.featured ? C.accent : C.border), borderRadius: 10, padding: "36px 32px", display: "flex", flexDirection: "column", transition: "transform 0.2s, box-shadow 0.2s", cursor: "pointer" }}
+              onMouseEnter={e => { e.currentTarget.style.transform = "translateY(-3px)"; e.currentTarget.style.boxShadow = "0 12px 40px rgba(0,0,0,0.08)"; }}
+              onMouseLeave={e => { e.currentTarget.style.transform = "none"; e.currentTarget.style.boxShadow = "none"; }}>
+              <div style={{ fontSize: 11, letterSpacing: 2.5, textTransform: "uppercase", color: card.featured ? C.white : C.accent, background: card.featured ? "rgba(255,255,255,0.18)" : "rgba(61,107,33,0.08)", borderRadius: 20, padding: "4px 12px", marginBottom: 16, fontWeight: 700, alignSelf: "flex-start" }}>{card.tag}</div>
+              <h2 style={{ fontFamily: FFD, fontSize: 22, fontWeight: 700, color: card.featured ? C.white : C.text, marginBottom: 12, lineHeight: 1.2 }}>{card.title}</h2>
+              <p style={{ fontSize: 15, fontWeight: 500, lineHeight: 1.8, color: card.featured ? "rgba(255,255,255,0.88)" : C.textMid, marginBottom: 16, flex: 1 }}>{card.body}</p>
+              <p style={{ fontSize: 13, fontWeight: 500, color: card.featured ? "rgba(255,255,255,0.6)" : C.textLight, lineHeight: 1.6, fontStyle: "italic", paddingTop: 14, borderTop: "1px solid " + (card.featured ? "rgba(255,255,255,0.18)" : C.border), marginBottom: 20 }}>{card.best}</p>
+              <button onClick={() => startReport(card.type)} style={{ background: card.featured ? C.white : C.accent, color: card.featured ? C.accent : C.white, border: "none", borderRadius: 40, padding: "11px 24px", fontSize: 13, fontWeight: 700, letterSpacing: 2, textTransform: "uppercase", fontFamily: FF, alignSelf: "flex-start" }}>{card.btn}</button>
+            </div>
+          ))}
+        </div>
+        <p style={{ fontSize: 13, fontWeight: 500, color: C.textLight, marginTop: 20, textAlign: "center" }}>Funded by subscribers, not vendors. No platform pays for placement or recommendation. Ever.</p>
+      </div>
+    </div>
+  );
+
+  // ─── CATEGORY SELECT ─────────────────────────────────────────────────────────
+  if (step === "category_select") return (
+    <div style={pageWrap}>
+      <style>{GS}</style>
+      <div style={{ maxWidth: 600, width: "100%", animation: "fadeUp 0.4s ease" }}>
+        <Logo />
+        <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: 2, textTransform: "uppercase", color: C.accent, background: "rgba(61,107,33,0.08)", borderRadius: 20, padding: "4px 12px", marginBottom: 16, display: "inline-block" }}>
+          {reportType === "stack_fit" ? "The Stack Fit" : "The Evaluation"}
+        </div>
+        {categoryStep === "categories" ? (
+          <>
+            <h2 style={{ fontFamily: FFD, fontSize: 28, fontWeight: 700, color: C.text, marginBottom: 12, lineHeight: 1.2 }}>What category are you evaluating?</h2>
+            <p style={{ fontSize: 16, fontWeight: 500, color: C.textMid, lineHeight: 1.75, marginBottom: 28 }}>Select all that apply.</p>
+            <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 28 }}>
+              {TOOL_CATEGORIES.map(cat => {
+                const sel = selectedCategories.includes(cat.id);
+                return (
+                  <button key={cat.id} onClick={() => toggleCategory(cat.id)}
+                    style={{ background: sel ? C.accent : C.white, border: "1.5px solid " + (sel ? C.accent : C.border), borderRadius: 4, padding: "14px 18px", textAlign: "left", fontSize: 16, fontWeight: 500, color: sel ? C.white : C.text, transition: "all 0.15s", display: "flex", alignItems: "center", gap: 12 }}>
+                    <div style={{ width: 20, height: 20, borderRadius: 3, border: "2px solid " + (sel ? "rgba(255,255,255,0.6)" : C.borderDark), background: sel ? "rgba(255,255,255,0.25)" : "transparent", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, fontSize: 12, color: C.white, fontWeight: 700 }}>{sel ? "✓" : ""}</div>
+                    {cat.label}
+                  </button>
+                );
+              })}
+            </div>
+            <Btn onClick={() => setCategoryStep("tools")} disabled={selectedCategories.length === 0}>Select Tools</Btn>
+          </>
+        ) : (
+          <>
+            <h2 style={{ fontFamily: FFD, fontSize: 28, fontWeight: 700, color: C.text, marginBottom: 12, lineHeight: 1.2 }}>Which tools are you considering?</h2>
+            <p style={{ fontSize: 16, fontWeight: 500, color: C.textMid, lineHeight: 1.75, marginBottom: 28 }}>Select all that apply.</p>
+            {selectedCategories.map(catId => {
+              const cat = TOOL_CATEGORIES.find(c => c.id === catId);
+              if (!cat) return null;
+              const otherVal = otherToolInputs[catId] || "";
+              const otherToolName = `Other: ${otherVal.trim()}`;
+              const otherSelected = otherVal.trim() && selectedTools.includes(otherToolName);
+              return (
+                <div key={catId} style={{ marginBottom: 28 }}>
+                  <p style={{ fontSize: 12, fontWeight: 700, letterSpacing: 2, textTransform: "uppercase", color: C.accent, marginBottom: 12 }}>{cat.label}</p>
+                  <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                    {cat.tools.map(tool => {
+                      const sel = selectedTools.includes(tool);
+                      return (
+                        <button key={tool} onClick={() => toggleTool(tool)}
+                          style={{ background: sel ? C.accent : C.white, border: "1.5px solid " + (sel ? C.accent : C.border), borderRadius: 4, padding: "12px 18px", textAlign: "left", fontSize: 15, fontWeight: 500, color: sel ? C.white : C.text, transition: "all 0.15s", display: "flex", alignItems: "center", gap: 12 }}>
+                          <div style={{ width: 18, height: 18, borderRadius: 3, border: "2px solid " + (sel ? "rgba(255,255,255,0.6)" : C.borderDark), background: sel ? "rgba(255,255,255,0.25)" : "transparent", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, fontSize: 11, color: C.white, fontWeight: 700 }}>{sel ? "✓" : ""}</div>
+                          {tool}
+                        </button>
+                      );
+                    })}
+                    <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                      <button
+                        onClick={() => {
+                          if (otherVal.trim()) {
+                            toggleTool(otherToolName);
+                          } else {
+                            document.getElementById(`other-input-${catId}`)?.focus();
+                          }
+                        }}
+                        style={{ background: otherSelected ? C.accent : C.white, border: "1.5px solid " + (otherSelected ? C.accent : C.border), borderRadius: 4, padding: "12px 18px", textAlign: "left", fontSize: 15, fontWeight: 500, color: otherSelected ? C.white : C.text, transition: "all 0.15s", display: "flex", alignItems: "center", gap: 12, flexShrink: 0 }}>
+                        <div style={{ width: 18, height: 18, borderRadius: 3, border: "2px solid " + (otherSelected ? "rgba(255,255,255,0.6)" : C.borderDark), background: otherSelected ? "rgba(255,255,255,0.25)" : "transparent", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, fontSize: 11, color: C.white, fontWeight: 700 }}>{otherSelected ? "✓" : ""}</div>
+                        Other
+                      </button>
+                      <input
+                        id={`other-input-${catId}`}
+                        type="text"
+                        placeholder="Type tool name, then select"
+                        value={otherVal}
+                        onChange={e => {
+                          if (otherSelected) setSelectedTools(prev => prev.filter(t => t !== otherToolName));
+                          setOtherToolInputs(prev => ({ ...prev, [catId]: e.target.value }));
+                        }}
+                        onKeyDown={e => {
+                          if (e.key === "Enter" && e.target.value.trim()) {
+                            const newName = `Other: ${e.target.value.trim()}`;
+                            if (!selectedTools.includes(newName)) {
+                              setSelectedTools(prev => [...prev, newName]);
+                            }
+                          }
+                        }}
+                        style={{ flex: 1, border: "1.5px solid " + C.border, borderRadius: 4, padding: "12px 14px", fontSize: 15, fontFamily: FF, color: C.text, background: C.white }}
+                      />
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+            <div style={{ display: "flex", gap: 12 }}>
+              <Btn variant="ghost" onClick={() => setCategoryStep("categories")}>Back</Btn>
+              <Btn onClick={confirmSelection} disabled={selectedTools.length === 0}>Continue</Btn>
+            </div>
+          </>
+        )}
+      </div>
+    </div>
+  );
+
+  // ─── GENERATING ──────────────────────────────────────────────────────────────
+  if (step === "generating") return (
+    <div style={pageWrap}>
+      <style>{GS}</style>
+      <div style={{ textAlign: "center", maxWidth: 480, padding: "0 24px" }}>
+        <div style={{ width: 48, height: 48, border: "3px solid " + C.border, borderTop: "3px solid " + C.accent, borderRadius: "50%", margin: "0 auto 28px", animation: "spin 0.9s linear infinite" }} />
+        <p style={{ fontSize: 22, fontWeight: 700, color: C.text, marginBottom: 14, fontFamily: FFD }}>Building your report</p>
+        <p style={{ fontSize: 16, fontWeight: 500, color: C.textMid, lineHeight: 1.75, marginBottom: 12 }}>
+          {reportType === "stack_fit"
+            ? "Analyzing your stack, integration patterns, and compatibility signals."
+            : "Analyzing your situation against known implementation requirements and organizational readiness signals."}
+        </p>
+        <p style={{ fontSize: 14, fontWeight: 500, color: C.textLight, lineHeight: 1.6 }}>This takes about 45–60 seconds. We're pulling current information, not cached answers.</p>
+      </div>
+    </div>
+  );
+
+  // ─── REPORT ──────────────────────────────────────────────────────────────────
+  if (step === "report") {
+    const section = reportSections[activeSection];
+    return (
+      <div style={{ minHeight: "100vh", background: C.bg, display: "flex", fontFamily: FF }}>
+        <style>{GS}</style>
+        <div style={{ width: 240, minWidth: 240, background: C.sidebar, borderRight: "1px solid " + C.border, padding: "32px 20px", display: "flex", flexDirection: "column", position: "sticky", top: 0, height: "100vh", overflowY: "auto" }}>
+          <Logo small />
+          <p style={{ fontSize: 11, fontWeight: 700, color: C.textLight, letterSpacing: 1.5, textTransform: "uppercase", marginBottom: 24, marginLeft: 44 }}>
+            {reportType === "stack_fit" ? "Stack Fit Report" : "Evaluation Report"}
+          </p>
+          <div style={{ height: 1, background: C.border, marginBottom: 16 }} />
+          <nav style={{ display: "flex", flexDirection: "column", gap: 4, flex: 1 }}>
+            {reportSections.map((sec, i) => {
+              const isActive = activeSection === i;
+              return (
+                <button key={i} onClick={() => setActiveSection(i)}
+                  style={{ background: isActive ? C.accent : "transparent", border: "none", borderRadius: 4, padding: "10px 12px", textAlign: "left", cursor: "pointer", display: "flex", alignItems: "flex-start", gap: 10 }}>
+                  <span style={{ fontSize: 11, color: isActive ? C.white : C.accent, marginTop: 2, flexShrink: 0 }}>{sectionIcons[sec.title] || "○"}</span>
+                  <span style={{ fontSize: 13, fontWeight: 600, lineHeight: 1.4, color: isActive ? C.white : C.textMid }}>{sec.title}</span>
+                </button>
+              );
+            })}
+          </nav>
+          <div style={{ height: 1, background: C.border, margin: "16px 0" }} />
+          <button onClick={restart} style={{ background: "none", border: "1px solid " + C.border, borderRadius: 4, color: C.textLight, fontSize: 12, fontWeight: 700, padding: "9px 12px", letterSpacing: 1.5, textTransform: "uppercase", fontFamily: FF }}>New Report</button>
+        </div>
+
+        <div style={{ flex: 1, padding: "40px 56px 40px 48px", maxWidth: 780, overflowY: "auto" }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 28, paddingBottom: 22, borderBottom: "2px solid " + C.borderDark }}>
+            <h2 style={{ fontSize: 26, fontWeight: 700, color: C.text, fontFamily: FFD }}>{section?.title}</h2>
+            <span style={{ fontSize: 13, fontWeight: 500, color: C.textLight, marginTop: 6 }}>{activeSection + 1} / {reportSections.length}</span>
+          </div>
+          <div style={{ marginBottom: 32 }}>{section && renderContent(section.content, section.title)}</div>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", paddingTop: 20, borderTop: "1px solid " + C.border }}>
+            <button onClick={() => activeSection > 0 && setActiveSection(activeSection - 1)}
+              style={{ background: "none", border: "none", color: C.textMid, fontSize: 15, fontWeight: 500, opacity: activeSection === 0 ? 0.3 : 1, cursor: activeSection === 0 ? "default" : "pointer", fontFamily: FF }}>← Previous</button>
+            <div style={{ display: "flex", gap: 7 }}>
+              {reportSections.map((_, i) => (
+                <div key={i} onClick={() => setActiveSection(i)}
+                  style={{ width: 7, height: 7, borderRadius: "50%", background: i === activeSection ? C.accent : C.border, cursor: "pointer", transition: "background 0.2s" }} />
+              ))}
+            </div>
+            {activeSection < reportSections.length - 1 ? (
+              <button onClick={() => setActiveSection(activeSection + 1)}
+                style={{ background: "none", border: "none", color: C.textMid, fontSize: 15, fontWeight: 500, cursor: "pointer", fontFamily: FF }}>Next →</button>
+            ) : (
+              <span style={{ fontSize: 13, fontWeight: 500, color: C.textLight, fontFamily: FF }}>End of report</span>
+            )}
+          </div>
+          <p style={{ fontSize: 13, fontWeight: 500, color: C.textLight, marginTop: 36, paddingTop: 20, borderTop: "1px solid " + C.border, lineHeight: 1.7 }}>Delphi is funded by subscribers, not vendors. No platform pays for placement, recommendation, or access. Ever.</p>
+          <p style={{ fontSize: 12, fontWeight: 400, color: C.textLight, marginTop: 12, lineHeight: 1.7 }}>Delphi reports are generated using AI and publicly available information. They are for informational purposes only and do not constitute professional, legal, or financial advice. Vendor pricing, product capabilities, and market positioning change frequently — verify all claims directly with vendors before making any purchasing decision. Delphi is not responsible for outcomes resulting from decisions made based on this report.</p>
+        </div>
+      </div>
+    );
+  }
+
+  // ─── QUESTIONS ───────────────────────────────────────────────────────────────
+  return (
+    <div style={pageWrap}>
+      <style>{GS}</style>
+      <div style={{ maxWidth: 600, width: "100%" }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 24 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <div style={{ width: 30, height: 30, borderRadius: "50%", background: C.accent, color: C.white, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13, fontWeight: 700, fontFamily: FFD }}>D</div>
+            <span style={{ fontSize: 13, fontWeight: 700, letterSpacing: 1.5, textTransform: "uppercase", color: C.accent }}>{reportType === "stack_fit" ? "The Stack Fit" : "The Evaluation"}</span>
+          </div>
+          <span style={{ fontSize: 13, fontWeight: 500, color: C.textLight }}>{currentQ + 1} / {questionQueue.length}</span>
+        </div>
+
+        <div style={{ width: "100%", height: 3, background: C.border, borderRadius: 2, marginBottom: 36 }}>
+          <div style={{ width: progress + "%", height: "100%", background: C.accent, borderRadius: 2, transition: "width 0.35s ease" }} />
+        </div>
+
+        {q && (
+          <>
+            <p style={{ fontSize: 12, fontWeight: 700, letterSpacing: 2.5, textTransform: "uppercase", color: C.textLight, marginBottom: 16 }}>
+              {q.isBranch ? "Tell us more" : q.layer === 1 ? "Layer 1 — Your Situation" : "Layer 2 — Readiness Assessment"}
+            </p>
+            <h2 style={{ fontSize: 24, fontWeight: 700, lineHeight: 1.5, color: C.text, marginBottom: 12, fontFamily: FFD }}>{q.text}</h2>
+            <p style={{ fontSize: 15, fontWeight: 500, color: C.textMid, lineHeight: 1.7, marginBottom: 28 }}>{q.hint}</p>
+
+            {q.type === "text" && (
+              <>
+                <textarea ref={inputRef} rows={4} value={currentInput}
+                  onChange={e => setCurrentInput(e.target.value)}
+                  onKeyDown={e => { if (e.key === "Enter" && e.metaKey && currentInput.trim()) submitAnswer(currentInput.trim()); }}
+                  placeholder="Type your answer here..."
+                  style={{ width: "100%", background: C.white, border: "1.5px solid " + C.border, borderRadius: 4, color: C.text, fontSize: 16, fontWeight: 500, padding: "14px 16px", resize: "vertical", lineHeight: 1.7, fontFamily: FF }} />
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 12 }}>
+                  <span style={{ fontSize: 12, fontWeight: 500, color: C.borderDark, fontFamily: FF }}>Command + Enter to continue</span>
+                  <Btn onClick={() => currentInput.trim() && submitAnswer(currentInput.trim())} disabled={!currentInput.trim()}>Continue</Btn>
+                </div>
+                <button onClick={() => submitAnswer("Not provided")}
+                  style={{ background: "none", border: "none", color: C.textLight, fontSize: 13, fontWeight: 500, marginTop: 16, textDecoration: "underline", cursor: "pointer", display: "block", fontFamily: FF }}>
+                  Skip this question
+                </button>
+              </>
+            )}
+
+            {q.type === "choice" && (
+              <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                {q.options.map(opt => (
+                  <button key={opt} onClick={() => submitAnswer(opt)}
+                    onMouseEnter={() => setHoveredChoice(opt)}
+                    onMouseLeave={() => setHoveredChoice(null)}
+                    style={{ background: hoveredChoice === opt ? C.accent : C.white, border: "1.5px solid " + (hoveredChoice === opt ? C.accent : C.border), borderRadius: 4, color: hoveredChoice === opt ? C.white : C.text, fontSize: 16, fontWeight: 500, padding: "14px 18px", textAlign: "left", lineHeight: 1.4, cursor: "pointer", transition: "all 0.15s", fontFamily: FF }}>
+                    {opt}
+                  </button>
+                ))}
+              </div>
+            )}
+          </>
+        )}
+      </div>
+    </div>
+  );
+}
