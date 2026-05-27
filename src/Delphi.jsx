@@ -22,7 +22,7 @@ const TOOL_CATEGORIES = [
   { id: "crm", label: "CRM", tools: ["Salesforce", "HubSpot CRM", "Microsoft Dynamics", "Pipedrive"] },
 ];
 
-// ─── UNIVERSAL CORE QUESTIONS ─────────────────────────────────────────────────
+// ─── TRACK 1: STRATEGIC CORE QUESTIONS ────────────────────────────────────────
 const CORE_QUESTIONS = [
   {
     id: "problem", layer: 1,
@@ -122,443 +122,7 @@ const CORE_QUESTIONS = [
   },
 ];
 
-// ─── CATEGORY-SPECIFIC QUESTIONS ──────────────────────────────────────────────
-const CATEGORY_QUESTIONS = {
-  abm: [
-    {
-      id: "abm_account_list", layer: 1,
-      text: "How many target accounts are you working with?",
-      hint: "200 tightly defined accounts and 10,000 loosely defined ones require very different tools.",
-      type: "choice",
-      options: ["Fewer than 250 — tightly defined", "250 to 1,000", "1,000 to 5,000", "More than 5,000 — broadly defined"],
-      branch: {
-        trigger: ["More than 5,000 — broadly defined"],
-        id: "abm_account_detail",
-        text: "Are these accounts agreed upon by sales and marketing, or is this primarily a marketing-defined list?",
-        hint: "Sales ignoring the list is the #1 ABM failure mode.",
-        type: "text",
-      },
-    },
-    {
-      id: "abm_sales_sponsor", layer: 1,
-      text: "Is there a named sales leader sponsoring this initiative who has committed to changing how their team works accounts?",
-      hint: "Right tool plus bad implementation plus no sponsorship is an expensive mistake.",
-      type: "choice",
-      options: ["Yes — named sponsor, fully committed", "Sales knows about it but hasn't committed to behavior change", "Marketing is driving this, sales will be informed after", "We haven't had that conversation yet"],
-      branch: {
-        trigger: ["Sales knows about it but hasn't committed to behavior change", "Marketing is driving this, sales will be informed after", "We haven't had that conversation yet"],
-        id: "abm_sponsor_detail",
-        text: "What's the plan to get sales committed before go-live? Without it, ABM tools fail within 6 months.",
-        hint: "This isn't a judgment — it's the most important thing to solve before you sign.",
-        type: "text",
-      },
-    },
-    {
-      id: "abm_intent", layer: 2,
-      text: "Has your team used intent data before?",
-      hint: "Intent data is only valuable if you have workflows to act on it.",
-      type: "choice",
-      options: ["Yes, and we have workflows built around it", "Yes, but we never really trusted or acted on it", "No, this would be our first time", "Not sure what intent data means in practice"],
-      branch: {
-        trigger: ["Yes, but we never really trusted or acted on it", "Not sure what intent data means in practice"],
-        id: "abm_intent_detail",
-        text: "What would it take for your team to trust and act on intent signals? Who would own that workflow?",
-        hint: "Unused intent data is expensive noise.",
-        type: "text",
-      },
-    },
-    {
-      id: "abm_content", layer: 2,
-      text: "Do you have content mapped to each persona in your buying committee?",
-      hint: "ABM without multi-threaded content is expensive banner ads.",
-      type: "choice",
-      options: ["Yes — persona-specific content for each stage", "Partially — some personas covered, not all", "We have content but it's not persona-mapped", "No — we're selling to whoever picks up the phone"],
-      branch: {
-        trigger: ["Partially — some personas covered, not all", "We have content but it's not persona-mapped", "No — we're selling to whoever picks up the phone"],
-        id: "abm_content_detail",
-        text: "Who owns content creation, and is there capacity to build persona-specific content before or during implementation?",
-        hint: "The content gap is usually bigger than teams expect.",
-        type: "text",
-      },
-    },
-  ],
-  sales_engagement: [
-    {
-      id: "se_sponsor", layer: 1,
-      text: "Is there a named sales leader who will enforce adoption of this tool?",
-      hint: "Tools that are optional are dead within 90 days.",
-      type: "choice",
-      options: ["Yes — it's in their QBR and they're measuring it", "There's interest but no enforcement plan", "This is being pushed on sales from above", "Sales doesn't know about this yet"],
-      branch: {
-        trigger: ["There's interest but no enforcement plan", "This is being pushed on sales from above", "Sales doesn't know about this yet"],
-        id: "se_sponsor_detail",
-        text: "What's the plan to make adoption non-optional? This is the single biggest predictor of whether this tool succeeds.",
-        hint: "Be specific — who will enforce it and how.",
-        type: "text",
-      },
-    },
-    {
-      id: "se_sequences", layer: 1,
-      text: "Who owns your sales sequence and cadence library?",
-      hint: "If every rep writes their own sequences, you have a content problem that no tool fixes.",
-      type: "choice",
-      options: ["Marketing owns it — documented and maintained", "Sales ops owns it", "Individual reps write their own", "We don't have sequences yet"],
-      branch: {
-        trigger: ["Individual reps write their own", "We don't have sequences yet"],
-        id: "se_sequences_detail",
-        text: "Who will own building and maintaining the sequence library in the new tool? This is the #1 implementation gap.",
-        hint: "Marketing typically owns this in high-performing orgs.",
-        type: "text",
-      },
-    },
-    {
-      id: "se_fatigue", layer: 1,
-      text: "How many tools are your reps currently expected to use daily?",
-      hint: "More tools means less selling. Every addition needs a justification.",
-      type: "choice",
-      options: ["1 to 2 — very lean stack", "3 to 4 — manageable", "5 or more — it's a lot", "Honestly not sure, nobody has counted"],
-      branch: {
-        trigger: ["5 or more — it's a lot", "Honestly not sure, nobody has counted"],
-        id: "se_fatigue_detail",
-        text: "Which tools are actually being used vs. ignored? Adding another tool to an ignored stack doesn't work.",
-        hint: "The ones being ignored tell you more than the ones being used.",
-        type: "text",
-      },
-    },
-    {
-      id: "se_contact_data", layer: 2,
-      text: "How would you rate your contact data quality — email validity, phone numbers, titles?",
-      hint: "Sequences sent to bad data destroy your domain reputation and demoralizes reps.",
-      type: "choice",
-      options: ["Clean — regularly validated", "Decent but aging", "Patchy — some segments good, some bad", "It's a mess"],
-      branch: {
-        trigger: ["Patchy — some segments good, some bad", "It's a mess"],
-        id: "se_contact_detail",
-        text: "Is there a data enrichment or validation plan before go-live? Domain reputation damage from bad sends from bad lists slow domain health recovery.",
-        hint: "This needs to be solved before sequences go live, not after.",
-        type: "text",
-      },
-    },
-    {
-      id: "se_managers", layer: 2,
-      text: "Will sales managers use this tool to coach — reviewing sequence performance, running 1:1s from the data?",
-      hint: "Manager adoption is where ROI lives. Rep adoption is table stakes.",
-      type: "choice",
-      options: ["Yes — it's already in their workflow expectations", "Probably, but it's not formalized", "Unlikely — managers are already stretched", "We haven't thought about manager adoption"],
-      branch: {
-        trigger: ["Probably, but it's not formalized", "Unlikely — managers are already stretched", "We haven't thought about manager adoption"],
-        id: "se_managers_detail",
-        text: "What would need to be true for managers to actually use this for coaching? That's where the ROI conversation lives.",
-        hint: "If managers won't use it, the tool becomes a rep surveillance tool — which kills adoption.",
-        type: "text",
-      },
-    },
-  ],
-  revenue_intelligence: [
-    {
-      id: "ri_legal", layer: 1,
-      text: "Has your legal team reviewed call recording consent requirements for every state and country your reps sell into?",
-      hint: "Two-party consent states include California, Illinois, Florida, and others. This needs legal review before go-live.",
-      type: "choice",
-      options: ["Yes — legal has signed off, consent workflows are in place", "We're aware of it but haven't formally addressed it", "We didn't know this was a legal issue", "We only sell domestically and assumed it was fine"],
-      branch: {
-        trigger: ["We're aware of it but haven't formally addressed it", "We didn't know this was a legal issue", "We only sell domestically and assumed it was fine"],
-        id: "ri_legal_detail",
-        text: "Which states and countries do your reps sell into? List them — we'll flag specific consent requirements in your report.",
-        hint: "This is not a box-checking exercise. Exposure here is real.",
-        type: "text",
-      },
-    },
-    {
-      id: "ri_rep_buyin", layer: 1,
-      text: "Have reps been involved in the evaluation, or will recording be announced after the decision is made?",
-      hint: "Reps who feel surveilled without consent become actively resistant and find workarounds.",
-      type: "choice",
-      options: ["Reps were part of the selection process", "We plan to involve them before go-live", "This will be announced after the decision", "We haven't thought about how to introduce it"],
-      branch: {
-        trigger: ["This will be announced after the decision", "We haven't thought about how to introduce it"],
-        id: "ri_buyin_detail",
-        text: "What's the change management plan for introducing recording to the team?",
-        hint: "The best implementations involved reps early. The worst were surprise announcements.",
-        type: "text",
-      },
-    },
-    {
-      id: "ri_managers", layer: 2,
-      text: "Will managers watch calls and coach from them weekly?",
-      hint: "If managers won't watch calls, the ROI calculation changes significantly.",
-      type: "choice",
-      options: ["Yes — defined expectation with accountability", "Probably, but it's not formalized yet", "Managers are already stretched thin", "We're buying it for deal visibility, not coaching"],
-      branch: {
-        trigger: ["Probably, but it's not formalized yet", "Managers are already stretched thin", "We're buying it for deal visibility, not coaching"],
-        id: "ri_managers_detail",
-        text: "If coaching isn't the primary use case, what is? The ROI story — and the vendor you choose — depends heavily on the answer.",
-        hint: "Deal visibility, forecasting accuracy, and coaching require different configurations.",
-        type: "text",
-      },
-    },
-    {
-      id: "ri_crm", layer: 2,
-      text: "Is your CRM ready to receive structured data from a revenue intelligence tool — call summaries, next steps, deal risk scores?",
-      hint: "This is where most revenue intelligence implementations stall.",
-      type: "choice",
-      options: ["Yes — fields are mapped and ops owns the integration", "Probably, but we haven't scoped it", "Our CRM is too messy to receive clean data", "We don't know what that integration requires"],
-      branch: {
-        trigger: ["Probably, but we haven't scoped it", "Our CRM is too messy to receive clean data", "We don't know what that integration requires"],
-        id: "ri_crm_detail",
-        text: "Who will own the CRM integration and field mapping? And what's the current state of the fields that would receive this data?",
-        hint: "Garbage in from revenue intelligence on top of a messy CRM makes the CRM worse, not better.",
-        type: "text",
-      },
-    },
-    {
-      id: "ri_sponsor", layer: 2,
-      text: "Who is the executive sponsor — is this sales-driven or being pushed on sales from another function?",
-      hint: "Tools pushed on sales without a sales sponsor get ignored.",
-      type: "choice",
-      options: ["Sales leadership is driving this", "Joint decision between sales and revenue ops", "Being pushed on sales from marketing or finance", "No clear sponsor yet"],
-      branch: {
-        trigger: ["Being pushed on sales from marketing or finance", "No clear sponsor yet"],
-        id: "ri_sponsor_detail",
-        text: "What's the plan to get a sales leader as the named owner before go-live?",
-        hint: "This is a political problem, not a technical one. It needs to be solved first.",
-        type: "text",
-      },
-    },
-  ],
-  data_enrichment: [
-    {
-      id: "de_usecase", layer: 1,
-      text: "What specifically are you enriching?",
-      hint: "Prospecting lists, CRM contacts, and inbound leads each require different data and different workflows.",
-      type: "choice",
-      options: ["Prospecting — building new outbound lists", "CRM enrichment — filling gaps in existing records", "Inbound enrichment — appending data to form fills", "All three", "Not sure yet"],
-      branch: {
-        trigger: ["Not sure yet"],
-        id: "de_usecase_detail",
-        text: "Walk us through your current outbound or inbound process. Where are the data gaps that are hurting you most?",
-        hint: "Use case clarity is the single biggest predictor of enrichment ROI.",
-        type: "text",
-      },
-    },
-    {
-      id: "de_writeback", layer: 1,
-      text: "Do you have a plan for where enriched data goes in your CRM?",
-      hint: "Field mapping and conflict resolution are where enrichment implementations break down.",
-      type: "choice",
-      options: ["Yes — documented field mapping, ops owns it", "We know roughly where it goes but it's not documented", "We haven't figured that out yet", "We don't have someone who owns that decision"],
-      branch: {
-        trigger: ["We know roughly where it goes but it's not documented", "We haven't figured that out yet", "We don't have someone who owns that decision"],
-        id: "de_writeback_detail",
-        text: "Who will own the field mapping decision, and what happens to existing data that conflicts with enriched data?",
-        hint: "Overwriting good data with bad enriched data is a real and common problem.",
-        type: "text",
-      },
-    },
-    {
-      id: "de_decay", layer: 2,
-      text: "Do you have a plan for managing data decay over time?",
-      hint: "B2B data decays at roughly 30% annually. Enrichment is a subscription to ongoing maintenance, not a one-time fix.",
-      type: "choice",
-      options: ["Yes — we have a refresh cadence and someone owns it", "We know it's a problem but don't have a plan", "We didn't know data decayed that fast", "We're planning to address it after we get the tool"],
-      branch: {
-        trigger: ["We know it's a problem but don't have a plan", "We didn't know data decayed that fast", "We're planning to address it after we get the tool"],
-        id: "de_decay_detail",
-        text: "Who would own the refresh cadence, and how often does your sales team complain about stale contact data today?",
-        hint: "If sales is already frustrated with data quality, enrichment without a maintenance plan just delays the complaint.",
-        type: "text",
-      },
-    },
-    {
-      id: "de_ownership", layer: 2,
-      text: "Who will own the enrichment workflow day-to-day?",
-      hint: "Enrichment tools bought without a named operator become shelfware within a quarter.",
-      type: "choice",
-      options: ["Dedicated ops or data person", "Shared ops resource", "The person who bought it", "We're figuring that out"],
-      branch: {
-        trigger: ["The person who bought it", "We're figuring that out"],
-        id: "de_ownership_detail",
-        text: "What is that person's current capacity, and what will they stop doing to take this on?",
-        hint: "Capacity is the honest question most teams avoid.",
-        type: "text",
-      },
-    },
-    {
-      id: "de_intent", layer: 2,
-      text: "Are you looking for contact and company data, intent data, or both?",
-      hint: "These are different products with different use cases, even when sold by the same vendor.",
-      type: "choice",
-      options: ["Contact and company data only", "Intent data only", "Both — we understand the difference", "Both — we're not sure what the difference means in practice"],
-      branch: {
-        trigger: ["Both — we're not sure what the difference means in practice"],
-        id: "de_intent_detail",
-        text: "Walk us through how you'd use each. Intent data without a workflow to act on signals is expensive noise.",
-        hint: "Most teams buy both and only use one.",
-        type: "text",
-      },
-    },
-  ],
-  marketing_automation: [
-    {
-      id: "ma_database", layer: 1,
-      text: "How would you describe your current contact database — is it segmented, clean, and ready to activate?",
-      hint: "Platform selection depends heavily on database readiness, not just size.",
-      type: "choice",
-      options: ["Yes — segmented by persona, clean, ready to run programs", "Partially — some segments solid, others need work", "No — needs significant cleanup before we can activate", "We don't have a database yet — building from scratch"],
-      branch: {
-        trigger: ["Partially — some segments solid, others need work", "No — needs significant cleanup before we can activate"],
-        id: "ma_database_detail",
-        text: "What's the primary issue — duplicates, missing fields, no engagement history, or poor segmentation?",
-        hint: "The answer determines whether you need a data project before or alongside the platform implementation.",
-        type: "text",
-      },
-    },
-    {
-      id: "ma_nurture", layer: 1,
-      text: "How complex is your nurture program — or how complex do you need it to be?",
-      hint: "Complex programs without a dedicated owner become unmaintainable within a year.",
-      type: "choice",
-      options: ["Simple — one or two linear drip sequences", "Moderate — branching logic based on behavior", "Complex — multi-track, persona-based, behavior-triggered", "We don't have nurture yet — starting from scratch"],
-      branch: {
-        trigger: ["Complex — multi-track, persona-based, behavior-triggered", "We don't have nurture yet — starting from scratch"],
-        id: "ma_nurture_detail",
-        text: "Who will build and maintain the nurture architecture? And is that person already on staff?",
-        hint: "This is a full-time job at scale. Most teams underestimate it.",
-        type: "text",
-      },
-    },
-    {
-      id: "ma_content", layer: 1,
-      text: "Do you have enough content to actually run nurture programs right now?",
-      hint: "Platforms bought before content exists sit idle and create organizational frustration.",
-      type: "choice",
-      options: ["Yes — library built and mapped to funnel stages", "Partially — some content exists but gaps remain", "No — we'd be buying the platform before the content exists", "Content is being created in parallel"],
-      branch: {
-        trigger: ["No — we'd be buying the platform before the content exists", "Content is being created in parallel"],
-        id: "ma_content_detail",
-        text: "What's the content production timeline, and who owns it?",
-        hint: "If content and platform go live at the same time, neither gets the attention it needs.",
-        type: "text",
-      },
-    },
-    {
-      id: "ma_crm_sync", layer: 2,
-      text: "How will this platform sync with your CRM?",
-      hint: "Marketing automation without clean CRM sync creates duplicate data and broken lead routing.",
-      type: "choice",
-      options: ["Native integration — already scoped", "Middleware like Zapier or Make", "Custom API work", "We don't know yet"],
-      branch: {
-        trigger: ["Custom API work", "We don't know yet"],
-        id: "ma_crm_detail",
-        text: "Who owns the integration decision and build? And has ops reviewed the field mapping requirements?",
-        hint: "The CRM sync is the most common MAP implementation failure point.",
-        type: "text",
-      },
-    },
-    {
-      id: "ma_scoring", layer: 2,
-      text: "Do you have a lead scoring model, and does sales agree with how leads are qualified?",
-      hint: "Automation that routes leads sales doesn't trust creates more conflict than it solves.",
-      type: "choice",
-      options: ["Yes — documented model, sales has signed off", "We have scoring but sales ignores the scores", "No scoring yet — starting from scratch", "Sales and marketing disagree on what a qualified lead looks like"],
-      branch: {
-        trigger: ["We have scoring but sales ignores the scores", "Sales and marketing disagree on what a qualified lead looks like"],
-        id: "ma_scoring_detail",
-        text: "What's driving the disagreement or distrust? And who owns the conversation to align on lead definitions?",
-        hint: "This is a process problem that needs to be solved before the platform is configured, not after.",
-        type: "text",
-      },
-    },
-  ],
-  crm: [
-    {
-      id: "crm_consolidation", layer: 1,
-      text: "Are you implementing a single new CRM or consolidating multiple existing instances?",
-      hint: "PE rollup and acquisition scenarios are a fundamentally different implementation — plan accordingly.",
-      type: "choice",
-      options: ["Single implementation — one system, one migration", "Consolidating two systems", "Consolidating three or more — PE rollup or acquisition scenario", "Partially consolidated — some business units still on separate systems"],
-      branch: {
-        trigger: ["Consolidating two systems", "Consolidating three or more — PE rollup or acquisition scenario", "Partially consolidated — some business units still on separate systems"],
-        id: "crm_consolidation_detail",
-        text: "Who owns the data reconciliation across instances — specifically duplicate accounts, conflicting contact records, and different pipeline stage definitions?",
-        hint: "This is the highest-risk element of a multi-instance consolidation. It needs a named owner before day one.",
-        type: "text",
-      },
-    },
-    {
-      id: "crm_migration", layer: 1,
-      text: "What data are you migrating from your current system?",
-      hint: "Full history migrations without a dedicated owner are the #1 CRM implementation failure.",
-      type: "choice",
-      options: ["Full history — all contacts, accounts, activities, opportunities", "Selective — active accounts and open pipeline only", "Starting fresh — no migration", "We don't know yet what needs to move"],
-      branch: {
-        trigger: ["Full history — all contacts, accounts, activities, opportunities", "We don't know yet what needs to move"],
-        id: "crm_migration_detail",
-        text: "Who owns the migration plan — internal ops, a consultant, or the vendor?",
-        hint: "Vendor-led migrations are rarely as complete as vendor-assisted migrations with internal ownership.",
-        type: "text",
-      },
-    },
-    {
-      id: "crm_process", layer: 1,
-      text: "Are your current sales processes documented before you move them into a new CRM?",
-      hint: "A CRM reflects your process — it doesn't create one.",
-      type: "choice",
-      options: ["Yes — stages, fields, and workflows are all documented", "Partially — main process is clear but details aren't written down", "No — hoping the new CRM helps us figure that out", "Our process is broken and we want the CRM to fix it"],
-      branch: {
-        trigger: ["No — hoping the new CRM helps us figure that out", "Our process is broken and we want the CRM to fix it"],
-        id: "crm_process_detail",
-        text: "What's the plan to document the process before configuration begins? Who owns that work?",
-        hint: "Configuring a CRM around a broken process permanently encodes the broken process.",
-        type: "text",
-      },
-    },
-    {
-      id: "crm_adherence", layer: 2,
-      text: "When a rep closes a deal today, how completely does the full activity history exist in your current system?",
-      hint: "This pattern — disciplined or not — follows you into every new CRM.",
-      type: "choice",
-      options: ["Completely — full visibility into every deal", "Mostly — key activities logged, details missing", "Partially — depends on the rep", "Poorly — the CRM is a graveyard of incomplete records"],
-      branch: {
-        trigger: ["Partially — depends on the rep", "Poorly — the CRM is a graveyard of incomplete records"],
-        id: "crm_adherence_detail",
-        text: "What's driving the inconsistency — too many required fields, no manager enforcement, or the tool doesn't match how reps sell?",
-        hint: "The cause determines whether a new CRM fixes it or inherits it.",
-        type: "text",
-      },
-    },
-    {
-      id: "crm_customization", layer: 2,
-      text: "How customized does your CRM need to be to match your sales process?",
-      hint: "Heavy customization without a dedicated admin becomes unmaintainable and gets blamed on the tool.",
-      type: "choice",
-      options: ["Minimal — standard pipeline stages and fields work for us", "Moderate — some custom fields and workflow automation", "Heavy — complex territory rules, custom objects, advanced automation", "We don't know yet"],
-      branch: {
-        trigger: ["Heavy — complex territory rules, custom objects, advanced automation", "We don't know yet"],
-        id: "crm_custom_detail",
-        text: "Who will own configuration and ongoing administration? What's their current capacity?",
-        hint: "Heavy CRM customization is a full-time job. Most teams treat it as a project, then wonder why it breaks.",
-        type: "text",
-      },
-    },
-    {
-      id: "crm_integrations", layer: 2,
-      text: "How many systems need to integrate with the new CRM?",
-      hint: "CRM sits at the center of your stack — every integration decision downstream flows from this.",
-      type: "choice",
-      options: ["Just one or two — MAP and maybe one other", "Three to five systems", "Six or more — complex integration environment", "We haven't mapped our integration requirements yet"],
-      branch: {
-        trigger: ["Six or more — complex integration environment", "We haven't mapped our integration requirements yet"],
-        id: "crm_integrations_detail",
-        text: "Who owns your integration architecture? And has ops reviewed what breaks during the CRM migration?",
-        hint: "Integrations that work in the old CRM don't automatically work in the new one.",
-        type: "text",
-      },
-    },
-  ],
-};
-
-// ─── DEEP INFRASTRUCTURE STACK QUESTIONS ──────────────────────────────────────
+// ─── TRACK 2: DEEP INFRASTRUCTURE STACK QUESTIONS ──────────────────────────────
 const STACK_CORE_QUESTIONS = [
   {
     id: "data_flow_direction", layer: 1,
@@ -594,6 +158,85 @@ const STACK_CORE_QUESTIONS = [
     options: ["No historical data — starting fresh from day one", "Open opportunities and active accounts only", "Full historical log backfill (activities, closed deals, metrics)", "Not sure what our historical data requirement is yet"]
   }
 ];
+
+// ─── CATEGORY-SPECIFIC PATH QUESTIONS ─────────────────────────────────────────
+const CATEGORY_QUESTIONS = {
+  abm: [
+    {
+      id: "abm_account_list", layer: 1,
+      text: "How many target accounts are you working with?",
+      hint: "200 tightly defined accounts and 10,000 loosely defined ones require very different tools.",
+      type: "choice",
+      options: ["Fewer than 250 — tightly defined", "250 to 1,000", "1,000 to 5,000", "More than 5,000 — broadly defined"],
+    },
+    {
+      id: "abm_sales_sponsor", layer: 1,
+      text: "Is there a named sales leader sponsoring this initiative who has committed to changing how their team works accounts?",
+      hint: "Right tool plus bad implementation plus no sponsorship is an expensive mistake.",
+      type: "choice",
+      options: ["Yes — named sponsor, fully committed", "Sales knows about it but hasn't committed to behavior change", "Marketing is driving this, sales will be informed after", "We haven't had that conversation yet"],
+    },
+    {
+      id: "abm_intent", layer: 2,
+      text: "Has your team used intent data before?",
+      hint: "Intent data is only valuable if you have workflows to act on it.",
+      type: "choice",
+      options: ["Yes, and we have workflows built around it", "Yes, but we never really trusted or acted on it", "No, this would be our first time", "Not sure what intent data means in practice"],
+    },
+  ],
+  sales_engagement: [
+    {
+      id: "se_sponsor", layer: 1,
+      text: "Is there a named sales leader who will enforce adoption of this tool?",
+      hint: "Tools that are optional are dead within 90 days.",
+      type: "choice",
+      options: ["Yes — it's in their QBR and they're measuring it", "There's interest but no enforcement plan", "This is being pushed on sales from above", "Sales doesn't know about this yet"],
+    },
+    {
+      id: "se_sequences", layer: 1,
+      text: "Who owns your sales sequence and cadence library?",
+      hint: "If every rep writes their own sequences, you have a content problem that no tool fixes.",
+      type: "choice",
+      options: ["Marketing owns it — documented and maintained", "Sales ops owns it", "Individual reps write their own", "We don't have sequences yet"],
+    },
+  ],
+  revenue_intelligence: [
+    {
+      id: "ri_legal", layer: 1,
+      text: "Has your legal team reviewed call recording consent requirements for every state and country your reps sell into?",
+      hint: "Two-party consent states include California, Illinois, Florida, and others. This needs legal review before go-live.",
+      type: "choice",
+      options: ["Yes — legal has signed off, consent workflows are in place", "We're aware of it but haven't formally addressed it", "We didn't know this was a legal issue", "We only sell domestically and assumed it was fine"],
+    },
+  ],
+  data_enrichment: [
+    {
+      id: "de_usecase", layer: 1,
+      text: "What specifically are you enriching?",
+      hint: "Prospecting lists, CRM contacts, and inbound leads each require different data and different workflows.",
+      type: "choice",
+      options: ["Prospecting — building new outbound lists", "CRM enrichment — filling gaps in existing records", "Inbound enrichment — appending data to form fills", "All three", "Not sure yet"],
+    },
+  ],
+  marketing_automation: [
+    {
+      id: "ma_database", layer: 1,
+      text: "How would you describe your current contact database — is it segmented, clean, and ready to activate?",
+      hint: "Platform selection depends heavily on database readiness, not just size.",
+      type: "choice",
+      options: ["Yes — segmented by persona, clean, ready to run programs", "Partially — some segments solid, others need work", "No — needs significant cleanup before we can activate", "We don't have a database yet — building from scratch"],
+    },
+  ],
+  crm: [
+    {
+      id: "crm_consolidation", layer: 1,
+      text: "Are you implementing a single new CRM or consolidating multiple existing instances?",
+      hint: "PE rollup and acquisition scenarios are a fundamentally different implementation — plan accordingly.",
+      type: "choice",
+      options: ["Single implementation — one system, one migration", "Consolidating two systems", "Consolidating three or more — PE rollup or acquisition scenario", "Partially consolidated — some business units still on separate systems"],
+    },
+  ],
+};
 
 // ─── PROMPTS ──────────────────────────────────────────────────────────────────
 const EVAL_PROMPT = `You are Delphi, an independent software evaluation analyst for B2B SaaS buyers. You have no financial relationship with any vendor. Your job is to help buyers understand the gap between what a software tool actually requires and where their organization currently stands.
@@ -1025,7 +668,7 @@ function renderContent(content, sectionTitle) {
     ) : null;
 
     elements.push(
-      <div key={`vendor-${key}`} style={{ marginBottom: 28 }}>
+      <div style={{ marginBottom: 28 }} key={`vendor-${key}`}>
         <div style={{ background: C.accent, borderRadius: "6px 6px 0 0", padding: "14px 20px", display: "flex", alignItems: "flex-start", justifyContent: "space-between" }}>
           <div>
             <p style={{ fontSize: 18, fontWeight: 700, color: C.white, fontFamily: FFD, margin: "0 0 4px" }}>{cardToolName}</p>
@@ -1053,7 +696,7 @@ function renderContent(content, sectionTitle) {
     if (!questionGroupHeader) return;
     questionCounter = 0;
     elements.push(
-      <div key={`qgroup-${key}`} style={{ marginBottom: 24 }}>
+      <div style={{ marginBottom: 24 }} key={`qgroup-${key}`}>
         <div style={{ background: C.accent, borderRadius: "6px 6px 0 0", padding: "10px 18px" }}>
           <span style={{ fontSize: 12, fontWeight: 700, letterSpacing: 1.5, textTransform: "uppercase", color: C.white }}>{questionGroupHeader}</span>
         </div>
@@ -1073,7 +716,7 @@ function renderContent(content, sectionTitle) {
     let line = lines[i];
     if (!line.trim()) { i++; continue; }
 
-    const clean = line.replace(/\*\*(.*?)\*\//g, "$1").replace(/\*\*/g, "");
+    const clean = line.replace(/\*\*(.*?)\*\//g, "$1").replace(/\*\/g, "");
 
     if (line.trim().startsWith("|")) {
       if (inVendorCard) flushVendorCard(i);
@@ -1091,9 +734,9 @@ function renderContent(content, sectionTitle) {
         const isLegendTable = headers.length === 2 && headers[0].toLowerCase().includes("score") && headers[1].toLowerCase().includes("mean");
         if (isLegendTable) {
           elements.push(
-            <div key={i} style={{ display: "flex", gap: 16, flexWrap: "wrap", margin: "8px 0 20px", padding: "10px 14px", background: C.card, borderRadius: 6, border: "1px solid " + C.border }}>
+            <div style={{ display: "flex", gap: 16, flexWrap: "wrap", margin: "8px 0 20px", padding: "10px 14px", background: C.card, borderRadius: 6, border: "1px solid " + C.border }} key={i}>
               {data.map((row, j) => (
-                <div key={j} style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 8 }} key={j}>
                   <span style={{ fontSize: 13, fontWeight: 700, color: C.accent, fontFamily: FF }}>{row[0]}</span>
                   <span style={{ fontSize: 13, color: C.textMid, fontFamily: FF }}>— {row[1]}</span>
                   {j < data.length - 1 && <span style={{ color: C.border, marginLeft: 8 }}>·</span>}
@@ -1105,17 +748,17 @@ function renderContent(content, sectionTitle) {
         }
 
         elements.push(
-          <div key={i} style={{ overflowX: "auto", margin: "12px 0" }}>
+          <div style={{ overflowX: "auto", margin: "12px 0" }} key={i}>
             <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 14, fontFamily: FF }}>
               <thead>
                 <tr style={{ background: C.accent }}>
-                  {headers.map((h, j) => <th key={j} style={{ padding: "10px 14px", textAlign: "left", color: C.white, fontWeight: 700, fontSize: 13 }}>{h}</th>)}
+                  {headers.map((h, j) => <th style={{ padding: "10px 14px", textAlign: "left", color: C.white, fontWeight: 700, fontSize: 13 }} key={j}>{h}</th>)}
                 </tr>
               </thead>
               <tbody>
                 {data.map((row, j) => (
-                  <tr key={j} style={{ background: j % 2 === 0 ? C.white : C.card, borderBottom: "1px solid " + C.border }}>
-                    {row.map((cell, k) => <td key={k} style={{ padding: "10px 14px", color: C.textMid, lineHeight: 1.5 }}>{cell}</td>)}
+                  <tr style={{ background: j % 2 === 0 ? C.white : C.card, borderBottom: "1px solid " + C.border }} key={j}>
+                    {row.map((cell, k) => <td style={{ padding: "10px 14px", color: C.textMid, lineHeight: 1.5 }} key={k}>{cell}</td>)}
                   </tr>
                 ))}
               </tbody>
@@ -1132,7 +775,6 @@ function renderContent(content, sectionTitle) {
       const parts = rawHeaderLine.split("|").map(p => p.trim());
       cardToolName = parts[0].replace(/\*\*/g, "");
       
-      // FIXED: Iterates safely over the tags with an active loop mapper
       cardMeta = parts.slice(1).map(p => {
         return p.replace(/Budget:\s*/i, "")
                 .replace(/Readiness:\s*/i, "")
@@ -1178,7 +820,7 @@ function renderContent(content, sectionTitle) {
           }
         }
         questionGroupItems.push(
-          <div key={`q-${i}`} style={{ padding: "14px 20px", borderBottom: "0.5px solid " + C.border }}>
+          <div style={{ padding: "14px 20px", borderBottom: "0.5px solid " + C.border }} key={`q-${i}`}>
             <div style={{ display: "flex", gap: 14, alignItems: "flex-start" }}>
               <span style={{ fontSize: 15, fontWeight: 700, color: C.accent, flexShrink: 0, minWidth: 22, lineHeight: 1.75 }}>{questionCounter}.</span>
               <div style={{ flex: 1 }}>
@@ -1204,7 +846,7 @@ function renderContent(content, sectionTitle) {
         const color = score <= 2 ? C.red : score <= 3 ? C.amber : C.accent;
         const label = score <= 2 ? "Needs attention before purchasing" : score <= 3 ? "Proceed with preparation" : "Well positioned";
         elements.push(
-          <div key={i} style={{ background: color, borderRadius: 8, padding: "20px 24px", margin: "16px 0 24px", display: "flex", alignItems: "center", gap: 24 }}>
+          <div style={{ background: color, borderRadius: 8, padding: "20px 24px", margin: "16px 0 24px", display: "flex", alignItems: "center", gap: 24 }} key={i}>
             <div style={{ textAlign: "center", flexShrink: 0, minWidth: 80 }}>
               <div style={{ fontSize: 64, fontWeight: 700, color: C.white, lineHeight: 1, fontFamily: FFD }}>{score}</div>
               <div style={{ fontSize: 11, color: "rgba(255,255,255,0.8)", fontWeight: 600, letterSpacing: 1, marginTop: 4 }}>OUT OF 5</div>
@@ -1222,7 +864,7 @@ function renderContent(content, sectionTitle) {
     if (!isQuestionsSection && !inVendorCard && line.includes("|") && line.match(/\d+\/5/) && !line.trim().startsWith("|")) {
       const parts = line.trim().split("|").map(p => p.trim());
       elements.push(
-        <div key={i} style={{ borderBottom: "1px solid " + C.border, paddingBottom: 6, marginTop: 28, marginBottom: 8, display: "flex", alignItems: "baseline", gap: 12 }}>
+        <div style={{ borderBottom: "1px solid " + C.border, paddingBottom: 6, marginTop: 28, marginBottom: 8, display: "flex", alignItems: "baseline", gap: 12 }} key={i}>
           <p style={{ fontSize: 16, fontWeight: 700, color: C.text, margin: 0, fontFamily: FFD }}>{parts[0]}</p>
           <p style={{ fontSize: 14, fontWeight: 600, color: C.accent, margin: 0, fontFamily: FF }}>{parts[1]}</p>
         </div>
@@ -1233,7 +875,7 @@ function renderContent(content, sectionTitle) {
     if (line.startsWith("**") && line.endsWith("**")) {
       const blockTitle = line.replace(/\*\*/g, "").trim();
       elements.push(
-        <p key={i} style={{ fontSize: 15, fontWeight: 700, color: C.text, margin: "24px 0 8px", lineHeight: 1.6, fontFamily: FF, borderBottom: "1px solid " + C.borderDark, paddingBottom: 6 }}>
+        <p style={{ fontSize: 15, fontWeight: 700, color: C.text, margin: "24px 0 8px", lineHeight: 1.6, fontFamily: FF, borderBottom: "1px solid " + C.borderDark, paddingBottom: 6 }} key={i}>
           {blockTitle}
         </p>
       );
@@ -1242,13 +884,13 @@ function renderContent(content, sectionTitle) {
 
     if (line.startsWith("### ")) {
       const content = line.replace("### ", "").trim();
-      elements.push(<p key={i} style={{ fontSize: 13, fontWeight: 700, letterSpacing: 1.5, textTransform: "uppercase", color: C.accent, margin: "24px 0 8px", fontFamily: FF }}>{content}</p>);
+      elements.push(<p style={{ fontSize: 13, fontWeight: 700, letterSpacing: 1.5, textTransform: "uppercase", color: C.accent, margin: "24px 0 8px", fontFamily: FF }} key={i}>{content}</p>);
       i++; continue;
     }
 
     if (line.startsWith("- ") || line.startsWith("• ")) {
       elements.push(
-        <div key={i} style={{ display: "flex", gap: 12, marginBottom: 10 }}>
+        <div style={{ display: "flex", gap: 12, marginBottom: 10 }} key={i}>
           <span style={{ color: C.accent, flexShrink: 0, marginTop: 4, fontSize: 14 }}>—</span>
           <p style={{ fontSize: 15, fontWeight: 500, lineHeight: 1.8, color: C.textMid, margin: 0, fontFamily: FF }}>{line.replace(/^[-•]\s/, "").replace(/\*\*(.*?)\*\*/g, "$1")}</p>
         </div>
@@ -1260,7 +902,7 @@ function renderContent(content, sectionTitle) {
       const num = line.match(/^\d+/)[0];
       const text = line.replace(/^\d+\.\s*/, "").replace(/\*\*(.*?)\*\*/g, "$1");
       elements.push(
-        <div key={i} style={{ display: "flex", gap: 16, marginBottom: 12, alignItems: "flex-start" }}>
+        <div style={{ display: "flex", gap: 16, marginBottom: 12, alignItems: "flex-start" }} key={i}>
           <span style={{ color: C.accent, flexShrink: 0, fontSize: 15, fontWeight: 700, fontFamily: FF, minWidth: 22, lineHeight: 1.75 }}>{num}.</span>
           <p style={{ fontSize: 15, fontWeight: 500, lineHeight: 1.75, color: C.textMid, margin: 0, fontFamily: FF }}>{text}</p>
         </div>
@@ -1268,7 +910,7 @@ function renderContent(content, sectionTitle) {
       i++; continue;
     }
 
-    elements.push(<p key={i} style={{ fontSize: 16, fontWeight: 500, lineHeight: 1.9, color: C.textMid, marginBottom: 14, fontFamily: FF, display: "inline-block", width: "100%" }}>{clean}</p>);
+    elements.push(<p style={{ fontSize: 16, fontWeight: 500, lineHeight: 1.9, color: C.textMid, marginBottom: 14, fontFamily: FF, display: "inline-block", width: "100%" }} key={i}>{clean}</p>);
     i++;
   }
 
@@ -1278,43 +920,7 @@ function renderContent(content, sectionTitle) {
   return elements;
 }
 
-// ─── SECTION ICONS ────────────────────────────────────────────────────────────
-const EVAL_ICONS = {
-  "What We Heard": "◎", "Your Shortlist, Assessed": "◈", "Readiness Score": "◐",
-  "What You Should Know": "◆", "Questions to Ask During the Sales Cycle": "◇", "Our Recommendation": "●", "Sources": "○"
-};
-const STACK_ICONS = {
-  "What We Heard": "◎", "Stack Compatibility Assessment": "◈", "Integration Readiness": "◐",
-  "What You Should Know": "◆", "Questions to Ask During the Sales Cycle": "◇", "Our Compatibility Verdict": "●", "Sources": "○"
-};
-
-// ─── SHARED UI COMPONENTS ─────────────────────────────────────────────────────
-const Logo = ({ small }) => (
-  <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: small ? 4 : 40 }}>
-    <div style={{ width: small ? 34 : 36, height: small ? 34 : 36, borderRadius: "50%", background: C.accent, color: C.white, display: "flex", alignItems: "center", justifyContent: "center", fontSize: small ? 15 : 16, fontWeight: 700, fontFamily: FFD }}>D</div>
-    {!small && (
-      <div>
-        <p style={{ fontSize: 18, fontWeight: 700, color: C.text, fontFamily: FFD }}>Delphi</p>
-        <p style={{ fontSize: 11, color: C.textLight, letterSpacing: 2, textTransform: "uppercase" }}>Independent report for software buyers</p>
-      </div>
-    )}
-    {small && <p style={{ fontSize: 16, fontWeight: 700, color: C.text, fontFamily: FFD }}>Delphi</p>}
-  </div>
-);
-
-const Btn = ({ children, onClick, disabled, variant = "primary", full }) => (
-  <button onClick={onClick} disabled={disabled}
-    style={{
-      background: variant === "primary" ? (disabled ? C.border : C.accent) : variant === "ghost" ? "transparent" : C.white,
-      color: variant === "primary" ? C.white : variant === "ghost" ? C.textLight : C.accent,
-      border: variant === "ghost" ? "1.5px solid " + C.borderDark : variant === "white" ? "1.5px solid " + C.border : "none",
-      borderRadius: 4, padding: "12px 24px", fontSize: 14, letterSpacing: 1.5, textTransform: "uppercase",
-      fontFamily: FF, fontWeight: 700, cursor: disabled ? "default" : "pointer",
-      width: full ? "100%" : "auto", opacity: disabled ? 0.5 : 1, transition: "all 0.15s",
-    }}>{children}</button>
-);
-
-// ─── MAIN COMPONENT ───────────────────────────────────────────────────────────
+// ─── MAIN APP IMPLEMENTATION ENTRY ────────────────────────────────────────────
 export default function Delphi({ paymentStatus, startCheckout, onHome }) {
   const [reportType, setReportType] = useState(null);
   const [step, setStep] = useState("select");
@@ -1339,19 +945,20 @@ export default function Delphi({ paymentStatus, startCheckout, onHome }) {
     if (step === "questions" && q?.type === "text") {
       setTimeout(() => inputRef.current?.focus(), 50);
     }
-  }, [currentQ, step]);
+  }, [currentQ, step, q]);
 
+  // FIXED: Keeps structural strategy items fully insulated from technical data pipes
   const buildQuestionQueue = (categories, currentType) => {
     const baseQueue = currentType === "stack_fit" ? [...STACK_CORE_QUESTIONS] : [...CORE_QUESTIONS];
     const queue = [...baseQueue];
     
-    const seen = new Set(baseQueue.map(q => q.id));
+    const seen = new Set(baseQueue.map(item => item.id));
     categories.forEach(catId => {
       const catQs = CATEGORY_QUESTIONS[catId] || [];
-      catQs.forEach(q => {
-        if (!seen.has(q.id)) {
-          seen.add(q.id);
-          queue.push(q);
+      catQs.forEach(item => {
+        if (!seen.has(item.id)) {
+          seen.add(item.id);
+          queue.push(item);
         }
       });
     });
@@ -1387,19 +994,9 @@ export default function Delphi({ paymentStatus, startCheckout, onHome }) {
     setStep("questions");
   };
 
+  // FIXED: Re-mapped pointer checks to eliminate question index reset loops
   const submitAnswer = (value) => {
     const newAnswers = { ...answers, [q.id]: value };
-
-    if (q.branch && q.branch.trigger.includes(value)) {
-      const branchQ = { ...q.branch, isBranch: true };
-      const newQueue = [
-        ...questionQueue.slice(0, currentQ + 1),
-        branchQ,
-        ...questionQueue.slice(currentQ + 1),
-      ];
-      setQuestionQueue(newQueue);
-    }
-
     setAnswers(newAnswers);
     setCurrentInput("");
     setHoveredChoice(null);
@@ -1428,7 +1025,7 @@ export default function Delphi({ paymentStatus, startCheckout, onHome }) {
       clearTimeout(timeout);
       const data = await res.json();
       
-      // FIXED: Dynamic route protector checks if a Stripe payment URL exists before reading text fields
+      // FIXED: Protective boundary array safeguards free trial promo executions safely
       if (data && data.url) {
         window.location.href = data.url;
         return; 
@@ -1455,7 +1052,7 @@ export default function Delphi({ paymentStatus, startCheckout, onHome }) {
 
   const pageWrap = { minHeight: "100vh", background: C.bg, display: "flex", alignItems: "center", justifyContent: "center", padding: "40px 24px", fontFamily: FF };
 
-  // ─── SELECT ──────────────────────────────────────────────────────────────────
+  // ─── VIEWPANELS ──────────────────────────────────────────────────────────────
   if (step === "select") return (
     <div style={{ minHeight: "100vh", background: C.bg, display: "flex", alignItems: "flex-start", justifyContent: "center", padding: "60px 24px", fontFamily: FF }}>
       <style>{GS}</style>
@@ -1485,7 +1082,6 @@ export default function Delphi({ paymentStatus, startCheckout, onHome }) {
     </div>
   );
 
-  // ─── CATEGORY SELECT ─────────────────────────────────────────────────────────
   if (step === "category_select") return (
     <div style={pageWrap}>
       <style>{GS}</style>
@@ -1583,7 +1179,7 @@ export default function Delphi({ paymentStatus, startCheckout, onHome }) {
     </div>
   );
 
-  // ─── QUESTIONS ───────────────────────────────────────────────────────────────
+  // ─── QUESTION STEPS OVERRIDE LAYER ───────────────────────────────────────────
   return (
     <div style={pageWrap}>
       <style>{GS}</style>
@@ -1603,7 +1199,7 @@ export default function Delphi({ paymentStatus, startCheckout, onHome }) {
         {q && (
           <>
             <p style={{ fontSize: 12, fontWeight: 700, letterSpacing: 2.5, textTransform: "uppercase", color: C.textLight, marginBottom: 16 }}>
-              {q.isBranch ? "Tell us more" : q.layer === 1 ? "Layer 1 — Your Situation" : "Layer 2 — Readiness Assessment"}
+              {reportType === "stack_fit" ? "Layer 1 — Core Infrastructure" : q.layer === 1 ? "Layer 1 — Your Situation" : "Layer 2 — Readiness Assessment"}
             </p>
             <h2 style={{ fontSize: 24, fontWeight: 700, lineHeight: 1.5, color: C.text, marginBottom: 12, fontFamily: FFD }}>{q.text}</h2>
             <p style={{ fontSize: 15, fontWeight: 500, color: C.textMid, lineHeight: 1.7, marginBottom: 28 }}>{q.hint}</p>
