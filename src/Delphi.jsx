@@ -1472,7 +1472,8 @@ export default function Delphi({ paymentStatus, startCheckout, onHome }) {
       const sections = parseReport(data.text, reportType);
       setReportSections(sections.length ? sections : [{ title: "What We Heard", content: ["Unable to parse report. Please try again."] }]);
       setStep("report");
-    } catch {
+    } catch (err) {
+      console.error(err);
       setReportSections([{ title: "What We Heard", content: ["Unable to generate your report. Please try again."] }]);
       setStep("report");
     }
