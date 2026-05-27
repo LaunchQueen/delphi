@@ -10,7 +10,6 @@ const C = {
 const FF = "'EB Garamond', Georgia, serif";
 const FFD = "'Playfair Display', Georgia, serif";
 
-// FIXED: Standardized text rendering and line alignment boundaries globally
 const GS = "@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,700;1,600&family=EB+Garamond:wght@400;500;600;700&display=swap'); * { box-sizing: border-box; margin: 0; padding: 0; } body { text-rendering: optimizeLegibility; -webkit-font-smoothing: antialiased; } button { cursor: pointer; } textarea { outline: none; } textarea:focus { border-color: " + C.accent + " !important; } input:focus { outline: none; border-color: " + C.accent + " !important; } @keyframes fadeUp { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:translateY(0); } } @keyframes spin { to { transform: rotate(360deg); } } ::-webkit-scrollbar { width: 5px; } ::-webkit-scrollbar-thumb { background: " + C.border + "; border-radius: 3px; }";
 
 // ─── TOOL CATEGORIES ──────────────────────────────────────────────────────────
@@ -183,7 +182,6 @@ const CATEGORY_QUESTIONS = {
       },
     },
   ],
-
   sales_engagement: [
     {
       id: "se_sponsor", layer: 1,
@@ -236,7 +234,7 @@ const CATEGORY_QUESTIONS = {
       branch: {
         trigger: ["Patchy — some segments good, some bad", "It's a mess"],
         id: "se_contact_detail",
-        text: "Is there a data enrichment or validation plan before go-live? Domain reputation damage from bad sends is slow to recover.",
+        text: "Is there a data enrichment or validation plan before go-live? Domain reputation damage from bad sends from bad lists slow domain health recovery.",
         hint: "This needs to be solved before sequences go live, not after.",
         type: "text",
       },
@@ -256,7 +254,6 @@ const CATEGORY_QUESTIONS = {
       },
     },
   ],
-
   revenue_intelligence: [
     {
       id: "ri_legal", layer: 1,
@@ -329,7 +326,6 @@ const CATEGORY_QUESTIONS = {
       },
     },
   ],
-
   data_enrichment: [
     {
       id: "de_usecase", layer: 1,
@@ -402,7 +398,6 @@ const CATEGORY_QUESTIONS = {
       },
     },
   ],
-
   marketing_automation: [
     {
       id: "ma_database", layer: 1,
@@ -475,7 +470,6 @@ const CATEGORY_QUESTIONS = {
       },
     },
   ],
-
   crm: [
     {
       id: "crm_consolidation", layer: 1,
@@ -564,8 +558,44 @@ const CATEGORY_QUESTIONS = {
   ],
 };
 
+// ─── DEEP INFRASTRUCTURE STACK QUESTIONS ──────────────────────────────────────
+const STACK_CORE_QUESTIONS = [
+  {
+    id: "data_flow_direction", layer: 1,
+    text: "How do you expect data to flow between the new tool and your CRM?",
+    hint: "Are you looking for a 1-way read, a 1-way write-back, or a fully automated bi-directional sync? Be specific about what system must be the 'source of truth'.",
+    type: "text"
+  },
+  {
+    id: "custom_objects", layer: 1,
+    text: "Does your current CRM rely heavily on custom objects or non-standard fields for your sales motions?",
+    hint: "Standard field mapping is easy. If your pipeline or account routing runs on heavily customized architecture, outline it here.",
+    type: "text"
+  },
+  {
+    id: "api_governance", layer: 1,
+    text: "Who manages your API limits, authentication protocols, and integration middleware?",
+    hint: "Do you use tools like Zapier, Make, or Workato, or do you rely entirely on native plug-and-play marketplace packages?",
+    type: "choice",
+    options: ["Native marketplace connectors only", "Middleware platforms (Zapier/Make/Workato)", "Custom internal APIs / Developer team required", "We don't have a structured approach to APIs yet"]
+  },
+  {
+    id: "identity_resolution", layer: 2,
+    text: "How do you currently deduplicate and resolve account or contact conflicts?",
+    hint: "If two systems have conflicting data for the same person (e.g., different phone numbers), which system is hardcoded to win?",
+    type: "choice",
+    options: ["CRM settings strictly govern overwrite rules", "We use a dedicated data hygiene tool (e.g., LeanData/Insycle)", "Reps manually clean duplicates as they find them", "We have no automated duplication governance right now"]
+  },
+  {
+    id: "historical_backfill", layer: 2,
+    text: "Do you need to migrate or backfill historical activity metrics into the new tool?",
+    hint: "Moving live pipelines is standard. Backfilling 3 years of email histories and call logs adds massive infrastructure complexity.",
+    type: "choice",
+    options: ["No historical data — starting fresh from day one", "Open opportunities and active accounts only", "Full historical log backfill (activities, closed deals, metrics)", "Not sure what our historical data requirement is yet"]
+  }
+];
+
 // ─── PROMPTS ──────────────────────────────────────────────────────────────────
-// FIXED: Integrated custom shortlist validation models to resolve the unlisted software evaluation drops
 const EVAL_PROMPT = `You are Delphi, an independent software evaluation analyst for B2B SaaS buyers. You have no financial relationship with any vendor. Your job is to help buyers understand the gap between what a software tool actually requires and where their organization currently stands.
 
 CRITICAL: The very first line of your output must be ## What We Heard. Do not write a title, introduction, or any other section before it. Nothing before ## What We Heard.
@@ -879,14 +909,10 @@ function buildStackPrompt(answers) {
 
 // ─── REPORT PARSING & RENDERING ───────────────────────────────────────────────
 
-// FIXED: Resolves floating text baselines and forces dangling formatting periods backward to avoid rendering standalone elements
 function cleanModelText(text) {
   if (!text) return "";
 
-  // 1. Clear citation keys safely to prevent punctuation orphaning
   let cleaned = text.replace(/\[\d+\]/g, "").replace(/\[Source[^\]]*\]/gi, "");
-  
-  // 2. Normalize and strip trailing spaces leaking directly before sentence breaks
   cleaned = cleaned.replace(/\s+\./g, ".");
 
   const lines = cleaned.split("\n");
@@ -910,7 +936,7 @@ function cleanModelText(text) {
     } else {
       let processedLine = line;
       if (trimmed.startsWith("**") && trimmed.endsWith("**")) {
-        processedLine = trimmed.replace(/\*\*/g, "");
+        processedLine = trimmed.replace(/\*\//g, "");
       }
       joined.push(processedLine);
       i++;
@@ -1072,7 +1098,6 @@ function renderContent(content, sectionTitle) {
     let line = lines[i];
     if (!line.trim()) { i++; continue; }
 
-    // FIXED: Cleans inline bold leaking blocks early before checking routing rules
     const clean = line.replace(/\*\*(.*?)\*\*/g, "$1");
 
     if (line.trim().startsWith("|")) {
@@ -1312,7 +1337,6 @@ function renderContent(content, sectionTitle) {
       i++; continue;
     }
 
-    // FIXED: Standardized bounding box display parameters to eliminate sentence fragmentation and lone hanging periods
     elements.push(<p key={i} style={{ fontSize: 16, fontWeight: 500, lineHeight: 1.9, color: C.textMid, marginBottom: 14, fontFamily: FF, display: "inline-block", width: "100%" }}>{clean}</p>);
     i++;
   }
@@ -1386,9 +1410,11 @@ export default function Delphi({ paymentStatus, startCheckout, onHome }) {
     }
   }, [currentQ, step]);
 
-  const buildQuestionQueue = (categories) => {
-    const queue = [...CORE_QUESTIONS];
-    const seen = new Set(CORE_QUESTIONS.map(q => q.id));
+  const buildQuestionQueue = (categories, currentType) => {
+    const baseQueue = currentType === "stack_fit" ? [...STACK_CORE_QUESTIONS] : [...CORE_QUESTIONS];
+    const queue = [...baseQueue];
+    
+    const seen = new Set(baseQueue.map(q => q.id));
     categories.forEach(catId => {
       const catQs = CATEGORY_QUESTIONS[catId] || [];
       catQs.forEach(q => {
@@ -1420,7 +1446,9 @@ export default function Delphi({ paymentStatus, startCheckout, onHome }) {
   const confirmSelection = () => {
     const shortlistKey = reportType === "stack_fit" ? "stack_shortlist" : "shortlist";
     const labels = selectedCategories.map(id => TOOL_CATEGORIES.find(x => x.id === id)?.label).filter(Boolean);
-    const queue = buildQuestionQueue(selectedCategories);
+    
+    const queue = buildQuestionQueue(selectedCategories, reportType);
+    
     const cleanedTools = selectedTools.map(t => t.startsWith("Other: ") ? t.replace("Other: ", "").trim() : t);
     setAnswers({ categories: labels, [shortlistKey]: cleanedTools });
     setQuestionQueue(queue);
@@ -1468,6 +1496,12 @@ export default function Delphi({ paymentStatus, startCheckout, onHome }) {
       });
       clearTimeout(timeout);
       const data = await res.json();
+      
+      if (data.url) {
+        window.location.href = data.url;
+        return;
+      }
+
       if (!data.text) throw new Error("empty");
       const sections = parseReport(data.text, reportType);
       setReportSections(sections.length ? sections : [{ title: "What We Heard", content: ["Unable to parse report. Please try again."] }]);
@@ -1644,7 +1678,7 @@ export default function Delphi({ paymentStatus, startCheckout, onHome }) {
           <p style={{ fontSize: 11, fontWeight: 700, color: C.textLight, letterSpacing: 1.5, textTransform: "uppercase", marginBottom: 24, marginLeft: 44 }}>
             {reportType === "stack_fit" ? "Stack Fit Report" : "Evaluation Report"}
           </p>
-          <div style={{ height: 1, background: C.border, marginBottom: 16 }} />
+          <div style={{ height: 1, background: C.border, margin_bottom: 16 }} />
           <nav style={{ display: "flex", flexDirection: "column", gap: 4, flex: 1 }}>
             {reportSections.map((sec, i) => {
               const isActive = activeSection === i;
