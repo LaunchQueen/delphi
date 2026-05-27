@@ -636,7 +636,7 @@ Use ONLY these exact section headers, in this order:
 ## Your Shortlist, Assessed
 ## Readiness Score
 ## What You Should Know
-## Questions to Ask in Your Next Demo
+## Questions to Ask During the Sales Cycle
 ## Our Recommendation
 ## Sources
 
@@ -701,7 +701,9 @@ For each dimension: state the score, describe the current situation factually, e
 
 **What You Should Know** — Vendor-specific gotchas and hidden requirements for the tools on the shortlist only. Things the vendor's sales team will not volunteer.
 
-Structure this section with thematic headers based on what you find. Examples: Cost of Ownership, Integration Considerations, Implementation Considerations, Contract Considerations, Data Requirements.
+CRITICAL FORMAT REQUIREMENT: For each tool, use an independent subheader section inside double asterisks containing the vendor name, followed immediately by standard thematic bullet rows. Example formatting:
+**Salesforce Integration Specifics**
+The tool requires custom objects...
 
 Every point must be:
 - Directly tied to a specific tool on the shortlist and this buyer's situation
@@ -715,7 +717,7 @@ Each point must be distinct — do not repeat the same information in different 
 
 Do not invent stack problems. If the buyer said a system is working — it is working.
 
-**Questions to Ask in the Demo** — 5-7 questions structured as:
+**Questions to Ask During the Sales Cycle** — 5-7 questions structured as:
 
 Ask All Vendors:
 1. [Question — no quotes]
@@ -787,7 +789,7 @@ const STACK_PROMPT = `You are Delphi, an independent software implementation ana
 
 CRITICAL: The very first line of your output must be ## What We Heard. Nothing before ## What We Heard.
 
-IMPORTANT ON CONSIDERED TOOLS: Evaluate all entries passed under the tools being considered array. If a user inputs an unknown or custom typed vendor, you MUST still construct the complete report architecture around it. Deduce data flow dependencies based on best-practice integrations within that primary software group.
+IMPORTANT ON CONSIDERED TOOLS: Evaluate all entries passed under the tools being considered array. You must generate comparative assessments for ALL tools on the shortlist within the same output.
 
 IRONCLAD RULES:
 - NEVER mention any tool not on the buyer's shortlist.
@@ -809,7 +811,7 @@ Use ONLY these exact section headers, in this order:
 ## Stack Compatibility Assessment
 ## Integration Readiness
 ## What You Should Know
-## Questions to Ask Before You Integrate
+## Questions to Ask During the Sales Cycle
 ## Our Compatibility Verdict
 ## Sources
 
@@ -822,98 +824,72 @@ Immediately after the summary paragraph:
 - Order from most compatible to least
 - Score X/5, Our Take one sharp sentence
 
-**Stack Compatibility Assessment** — Order most to least compatible. For each tool: Tool name | Score | Stack Compatibility | Integration Complexity. Assess compatibility with their specific CRM and MAP. Timelines in weeks with specific dependency explained.
+**Stack Compatibility Assessment** — Order most to least compatible. For each tool, open with a header line in EXACTLY this format to feed the engine's parsing metrics — do not add any other text, numbers, or characters to this line:
+What it does well:
+[2-3 sentences of plain prose specific to this buyer's situation]
 
-**Integration Readiness** — Five dimensions: Integration Ownership Clarity, Current Stack Health, Data Model Maturity, Team Capacity for New Integrations, Historical Integration Track Record. For each: DIMENSION NAME: X/5, current situation, what this integration requires, one concrete action if gap exists.
+What it does not do well:
+[2-3 sentences of plain prose specific to this buyer's configuration dependencies]
+
+Implementation timeline:
+[X to Y weeks — driven by specific technical requirements or workflows]
+
+Pricing:
+[Verified price or "Requires direct quote from vendor."]
+
+Integration requirements:
+[Plain prose detailing specific CRM and MAP hooks]
+
+Bottom line:
+[One direct sentence on stack compatibility for this buyer]
+
+**Integration Readiness** — Opening paragraph: 2-3 sentences on what the Integration Readiness Score measures and why this page matters. End after "implement successfully." Do not editorialize further.
+OVERALL COMPATIBILITY: X/5
+| Dimension | Score | Status |
+
+Then use a summary legend table:
+| Score | What It Means |
+| 1–2 | Address before go-live |
+| 3 | Manageable with preparation |
+| 4–5 | Strong foundation |
+
+The five dimensions:
+1. Integration Ownership Clarity
+2. Current Stack Health
+3. Data Model Maturity
+4. Team Capacity for New Integrations
+5. Historical Integration Track Record
+
+For each dimension, print the header row using this exact format:
+Dimension Name | X/5
+[Fact breakdown paragraph explaining what this tool integration expects from your stack and how to cover infrastructure gaps.]
 
 **What You Should Know** — Vendor-specific integration gotchas for tools on the shortlist only. No general advice. No tools not on the shortlist.
+CRITICAL FORMAT REQUIREMENT: For each tool, use an independent subheader section inside double asterisks containing the vendor name, followed immediately by standard thematic bullet rows. Example formatting:
+**6sense Integration Specifics**
+The platform requires custom...
 
-**Questions to Ask Before You Integrate** —
+**Questions to Ask During the Sales Cycle** —
 Ask All Vendors:
 1. [Question]
 What to listen for: [one sentence]
 
 Ask [Vendor] specifically:
-2. [Question]
+1. [Question]
 What to listen for: [one sentence]
 
 **Our Compatibility Verdict** —
-We recommend [Tool] for integration.
-[Two to four sentences: fit for this buyer's specific stack.]
-For each non-recommended tool: one sentence — genuine strength, specific reason not best fit for their scenario.
+Rather than recommending a single product, write an unbiased implementation checklist for the buyer. Break down the Technical Debt Assessment and Implementation Risk Profile for each tool on their list. Structure it as a cold, practical evaluation of what they must build or prepare to integrate each system safely.
 
 **Sources** — Real URLs from web search only. No fabricated URLs. G2 product pages, Gartner/Forrester, vendor integration docs. No marketing pages. Note G2 reviews were referenced. Plain label, plain URL, one per line.`;
 
-// ─── PROMPT BUILDERS ──────────────────────────────────────────────────────────
-function buildEvalPrompt(answers) {
-  const lines = [
-    "Buyer diagnostic answers:",
-    "Categories: " + (answers.categories?.join(", ") || "Not provided"),
-    "Tools on shortlist: " + (answers.shortlist?.join(", ") || "Not provided"),
-    "Problem / why now: " + (answers.problem || "Not provided"),
-    "Prior experience: " + (answers.maturity || "Not provided"),
-    answers.maturity_detail ? "Prior experience detail: " + answers.maturity_detail : null,
-    "Ops ownership: " + (answers.ops_support || "Not provided"),
-    answers.ops_detail ? "Ops detail: " + answers.ops_detail : null,
-    "Current stack: " + (answers.stack || "Not provided"),
-    "CRM data quality: " + (answers.data_quality || "Not provided"),
-    answers.data_detail ? "Data detail: " + answers.data_detail : null,
-    "Change readiness: " + (answers.change_readiness || "Not provided"),
-    answers.change_detail ? "Change detail: " + answers.change_detail : null,
-    "Budget: " + (answers.budget || "Not provided"),
-    answers.budget_detail ? "Budget detail: " + answers.budget_detail : null,
-    "Timeline: " + (answers.timeline || "Not provided"),
-    answers.timeline_detail ? "Timeline detail: " + answers.timeline_detail : null,
-  ];
-
-  const catKeys = Object.keys(answers).filter(k =>
-    !["categories", "shortlist", "problem", "maturity", "maturity_detail", "ops_support", "ops_detail",
-      "stack", "data_quality", "data_detail", "change_readiness", "change_detail",
-      "budget", "budget_detail", "timeline", "timeline_detail"].includes(k)
-  );
-  if (catKeys.length) {
-    lines.push("\nCategory-specific answers:");
-    catKeys.forEach(k => answers[k] && lines.push(k + ": " + answers[k]));
-  }
-
-  lines.push("\nGenerate the Delphi evaluation report now.");
-  return lines.filter(Boolean).join("\n");
-}
-
-function buildStackPrompt(answers) {
-  const lines = [
-    "Stack Fit diagnostic answers:",
-    "Categories: " + (answers.categories?.join(", ") || "Not provided"),
-    "Tools being considered: " + (answers.stack_shortlist?.join(", ") || "Not provided"),
-    "Problem / why now: " + (answers.problem || "Not provided"),
-    "Current stack: " + (answers.stack || "Not provided"),
-    "CRM data quality: " + (answers.data_quality || "Not provided"),
-    answers.data_detail ? "Data detail: " + answers.data_detail : null,
-    "Change readiness: " + (answers.change_readiness || "Not provided"),
-    "Budget: " + (answers.budget || "Not provided"),
-    "Timeline: " + (answers.timeline || "Not provided"),
-  ];
-
-  const catKeys = Object.keys(answers).filter(k =>
-    !["categories", "stack_shortlist", "problem", "stack", "data_quality", "data_detail",
-      "change_readiness", "budget", "timeline"].includes(k)
-  );
-  if (catKeys.length) {
-    lines.push("\nCategory-specific answers:");
-    catKeys.forEach(k => answers[k] && lines.push(k + ": " + answers[k]));
-  }
-
-  lines.push("\nGenerate the Delphi Stack Fit compatibility report now.");
-  return lines.filter(Boolean).join("\n");
-}
-
-// ─── REPORT PARSING & RENDERING ───────────────────────────────────────────────
+// ─── PARSING & RENDERING UTILITIES ───────────────────────────────────────────
 
 function cleanModelText(text) {
   if (!text) return "";
 
   let cleaned = text.replace(/\[\d+\]/g, "").replace(/\[Source[^\]]*\]/gi, "");
-  cleaned = cleaned.replace(/\s+\./g, ".");
+  cleaned = cleaned.replace(/\s+\./g, ".").replace(/\s+,/g, ",");
 
   const lines = cleaned.split("\n");
   const joined = [];
@@ -928,17 +904,13 @@ function cleanModelText(text) {
     const next = j < lines.length ? lines[j].trim() : null;
     
     const currentEndsIncomplete = trimmed && !trimmed.match(/[.!?:]$/) && !trimmed.startsWith("#") && !trimmed.startsWith("|") && !trimmed.match(/^\d+\/5/);
-    const nextIsContinuation = next && /^[a-z]/.test(next) && !next.startsWith("##") && !next.startsWith("###") && !next.startsWith("|");
+    const nextIsContinuation = next && /^[A-Za-z]/.test(next) && !next.startsWith("##") && !next.startsWith("###") && !next.startsWith("|");
     
     if (currentEndsIncomplete && nextIsContinuation) {
       joined.push(trimmed + " " + next);
       i = j + 1;
     } else {
-      let processedLine = line;
-      if (trimmed.startsWith("**") && trimmed.endsWith("**")) {
-        processedLine = trimmed.replace(/\*\//g, "");
-      }
-      joined.push(processedLine);
+      joined.push(line);
       i++;
     }
   }
@@ -946,18 +918,18 @@ function cleanModelText(text) {
   return joined
     .map(line => {
       const t = line.trim();
-      if (t === "." || t === " ." || t === " . ") return "";
+      if (t === "." || t === ",") return "";
       return line;
     })
     .filter(line => {
       const t = line.trim();
-      return !t.match(/^[.,;!?:]\s*$/) && t !== "and" && t !== "or" && t !== "but" && t !== "with";
+      return t !== "" && !t.match(/^[.,;!?:]\s*$/);
     })
     .join("\n");
 }
 
-const VALID_EVAL_SECTIONS = new Set(["What We Heard", "Your Shortlist, Assessed", "Readiness Score", "What You Should Know", "Questions to Ask in the Demo", "Our Recommendation", "Sources"]);
-const VALID_STACK_SECTIONS = new Set(["What We Heard", "Stack Compatibility Assessment", "Integration Readiness", "What You Should Know", "Questions to Ask Before You Integrate", "Our Compatibility Verdict", "Sources"]);
+const VALID_EVAL_SECTIONS = new Set(["What We Heard", "Your Shortlist, Assessed", "Readiness Score", "What You Should Know", "Questions to Ask During the Sales Cycle", "Our Recommendation", "Sources"]);
+const VALID_STACK_SECTIONS = new Set(["What We Heard", "Stack Compatibility Assessment", "Integration Readiness", "What You Should Know", "Questions to Ask During the Sales Cycle", "Our Compatibility Verdict", "Sources"]);
 
 function parseReport(text, type = "evaluation") {
   const validSections = type === "stack_fit" ? VALID_STACK_SECTIONS : VALID_EVAL_SECTIONS;
@@ -1000,24 +972,23 @@ function renderContent(content, sectionTitle) {
   const flushVendorCard = (key) => {
     if (!cardToolName) return;
 
-    const fieldOrder = ["What it does well", "What it does not do well", "Implementation timeline", "Pricing", "Integration requirements", "Bottom line"];
+    const fieldLabels = ["What it does well", "What it does not do well", "Implementation timeline", "Pricing", "Integration requirements", "Bottom line"];
     const fieldData = {};
     let currentField = null;
     let currentText = [];
 
     cardRawLines.forEach(line => {
-      const FIELD_LABELS = ["What it does well:", "What it does not do well:", "Implementation timeline:", "Pricing:", "Integration requirements:", "Bottom line:"];
-      const matched = FIELD_LABELS.find(l => line.trim().startsWith(l));
+      const matched = fieldLabels.find(l => line.trim().startsWith(l + ":"));
       if (matched) {
-        if (currentField) fieldData[currentField] = currentText.join(" ").trim().replace(/^\.\s*/, "");
-        currentField = matched.replace(":", "");
-        currentText = [line.trim().slice(matched.length).trim()];
+        if (currentField) fieldData[currentField] = currentText.join(" ").trim();
+        currentField = matched;
+        currentText = [line.trim().slice(matched.length + 1).trim()];
       } else if (currentField && line.trim()) {
-        const cleaned = line.trim().replace(/^\.\s+/, "").replace(/^[-•]\s+/, "");
+        const cleaned = line.trim().replace(/^[-•]\s+/, "");
         if (cleaned) currentText.push(cleaned);
       }
     });
-    if (currentField) fieldData[currentField] = currentText.join(" ").trim().replace(/^\.\s*/, "");
+    if (currentField) fieldData[currentField] = currentText.join(" ").trim();
 
     const gridFields = [
       ["What it does well", "What it does not do well"],
@@ -1092,13 +1063,13 @@ function renderContent(content, sectionTitle) {
     inQuestionGroup = false;
   };
 
-  const isQuestionsSection = sectionTitle && (sectionTitle.includes("Questions to Ask") || sectionTitle.includes("Questions to ask"));
+  const isQuestionsSection = sectionTitle && sectionTitle.includes("Questions to Ask");
 
   while (i < lines.length) {
     let line = lines[i];
     if (!line.trim()) { i++; continue; }
 
-    const clean = line.replace(/\*\*(.*?)\*\*/g, "$1");
+    const clean = line.replace(/\*\*(.*?)\*\//g, "$1").replace(/\*\*/g, "");
 
     if (line.trim().startsWith("|")) {
       if (inVendorCard) flushVendorCard(i);
@@ -1140,7 +1111,7 @@ function renderContent(content, sectionTitle) {
               <tbody>
                 {data.map((row, j) => (
                   <tr key={j} style={{ background: j % 2 === 0 ? C.white : C.card, borderBottom: "1px solid " + C.border }}>
-                    {row.map((cell, k) => <td key={k} style={{ padding: "10px 14px", color: C.textMid, lineHeight: 1.5 }}>{cell.replace(/\*\*(.*?)\*\*/g, "$1")}</td>)}
+                    {row.map((cell, k) => <td key={k} style={{ padding: "10px 14px", color: C.textMid, lineHeight: 1.5 }}>{cell}</td>)}
                   </tr>
                 ))}
               </tbody>
@@ -1152,14 +1123,11 @@ function renderContent(content, sectionTitle) {
     }
 
     const rawHeaderLine = line.trim().startsWith("### ") ? line.trim().replace("### ", "") : line.trim();
-    if (!isQuestionsSection && !rawHeaderLine.startsWith("|") && rawHeaderLine.match(/\|\s*\d+\/5/i)) {
+    if (!isQuestionsSection && !rawHeaderLine.startsWith("|") && (rawHeaderLine.includes("|") && rawHeaderLine.match(/\d+\/5/))) {
       if (inVendorCard) flushVendorCard(i);
-      const parts = rawHeaderLine.split("|").map(p => p.trim()).filter(p => p);
-      cardToolName = parts[0];
-      cardMeta = parts.slice(1).map(p => {
-        p = p.replace(/Budget:\s*/i, "").replace(/Readiness:\s*/i, "");
-        return p;
-      }).join(" · ");
+      const parts = rawHeaderLine.split("|").map(p => p.trim());
+      cardToolName = parts[0].replace(/\*\*/g, "");
+      cardMeta = parts.slice(1).map(p => p.replace(/Budget:\s*/i, "").replace(/Readiness:\s*/i, "").replace(/Stack Compatibility:\s*/i, "").replace(/Integration Complexity:\s*/i, "")).join(" · ");
       cardIsRecommended = vendorCardCount === 0;
       vendorCardCount++;
       inVendorCard = true;
@@ -1167,7 +1135,7 @@ function renderContent(content, sectionTitle) {
     }
 
     if (inVendorCard) {
-      cardRawLines.push(clean);
+      cardRawLines.push(line);
       i++; continue;
     }
 
@@ -1216,41 +1184,6 @@ function renderContent(content, sectionTitle) {
       }
     }
 
-    if (sectionTitle === "Sources" && (line.trim() === "G2 Reviews" || line.trim() === "Vendor Documentation" || line.trim() === "Analyst Reports")) {
-      elements.push(
-        <p key={i} style={{ fontSize: 12, fontWeight: 700, letterSpacing: 2, textTransform: "uppercase", color: C.accent, margin: "20px 0 10px", fontFamily: FF }}>{line.trim()}</p>
-      );
-      i++; continue;
-    }
-
-    if (line.trim().match(/^\[.+\]\(https?:\/\/.+\)/)) {
-      const match = line.trim().match(/^\[(.+)\]\((https?:\/\/.+)\)/);
-      if (match) {
-        elements.push(<div key={i} style={{ marginBottom: 10 }}><a href={match[2]} target="_blank" rel="noopener noreferrer" style={{ color: C.accent, fontSize: 15, fontFamily: FF, wordBreak: "break-all", textDecoration: "underline" }}>{match[1]}</a></div>);
-        i++; continue;
-      }
-    }
-    if (line.trim().match(/^https?:\/\//)) {
-      elements.push(<div key={i} style={{ marginBottom: 10 }}><a href={line.trim()} target="_blank" rel="noopener noreferrer" style={{ color: C.accent, fontSize: 15, fontFamily: FF, wordBreak: "break-all", textDecoration: "underline" }}>{line.trim()}</a></div>);
-      i++; continue;
-    }
-    if (line.trim().match(/^[-•]\s*https?:\/\//)) {
-      const url = line.trim().replace(/^[-•]\s*/, "");
-      elements.push(<div key={i} style={{ marginBottom: 10 }}><a href={url} target="_blank" rel="noopener noreferrer" style={{ color: C.accent, fontSize: 15, fontFamily: FF, wordBreak: "break-all", textDecoration: "underline" }}>{url}</a></div>);
-      i++; continue;
-    }
-    if (line.trim().match(/\s+https?:\/\/\S+$/)) {
-      const urlMatch = line.trim().match(/^(.+?)\s+(https?:\/\/\S+)$/);
-      if (urlMatch) {
-        elements.push(
-          <div key={i} style={{ marginBottom: 10 }}>
-            <a href={urlMatch[2]} target="_blank" rel="noopener noreferrer" style={{ color: C.accent, fontSize: 15, fontFamily: FF, textDecoration: "underline" }}>{urlMatch[1]}</a>
-          </div>
-        );
-        i++; continue;
-      }
-    }
-
     if (/^OVERALL (READINESS|COMPATIBILITY):/i.test(line)) {
       const match = line.match(/(\d(?:\.\d)?)\s*\/\s*5/);
       const score = match ? parseFloat(match[1]) : null;
@@ -1273,7 +1206,7 @@ function renderContent(content, sectionTitle) {
       }
     }
 
-    if (!isQuestionsSection && !inVendorCard && line.trim().match(/^[A-Za-z\s]+\|\s*\d+\/5$/) && !line.trim().startsWith("|")) {
+    if (!isQuestionsSection && !inVendorCard && line.includes("|") && line.match(/\d+\/5/) && !line.trim().startsWith("|")) {
       const parts = line.trim().split("|").map(p => p.trim());
       elements.push(
         <div key={i} style={{ borderBottom: "1px solid " + C.border, paddingBottom: 6, marginTop: 28, marginBottom: 8, display: "flex", alignItems: "baseline", gap: 12 }}>
@@ -1284,35 +1217,20 @@ function renderContent(content, sectionTitle) {
       i++; continue;
     }
 
+    if (line.startsWith("**") && line.endsWith("**")) {
+      const blockTitle = line.replace(/\*\*/g, "").trim();
+      elements.push(
+        <p key={i} style={{ fontSize: 15, fontWeight: 700, color: C.text, margin: "24px 0 8px", lineHeight: 1.6, fontFamily: FF, borderBottom: "1px solid " + C.borderDark, paddingBottom: 6 }}>
+          {blockTitle}
+        </p>
+      );
+      i++; continue;
+    }
+
     if (line.startsWith("### ")) {
       const content = line.replace("### ", "").trim();
       elements.push(<p key={i} style={{ fontSize: 13, fontWeight: 700, letterSpacing: 1.5, textTransform: "uppercase", color: C.accent, margin: "24px 0 8px", fontFamily: FF }}>{content}</p>);
       i++; continue;
-    }
-
-    if (line.match(/^\*\*(.+:)\*\*$/) || (line.match(/^\*\*(.+)\*\*$/) && !line.includes("|"))) {
-      const isSubItem = line.match(/^\*\*(.+:)\*\*$/);
-      const label = clean.replace(/:$/, "");
-      if (isSubItem) {
-        let j = i + 1;
-        const bodyLines = [];
-        while (j < lines.length && lines[j].trim() && !lines[j].match(/^\*\*/) && !lines[j].startsWith("##") && !lines[j].startsWith("###")) {
-          bodyLines.push(lines[j].trim().replace(/^\.\s*/, ""));
-          j++;
-        }
-        const body = bodyLines.filter(Boolean).join(" ");
-        elements.push(
-          <div key={i} style={{ border: "1px solid " + C.border, borderRadius: 6, padding: "14px 18px", marginBottom: 14 }}>
-            <p style={{ fontSize: 13, fontWeight: 700, color: C.accent, margin: "0 0 8px", fontFamily: FF, letterSpacing: 0.5 }}>{label}</p>
-            {body && <p style={{ fontSize: 15, color: C.textMid, margin: 0, lineHeight: 1.75, fontFamily: FF }}>{body}</p>}
-          </div>
-        );
-        i = j;
-      } else {
-        elements.push(<p key={i} style={{ fontSize: 15, fontWeight: 700, color: C.text, margin: "20px 0 8px", lineHeight: 1.6, fontFamily: FF, borderBottom: "0.5px solid " + C.border, paddingBottom: 6 }}>{label}</p>);
-        i++;
-      }
-      continue;
     }
 
     if (line.startsWith("- ") || line.startsWith("• ")) {
@@ -1350,11 +1268,11 @@ function renderContent(content, sectionTitle) {
 // ─── SECTION ICONS ────────────────────────────────────────────────────────────
 const EVAL_ICONS = {
   "What We Heard": "◎", "Your Shortlist, Assessed": "◈", "Readiness Score": "◐",
-  "What You Should Know": "◆", "Questions to Ask in the Demo": "◇", "Our Recommendation": "●", "Sources": "○"
+  "What You Should Know": "◆", "Questions to Ask During the Sales Cycle": "◇", "Our Recommendation": "●", "Sources": "○"
 };
 const STACK_ICONS = {
   "What We Heard": "◎", "Stack Compatibility Assessment": "◈", "Integration Readiness": "◐",
-  "What You Should Know": "◆", "Questions to Ask Before You Integrate": "◇", "Our Compatibility Verdict": "●", "Sources": "○"
+  "What You Should Know": "◆", "Questions to Ask During the Sales Cycle": "◇", "Our Compatibility Verdict": "●", "Sources": "○"
 };
 
 // ─── SHARED UI COMPONENTS ─────────────────────────────────────────────────────
@@ -1678,7 +1596,7 @@ export default function Delphi({ paymentStatus, startCheckout, onHome }) {
           <p style={{ fontSize: 11, fontWeight: 700, color: C.textLight, letterSpacing: 1.5, textTransform: "uppercase", marginBottom: 24, marginLeft: 44 }}>
             {reportType === "stack_fit" ? "Stack Fit Report" : "Evaluation Report"}
           </p>
-          <div style={{ height: 1, background: C.border, margin_bottom: 16 }} />
+          <div style={{ height: 1, background: C.border, marginBottom: 16 }} />
           <nav style={{ display: "flex", flexDirection: "column", gap: 4, flex: 1 }}>
             {reportSections.map((sec, i) => {
               const isActive = activeSection === i;
