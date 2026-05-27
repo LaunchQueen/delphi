@@ -825,6 +825,10 @@ Immediately after the summary paragraph:
 - Score X/5, Our Take one sharp sentence
 
 **Stack Compatibility Assessment** — Order most to least compatible. For each tool, open with a header line in EXACTLY this format to feed the engine's parsing metrics — do not add any other text, numbers, or characters to this line:
+ToolName | X/5 | Stack Compatibility: [one word] | Integration Complexity: [one word]
+
+Then write the assessment using these exact field labels on their own lines followed immediately by the content on the next line. Use plain prose only — no bullet points, no dashes, no lists inside any field.
+
 What it does well:
 [2-3 sentences of plain prose specific to this buyer's situation]
 
@@ -1122,13 +1126,13 @@ function renderContent(content, sectionTitle) {
       }
     }
 
- const rawHeaderLine = line.trim().startsWith("### ") ? line.trim().replace("### ", "") : line.trim();
+    const rawHeaderLine = line.trim().startsWith("### ") ? line.trim().replace("### ", "") : line.trim();
     if (!isQuestionsSection && !rawHeaderLine.startsWith("|") && (rawHeaderLine.includes("|") && rawHeaderLine.match(/\d+\/5/))) {
       if (inVendorCard) flushVendorCard(i);
       const parts = rawHeaderLine.split("|").map(p => p.trim());
       cardToolName = parts[0].replace(/\*\*/g, "");
       
-      // FIXED: Safely wraps the tags in an active .map loop so JavaScript doesn't crash the browser
+      // FIXED: Iterates safely over the tags with an active loop mapper
       cardMeta = parts.slice(1).map(p => {
         return p.replace(/Budget:\s*/i, "")
                 .replace(/Readiness:\s*/i, "")
@@ -1424,18 +1428,12 @@ export default function Delphi({ paymentStatus, startCheckout, onHome }) {
       clearTimeout(timeout);
       const data = await res.json();
       
-      if (data.url) {
-        window.location.href = data.url;
-        return;
-      }
-      
-      // 1. STRIPE CHECKOUT REDIRECT: If a payment link exists, go there instantly
+      // FIXED: Dynamic route protector checks if a Stripe payment URL exists before reading text fields
       if (data && data.url) {
         window.location.href = data.url;
-        return; // Halt further frontend execution so the browser can change pages
+        return; 
       }
 
-      // 2. BACKUP LOGIC: If checking out for free or running without Stripe configured
       if (!data || !data.text) throw new Error("Empty response payload from server");
       
       const sections = parseReport(data.text, reportType);
@@ -1584,80 +1582,6 @@ export default function Delphi({ paymentStatus, startCheckout, onHome }) {
       </div>
     </div>
   );
-
-  // ─── GENERATING ──────────────────────────────────────────────────────────────
-  if (step === "generating") return (
-    <div style={pageWrap}>
-      <style>{GS}</style>
-      <div style={{ textAlign: "center", maxWidth: 480, padding: "0 24px" }}>
-        <div style={{ width: 48, height: 48, border: "3px solid " + C.border, borderTop: "3px solid " + C.accent, borderRadius: "50%", margin: "0 auto 28px", animation: "spin 0.9s linear infinite" }} />
-        <p style={{ fontSize: 22, fontWeight: 700, color: C.text, marginBottom: 14, fontFamily: FFD }}>Building your report</p>
-        <p style={{ fontSize: 16, fontWeight: 500, color: C.textMid, lineHeight: 1.75, marginBottom: 12 }}>
-          {reportType === "stack_fit"
-            ? "Analyzing your stack, integration patterns, and compatibility signals."
-            : "Analyzing your situation against known implementation requirements and organizational readiness signals."}
-        </p>
-        <p style={{ fontSize: 14, fontWeight: 500, color: C.textLight, lineHeight: 1.6 }}>This takes about 45–60 seconds. We're pulling current information, not cached answers.</p>
-      </div>
-    </div>
-  );
-
-  // ─── REPORT ──────────────────────────────────────────────────────────────────
-  if (step === "report") {
-    const section = reportSections[activeSection];
-    return (
-      <div style={{ minHeight: "100vh", background: C.bg, display: "flex", fontFamily: FF }}>
-        <style>{GS}</style>
-        <div style={{ width: 240, minWidth: 240, background: C.sidebar, borderRight: "1px solid " + C.border, padding: "32px 20px", display: "flex", flexDirection: "column", position: "sticky", top: 0, height: "100vh", overflowY: "auto" }}>
-          <Logo small />
-          <p style={{ fontSize: 11, fontWeight: 700, color: C.textLight, letterSpacing: 1.5, textTransform: "uppercase", marginBottom: 24, marginLeft: 44 }}>
-            {reportType === "stack_fit" ? "Stack Fit Report" : "Evaluation Report"}
-          </p>
-          <div style={{ height: 1, background: C.border, marginBottom: 16 }} />
-          <nav style={{ display: "flex", flexDirection: "column", gap: 4, flex: 1 }}>
-            {reportSections.map((sec, i) => {
-              const isActive = activeSection === i;
-              return (
-                <button key={i} onClick={() => setActiveSection(i)}
-                  style={{ background: isActive ? C.accent : "transparent", border: "none", borderRadius: 4, padding: "10px 12px", textAlign: "left", cursor: "pointer", display: "flex", alignItems: "flex-start", gap: 10 }}>
-                  <span style={{ fontSize: 11, color: isActive ? C.white : C.accent, marginTop: 2, flexShrink: 0 }}>{sectionIcons[sec.title] || "○"}</span>
-                  <span style={{ fontSize: 13, fontWeight: 600, lineHeight: 1.4, color: isActive ? C.white : C.textMid }}>{sec.title}</span>
-                </button>
-              );
-            })}
-          </nav>
-          <div style={{ height: 1, background: C.border, margin: "16px 0" }} />
-          <button onClick={restart} style={{ background: "none", border: "1px solid " + C.border, borderRadius: 4, color: C.textLight, fontSize: 12, fontWeight: 700, padding: "9px 12px", letterSpacing: 1.5, textTransform: "uppercase", fontFamily: FF }}>New Report</button>
-        </div>
-
-        <div style={{ flex: 1, padding: "40px 56px 40px 48px", maxWidth: 780, overflowY: "auto" }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 28, paddingBottom: 22, borderBottom: "2px solid " + C.borderDark }}>
-            <h2 style={{ fontSize: 26, fontWeight: 700, color: C.text, fontFamily: FFD }}>{section?.title}</h2>
-            <span style={{ fontSize: 13, fontWeight: 500, color: C.textLight, marginTop: 6 }}>{activeSection + 1} / {reportSections.length}</span>
-          </div>
-          <div style={{ marginBottom: 32 }}>{section && renderContent(section.content, section.title)}</div>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", paddingTop: 20, borderTop: "1px solid " + C.border }}>
-            <button onClick={() => activeSection > 0 && setActiveSection(activeSection - 1)}
-              style={{ background: "none", border: "none", color: C.textMid, fontSize: 15, fontWeight: 500, opacity: activeSection === 0 ? 0.3 : 1, cursor: activeSection === 0 ? "default" : "pointer", fontFamily: FF }}>← Previous</button>
-            <div style={{ display: "flex", gap: 7 }}>
-              {reportSections.map((_, i) => (
-                <div key={i} onClick={() => setActiveSection(i)}
-                  style={{ width: 7, height: 7, borderRadius: "50%", background: i === activeSection ? C.accent : C.border, cursor: "pointer", transition: "background 0.2s" }} />
-              ))}
-            </div>
-            {activeSection < reportSections.length - 1 ? (
-              <button onClick={() => setActiveSection(activeSection + 1)}
-                style={{ background: "none", border: "none", color: C.textMid, fontSize: 15, fontWeight: 500, cursor: "pointer", fontFamily: FF }}>Next →</button>
-            ) : (
-              <span style={{ fontSize: 13, fontWeight: 500, color: C.textLight, fontFamily: FF }}>End of report</span>
-            )}
-          </div>
-          <p style={{ fontSize: 13, fontWeight: 500, color: C.textLight, marginTop: 36, paddingTop: 20, borderTop: "1px solid " + C.border, lineHeight: 1.7 }}>Delphi is funded by subscribers, not vendors. No platform pays for placement, recommendation, or access. Ever.</p>
-          <p style={{ fontSize: 12, fontWeight: 400, color: C.textLight, marginTop: 12, lineHeight: 1.7 }}>Delphi reports are generated using AI and publicly available information. They are for informational purposes only and do not constitute professional, legal, or financial advice. Vendor pricing, product capabilities, and market positioning change frequently — verify all claims directly with vendors before making any purchasing decision. Delphi is not responsible for outcomes resulting from decisions made based on this report.</p>
-        </div>
-      </div>
-    );
-  }
 
   // ─── QUESTIONS ───────────────────────────────────────────────────────────────
   return (
