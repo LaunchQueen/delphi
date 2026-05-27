@@ -677,8 +677,8 @@ function renderContent(content, sectionTitle) {
     let line = lines[i];
     if (!line.trim()) { i++; continue; }
 
-    // FIXED: Escaped forward slashes correctly to safeguard compiler deployment pipelines
-    const clean = line.replace(/\/\*(.*?)\*\//g, "$1").replace(/\/\*/g, "");
+    // FIXED: Corrected pattern target to perfectly decouple string parsing components
+    const clean = line.replace(/\/\*(.*?)\*\//g, "$1").replace(/\\\//g, "");
 
     if (line.trim().startsWith("|")) {
       if (inVendorCard) flushVendorCard(i);
@@ -985,7 +985,6 @@ export default function Delphi({ paymentStatus, startCheckout, onHome }) {
       clearTimeout(timeout);
       const data = await res.json();
       
-      // FIXED: Safe logic protector ensures payment tokens and trial keys bifurcate error-free
       if (data && data.url) {
         window.location.href = data.url;
         return; 
@@ -1012,7 +1011,7 @@ export default function Delphi({ paymentStatus, startCheckout, onHome }) {
 
   const pageWrap = { minHeight: "100vh", background: C.bg, display: "flex", alignItems: "center", justifyContent: "center", padding: "40px 24px", fontFamily: FF };
 
-  // ─── VIEWPANELS ──────────────────────────────────────────────────────────────
+  // ─── LAYOUT VIEWS ───────────────────────────────────────────────────────────
   if (step === "select") return (
     <div style={{ minHeight: "100vh", background: C.bg, display: "flex", alignItems: "flex-start", justifyContent: "center", padding: "60px 24px", fontFamily: FF }}>
       <style>{GS}</style>
@@ -1139,7 +1138,6 @@ export default function Delphi({ paymentStatus, startCheckout, onHome }) {
     </div>
   );
 
-  // ─── GENERATING ──────────────────────────────────────────────────────────────
   if (step === "generating") return (
     <div style={pageWrap}>
       <style>{GS}</style>
@@ -1156,7 +1154,6 @@ export default function Delphi({ paymentStatus, startCheckout, onHome }) {
     </div>
   );
 
-  // ─── REPORT ──────────────────────────────────────────────────────────────────
   if (step === "report") {
     const section = reportSections[activeSection];
     return (
@@ -1213,7 +1210,6 @@ export default function Delphi({ paymentStatus, startCheckout, onHome }) {
     );
   }
 
-  // ─── QUESTIONS PANEL ─────────────────────────────────────────────────────────
   return (
     <div style={pageWrap}>
       <style>{GS}</style>
