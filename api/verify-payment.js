@@ -16,7 +16,11 @@ export default async function handler(req, res) {
   try {
     const { sessionId } = req.body;
     const session = await stripe.checkout.sessions.retrieve(sessionId);
-    const paid = session.payment_status === "paid" || session.status === "complete";
+
+    // FIXED: Now checks for standard card payments AND zero-dollar promo code completions
+    const paid = 
+      session.status === "complete" && 
+      (session.payment_status === "paid" || session.payment_status === "no_payment_required");
 
     return res.status(200).json({
       paid,
