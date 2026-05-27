@@ -1428,13 +1428,21 @@ export default function Delphi({ paymentStatus, startCheckout, onHome }) {
         window.location.href = data.url;
         return;
       }
+      
+      // 1. STRIPE CHECKOUT REDIRECT: If a payment link exists, go there instantly
+      if (data && data.url) {
+        window.location.href = data.url;
+        return; // Halt further frontend execution so the browser can change pages
+      }
 
-      if (!data.text) throw new Error("empty");
+      // 2. BACKUP LOGIC: If checking out for free or running without Stripe configured
+      if (!data || !data.text) throw new Error("Empty response payload from server");
+      
       const sections = parseReport(data.text, reportType);
       setReportSections(sections.length ? sections : [{ title: "What We Heard", content: ["Unable to parse report. Please try again."] }]);
       setStep("report");
-    } catch (err) {
-      console.error(err);
+    } catch (error) {
+      console.log("Delphi Pipeline Generation Error:", error);
       setReportSections([{ title: "What We Heard", content: ["Unable to generate your report. Please try again."] }]);
       setStep("report");
     }
