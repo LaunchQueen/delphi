@@ -954,7 +954,6 @@ function cleanModelText(text) {
     .replace(/^---+\s*$/gm, "")
     // Strip ** wrapping from card header lines like **ToolName | 4/5 | ...**
     .replace(/^\*\*([^*]+\|\s*\d+\/5[^*]*)\*\*$/gm, "$1")
-    .replace(/([^\n])(## )/g, "$1\n\n$2")
     // Ensure ## section headers always start on their own line
     .replace(/([^\n])(## )/g, "$1\n\n$2")
     // Ensure OVERALL READINESS/COMPATIBILITY is always on its own line
@@ -1015,11 +1014,16 @@ function parseReport(text, type = "evaluation") {
   let current = null;
   for (const line of cleaned.split("\n")) {
     if (line.startsWith("## ")) {
-      const title = line.replace("## ", "").trim();
+      // Extract just the section title — strip any content that follows on the same line
+      const raw = line.replace("## ", "").trim();
+      const title = raw.replace(/\s{2,}.*$/, "").replace(/\s*\*\*.*$/, "").trim();
+      // Any content after the title on the same line belongs in the section body
+      const trailingContent = raw.slice(title.length).trim();
       if (current && current.content.some(l => l.trim())) sections.push(current);
       if (validSections.has(title)) {
-        current = { title, content: [] };
+        current = { title, content: trailingContent ? [trailingContent] : [] };
       } else {
+        console.warn("Discarded section:", JSON.stringify(title));
         current = null;
       }
     } else if (current) {
