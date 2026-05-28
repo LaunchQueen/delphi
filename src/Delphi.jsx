@@ -954,6 +954,7 @@ function cleanModelText(text) {
     .replace(/^---+\s*$/gm, "")
     // Strip ** wrapping from card header lines like **ToolName | 4/5 | ...**
     .replace(/^\*\*([^*]+\|\s*\d+\/5[^*]*)\*\*$/gm, "$1")
+    .replace(/([^\n])(## )/g, "$1\n\n$2")
     // Ensure ## section headers always start on their own line
     .replace(/([^\n])(## )/g, "$1\n\n$2")
     // Ensure OVERALL READINESS/COMPATIBILITY is always on its own line
