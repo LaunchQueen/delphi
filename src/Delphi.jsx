@@ -780,13 +780,13 @@ Use ONLY these exact section headers, in this order. Each must appear on its own
 ## Stack Compatibility Assessment
 ## Integration Readiness
 ## What You Should Know
-## Questions to Ask Before You Integrate
+## Questions to Ask in the Demo
 ## Our Compatibility Verdict
 ## Sources
 
 SECTION REQUIREMENTS:
 
-**What We Heard** — Read between the lines. Do not restate answers. Do not open with "Based on what you shared."
+**What We Heard** — Read between the lines. Write as a senior technical adviser who has seen this stack before. Specific and direct — no throat-clearing. Do not open with "Based on what you shared." Do not restate their answers. Arrive at something they have not yet articulated.
 
 Immediately after the summary paragraph:
 | Tool | Score | Stack Compatibility | Integration Complexity | Our Take |
@@ -870,11 +870,18 @@ The five dimensions:
 
 ---
 
-**What You Should Know** — Vendor-specific integration gotchas only. No general advice. No tools not on the shortlist.
+**What You Should Know** — Vendor-specific integration gotchas only. Things the vendor will not volunteer. No general advice. No tools not on the shortlist.
+
+For each tool use this exact format:
+
+**[Tool Name] — [short theme]:**
+[2-3 sentences specific to this buyer's stack]
+
+Each gotcha must be distinct. Do not repeat information.
 
 ---
 
-**Questions to Ask Before You Integrate** —
+**Questions to Ask in the Demo** —
 Ask All Vendors:
 1. [Question]
 What to listen for: [one sentence]
@@ -963,19 +970,25 @@ function buildStackPrompt(answers) {
 
 // ─── REPORT PARSING & RENDERING ───────────────────────────────────────────────
 
-// FIX 1: Clean citation markers WITH preceding whitespace, then fix floating punctuation
+// Clean model output
 function cleanModelText(text) {
   let cleaned = text
-    // Strip citations with any preceding space: " [1]", " [1,2]", " [Source: X]"
+    // Strip citation markers with preceding whitespace
     .replace(/\s*\[\d+(?:,\s*\d+)*\]/g, "")
-    .replace(/\s*\[Source[^\]]*\]/gi, "");
+    .replace(/\s*\[Source[^\]]*\]/gi, "")
+    // Strip --- separator lines (prompt artifact)
+    .replace(/^---+\s*$/gm, "")
+    // Strip ** wrapping from card header lines like **ToolName | 4/5 | ...**
+    .replace(/^\*\*([^*]+\|\s*\d+\/5[^*]*)\*\*$/gm, "$1")
+    // Ensure OVERALL READINESS/COMPATIBILITY is always on its own line
+    .replace(/([^\n])(OVERALL (?:READINESS|COMPATIBILITY):)/g, "$1\n$2");
 
-  // Fix floating punctuation left after citation removal: " ," -> "," and " ." -> "."
+  // Fix floating punctuation
   cleaned = cleaned
     .replace(/\s+([.,;:!?])/g, "$1")
     .replace(/([.,;:!?])\s{2,}/g, "$1 ");
 
-  // Join continuation lines — only join ADJACENT lines (no blank lines between them)
+  // Join continuation lines — only adjacent, never cross blank lines
   const lines = cleaned.split("\n");
   const joined = [];
   let i = 0;
@@ -984,9 +997,18 @@ function cleanModelText(text) {
     const trimmed = line.trim();
     const next = i + 1 < lines.length ? lines[i + 1].trim() : null;
 
-    // Only join if the very next line (no blank lines skipped) is a lowercase continuation
-    const currentEndsIncomplete = trimmed && !trimmed.match(/[.!?:]$/) && !trimmed.startsWith("#") && !trimmed.startsWith("|") && !trimmed.match(/^\d+\/5/);
-    const nextIsContinuation = next && /^[a-z,;.]/.test(next) && !next.startsWith("##") && !next.startsWith("###") && !next.startsWith("|");
+    const currentEndsIncomplete = trimmed
+      && !trimmed.match(/[.!?:]$/)
+      && !trimmed.startsWith("#")
+      && !trimmed.startsWith("|")
+      && !trimmed.match(/^\d+\/5/)
+      && !trimmed.match(/\|\s*\d+\/5/); // never join card header lines
+
+    const nextIsContinuation = next
+      && /^[a-z,;.]/.test(next)
+      && !next.startsWith("##")
+      && !next.startsWith("###")
+      && !next.startsWith("|");
 
     if (currentEndsIncomplete && nextIsContinuation) {
       joined.push(trimmed + " " + next);
@@ -1005,8 +1027,9 @@ function cleanModelText(text) {
     .join("\n");
 }
 
+
 const VALID_EVAL_SECTIONS = new Set(["What We Heard", "Your Shortlist, Assessed", "Readiness Score", "What You Should Know", "Questions to Ask in the Demo", "Our Recommendation", "Sources"]);
-const VALID_STACK_SECTIONS = new Set(["What We Heard", "Stack Compatibility Assessment", "Integration Readiness", "What You Should Know", "Questions to Ask Before You Integrate", "Our Compatibility Verdict", "Sources"]);
+const VALID_STACK_SECTIONS = new Set(["What We Heard", "Stack Compatibility Assessment", "Integration Readiness", "What You Should Know", "Questions to Ask in the Demo", "Our Compatibility Verdict", "Sources"]);
 
 function parseReport(text, type = "evaluation") {
   const validSections = type === "stack_fit" ? VALID_STACK_SECTIONS : VALID_EVAL_SECTIONS;
@@ -1183,9 +1206,10 @@ function renderContent(content, sectionTitle) {
   const flushQuestionGroup = (key) => {
     if (!questionGroupHeader) return;
     questionCounter = 0;
+    const qHeaderColor = ["Stack Compatibility Assessment","Integration Readiness","What You Should Know","Questions to Ask in the Demo","Our Compatibility Verdict"].includes(sectionTitle) ? C.stack : C.accent;
     elements.push(
       <div key={`qgroup-${key}`} style={{ marginBottom: 24 }}>
-        <div style={{ background: C.accent, borderRadius: "6px 6px 0 0", padding: "10px 18px" }}>
+        <div style={{ background: qHeaderColor, borderRadius: "6px 6px 0 0", padding: "10px 18px" }}>
           <span style={{ fontSize: 12, fontWeight: 700, letterSpacing: 1.5, textTransform: "uppercase", color: C.white }}>{questionGroupHeader}</span>
         </div>
         <div style={{ border: "0.5px solid " + C.border, borderTop: "none", borderRadius: "0 0 6px 6px", overflow: "hidden" }}>
@@ -1233,11 +1257,14 @@ function renderContent(content, sectionTitle) {
           i = j; continue;
         }
 
+        const isStackSection = ["Stack Compatibility Assessment","Integration Readiness","What You Should Know","Questions to Ask in the Demo","Our Compatibility Verdict","Sources"].includes(sectionTitle);
+        const tableHeaderColor = isStackSection ? C.stack : C.accent;
+
         elements.push(
           <div key={i} style={{ overflowX: "auto", margin: "12px 0" }}>
             <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 14, fontFamily: FF }}>
               <thead>
-                <tr style={{ background: C.accent }}>
+                <tr style={{ background: tableHeaderColor }}>
                   {headers.map((h, j) => <th key={j} style={{ padding: "10px 14px", textAlign: "left", color: C.white, fontWeight: 700, fontSize: 13 }}>{h}</th>)}
                 </tr>
               </thead>
@@ -1484,7 +1511,7 @@ const EVAL_ICONS = {
 };
 const STACK_ICONS = {
   "What We Heard": "◎", "Stack Compatibility Assessment": "◈", "Integration Readiness": "◐",
-  "What You Should Know": "◆", "Questions to Ask Before You Integrate": "◇", "Our Compatibility Verdict": "●", "Sources": "○"
+  "What You Should Know": "◆", "Questions to Ask in the Demo": "◇", "Our Compatibility Verdict": "●", "Sources": "○"
 };
 
 // ─── SHARED UI COMPONENTS ─────────────────────────────────────────────────────
@@ -1620,7 +1647,6 @@ export default function Delphi({ paymentStatus, startCheckout, onHome }) {
       });
       clearTimeout(timeout);
       const data = await res.json();
-      console.log("RAW OUTPUT:", data.text);
       if (!data.text) throw new Error("empty");
       const sections = parseReport(data.text, reportType);
       setReportSections(sections.length ? sections : [{ title: "What We Heard", content: ["Unable to parse report. Please try again."] }]);
