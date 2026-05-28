@@ -1620,6 +1620,7 @@ export default function Delphi({ paymentStatus, startCheckout, onHome }) {
       });
       clearTimeout(timeout);
       const data = await res.json();
+      console.log("RAW OUTPUT:", data.text);
       if (!data.text) throw new Error("empty");
       const sections = parseReport(data.text, reportType);
       setReportSections(sections.length ? sections : [{ title: "What We Heard", content: ["Unable to parse report. Please try again."] }]);
