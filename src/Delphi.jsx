@@ -795,45 +795,19 @@ Immediately after the summary paragraph:
 
 **Stack Compatibility Assessment**
 
-Order tools from most to least compatible. For each tool use EXACTLY this structure — every field label must appear on its own line followed by the content on the next line:
+Order tools from most to least compatible. For each tool use EXACTLY this structure:
 
 ToolName | X/5 | Compatibility: [one word] | Complexity: [one word]
 
-Native integrations:
-[prose]
-
-Custom work required:
-[prose]
-
-Data flow:
-[prose]
-
-Implementation timeline:
-[prose]
-
-Integration requirements:
-[prose]
+[One paragraph of 4-6 sentences: what integrates natively with their specific stack, what requires custom work, how data flows, and the implementation timeline. Prose only — no field labels, no bullet points, no sub-headers.]
 
 Bottom line:
-[one sentence]
+[One sentence on stack fit for this buyer]
 
-EXAMPLE (follow this format exactly):
+EXAMPLE:
 6sense | 4/5 | Compatibility: Strong | Complexity: Moderate
 
-Native integrations:
-6sense connects natively to Salesforce via AppExchange and to Marketo via LaunchPoint.
-
-Custom work required:
-Field mapping for intent scores and custom objects requires ops configuration before go-live.
-
-Data flow:
-Bi-directional nightly sync from Salesforce into 6sense; intent signals flow back to Salesforce and Marketo in real time.
-
-Implementation timeline:
-8 to 12 weeks depending on custom object complexity.
-
-Integration requirements:
-External Client App install in Salesforce, API-enabled user, LaunchPoint service configuration in Marketo.
+6sense connects natively to Salesforce via AppExchange and to Marketo via LaunchPoint, meeting your marketplace-only requirement. The Salesforce integration syncs account and object data nightly while intent signals flow back in real time. Field mapping for custom objects requires ops configuration before go-live, and the External Client App must be installed in your Salesforce org. Expect 8 to 12 weeks depending on custom object complexity and Marketo LaunchPoint service setup.
 
 Bottom line:
 6sense is the strongest fit for a Salesforce-primary stack with native connector requirements.
@@ -1109,43 +1083,25 @@ function renderContent(content, sectionTitle) {
     const labelColor = cardIsStack ? C.stack : C.accent;
     const badgeText = cardIsStack ? "Stack Fit" : "Recommended";
 
-    const fieldRow = (label, value, borderBottom = true) => (
-      <div key={label} style={{ padding: "14px 20px", ...(borderBottom ? { borderBottom: "1px solid " + C.border } : {}) }}>
-        <p style={{ fontSize: 11, fontWeight: 700, letterSpacing: 1.5, textTransform: "uppercase", color: labelColor, margin: "0 0 6px", fontFamily: FF }}>{label}</p>
-        <p style={{ fontSize: 15, color: C.textMid, margin: 0, lineHeight: 1.75, fontFamily: FF }}>{value || "—"}</p>
-      </div>
-    );
-
     let cardBody;
     if (cardIsStack) {
-      // Stack Fit layout: left accent bar, 2-col top grid, then full-width rows
+      // Stack Fit: single prose body + bottom line
+      const allText = cardRawLines
+        .map(l => l.trim())
+        .filter(l => l && l !== "Bottom line:")
+        .join(" ")
+        .replace(/Bottom line:.*$/, "")
+        .trim();
+      const bottomLine = fieldData["Bottom line"] || "";
+
       cardBody = (
         <div style={{ border: "1px solid " + C.border, borderTop: "none", borderRadius: "0 0 6px 6px" }}>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0 40px", borderBottom: "1px solid " + C.border, padding: "14px 20px" }}>
-            <div style={{ paddingRight: 8 }}>
-              <p style={{ fontSize: 11, fontWeight: 700, letterSpacing: 1.5, textTransform: "uppercase", color: labelColor, margin: "0 0 6px", fontFamily: FF }}>Native integrations</p>
-              <p style={{ fontSize: 15, color: C.textMid, margin: 0, lineHeight: 1.75, fontFamily: FF }}>{fieldData["Native integrations"] || "—"}</p>
-            </div>
-            <div>
-              <p style={{ fontSize: 11, fontWeight: 700, letterSpacing: 1.5, textTransform: "uppercase", color: labelColor, margin: "0 0 6px", fontFamily: FF }}>Custom work required</p>
-              <p style={{ fontSize: 15, color: C.textMid, margin: 0, lineHeight: 1.75, fontFamily: FF }}>{fieldData["Custom work required"] || "—"}</p>
-            </div>
+          <div style={{ padding: "16px 20px", borderBottom: bottomLine ? "1px solid " + C.border : "none" }}>
+            <p style={{ fontSize: 15, color: C.textMid, margin: 0, lineHeight: 1.9, fontFamily: FF }}>{allText}</p>
           </div>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0 40px", borderBottom: "1px solid " + C.border, padding: "14px 20px" }}>
-            <div style={{ paddingRight: 8 }}>
-              <p style={{ fontSize: 11, fontWeight: 700, letterSpacing: 1.5, textTransform: "uppercase", color: labelColor, margin: "0 0 6px", fontFamily: FF }}>Data flow</p>
-              <p style={{ fontSize: 15, color: C.textMid, margin: 0, lineHeight: 1.75, fontFamily: FF }}>{fieldData["Data flow"] || "—"}</p>
-            </div>
-            <div>
-              <p style={{ fontSize: 11, fontWeight: 700, letterSpacing: 1.5, textTransform: "uppercase", color: labelColor, margin: "0 0 6px", fontFamily: FF }}>Implementation timeline</p>
-              <p style={{ fontSize: 15, color: C.textMid, margin: 0, lineHeight: 1.75, fontFamily: FF }}>{fieldData["Implementation timeline"] || "—"}</p>
-            </div>
-          </div>
-          {fieldData["Integration requirements"] && fieldRow("Integration requirements", fieldData["Integration requirements"])}
-          {fieldData["Bottom line"] && (
+          {bottomLine && (
             <div style={{ padding: "14px 20px" }}>
-              <p style={{ fontSize: 11, fontWeight: 700, letterSpacing: 1.5, textTransform: "uppercase", color: labelColor, margin: "0 0 6px", fontFamily: FF }}>Bottom line</p>
-              <p style={{ fontSize: 15, color: C.textMid, margin: 0, lineHeight: 1.75, fontFamily: FF, fontStyle: "italic" }}>{fieldData["Bottom line"]}</p>
+              <p style={{ fontSize: 15, color: C.textMid, margin: 0, lineHeight: 1.75, fontFamily: FF, fontStyle: "italic" }}>{bottomLine}</p>
             </div>
           )}
         </div>
@@ -1649,6 +1605,7 @@ export default function Delphi({ paymentStatus, startCheckout, onHome }) {
       const data = await res.json();
       if (!data.text) throw new Error("empty");
       const sections = parseReport(data.text, reportType);
+      console.log("SECTIONS PARSED:", sections.map(s => s.title));
       setReportSections(sections.length ? sections : [{ title: "What We Heard", content: ["Unable to parse report. Please try again."] }]);
       setStep("report");
     } catch {
