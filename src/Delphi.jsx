@@ -6,6 +6,7 @@ const C = {
   borderDark: "#C4BAB0", text: "#1C1C1A", textMid: "#3E3830", textLight: "#7A7060",
   accent: "#3D6B21", accentDark: "#2D5016", dark: "#141410", gold: "#B8935A",
   white: "#FFFFFF", red: "#C0392B", amber: "#D4830A",
+  stack: "#4A6FA5", stackDark: "#35507A",
 };
 const FF = "'EB Garamond', Georgia, serif";
 const FFD = "'Playfair Display', Georgia, serif";
@@ -791,27 +792,27 @@ Immediately after the summary paragraph:
 | Tool | Score | Stack Compatibility | Integration Complexity | Our Take |
 
 **Stack Compatibility Assessment** — Order most to least compatible. For each tool, open with a header line in EXACTLY this format:
-ToolName | X/5 | Stack Compatibility: [one word] | Integration Complexity: [one word]
+ToolName | X/5 | Compatibility: [one word] | Complexity: [one word]
 
-Then write the assessment using these exact field labels. Use plain prose only — no bullet points.
+Then write the assessment using these exact field labels on their own lines. Use plain prose only — no bullet points.
 
-What it does well:
-[2-3 sentences]
+Native integrations:
+[What connects out of the box with their specific stack]
 
-What it does not do well:
-[2-3 sentences]
+Custom work required:
+[What will need to be built, configured, or middleware-connected]
+
+Data flow:
+[How data moves — direction, frequency, source of truth]
 
 Implementation timeline:
-[X to Y weeks]
-
-Pricing:
-[Verified price or "Requires direct quote from vendor."]
+[X to Y weeks with specific dependency]
 
 Integration requirements:
-[Plain prose]
+[API approach, permissions, field mapping needs]
 
 Bottom line:
-[One direct sentence]
+[One direct sentence on stack fit for this buyer]
 
 **Integration Readiness** — Structure in this exact order:
 1. Opening paragraph: 2-3 sentences on what Integration Readiness measures. End after "implement successfully."
@@ -933,24 +934,22 @@ function cleanModelText(text) {
     .replace(/\s+([.,;:!?])/g, "$1")
     .replace(/([.,;:!?])\s{2,}/g, "$1 ");
 
-  // Join continuation lines
+  // Join continuation lines — only join ADJACENT lines (no blank lines between them)
   const lines = cleaned.split("\n");
   const joined = [];
   let i = 0;
   while (i < lines.length) {
     const line = lines[i];
     const trimmed = line.trim();
+    const next = i + 1 < lines.length ? lines[i + 1].trim() : null;
 
-    let j = i + 1;
-    while (j < lines.length && !lines[j].trim()) j++;
-    const next = j < lines.length ? lines[j].trim() : null;
-
+    // Only join if the very next line (no blank lines skipped) is a lowercase continuation
     const currentEndsIncomplete = trimmed && !trimmed.match(/[.!?:]$/) && !trimmed.startsWith("#") && !trimmed.startsWith("|") && !trimmed.match(/^\d+\/5/);
     const nextIsContinuation = next && /^[a-z,;.]/.test(next) && !next.startsWith("##") && !next.startsWith("###") && !next.startsWith("|");
 
     if (currentEndsIncomplete && nextIsContinuation) {
       joined.push(trimmed + " " + next);
-      i = j + 1;
+      i += 2;
     } else {
       joined.push(line);
       i++;
@@ -1000,6 +999,7 @@ function renderContent(content, sectionTitle) {
   let cardToolName = null;
   let cardMeta = null;
   let cardIsRecommended = false;
+  let cardIsStack = false;
   let questionCounter = 0;
   let inQuestionGroup = false;
   let questionGroupItems = [];
@@ -1013,8 +1013,12 @@ function renderContent(content, sectionTitle) {
     let currentField = null;
     let currentText = [];
 
+    // Field labels differ by card type
+    const EVAL_FIELDS = ["What it does well:", "What it does not do well:", "Implementation timeline:", "Pricing:", "Integration requirements:", "Bottom line:"];
+    const STACK_FIELDS = ["Native integrations:", "Custom work required:", "Data flow:", "Implementation timeline:", "Integration requirements:", "Bottom line:"];
+    const FIELD_LABELS = cardIsStack ? STACK_FIELDS : EVAL_FIELDS;
+
     cardRawLines.forEach(line => {
-      const FIELD_LABELS = ["What it does well:", "What it does not do well:", "Implementation timeline:", "Pricing:", "Integration requirements:", "Bottom line:"];
       const matched = FIELD_LABELS.find(l => line.trim().startsWith(l));
       if (matched) {
         if (currentField) fieldData[currentField] = currentText.join(" ").trim().replace(/^\.\s*/, "");
@@ -1027,56 +1031,102 @@ function renderContent(content, sectionTitle) {
     });
     if (currentField) fieldData[currentField] = currentText.join(" ").trim().replace(/^\.\s*/, "");
 
-    const gridFields = [
-      ["What it does well", "What it does not do well"],
-      ["Implementation timeline", "Pricing"],
-    ];
+    const headerColor = cardIsStack ? C.stack : C.accent;
+    const labelColor = cardIsStack ? C.stack : C.accent;
+    const badgeText = cardIsStack ? "Stack Fit" : "Recommended";
 
-    // FIX 5: Wider column gap (40px) and padding on left column
-    const gridContent = gridFields.map((pair, pi) => (
-      <div key={`grid-${pi}`} style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0 40px", borderBottom: "1px solid " + C.border, padding: "16px 20px" }}>
-        {pair.map((field, fi) => (
-          <div key={field} style={{ paddingRight: fi === 0 ? 8 : 0 }}>
-            <p style={{ fontSize: 11, fontWeight: 700, letterSpacing: 1.5, textTransform: "uppercase", color: C.accent, margin: "0 0 6px", fontFamily: FF }}>{field}</p>
-            <p style={{ fontSize: 15, color: C.textMid, margin: 0, lineHeight: 1.75, fontFamily: FF }}>{fieldData[field] || "—"}</p>
+    const fieldRow = (label, value, borderBottom = true) => (
+      <div key={label} style={{ padding: "14px 20px", ...(borderBottom ? { borderBottom: "1px solid " + C.border } : {}) }}>
+        <p style={{ fontSize: 11, fontWeight: 700, letterSpacing: 1.5, textTransform: "uppercase", color: labelColor, margin: "0 0 6px", fontFamily: FF }}>{label}</p>
+        <p style={{ fontSize: 15, color: C.textMid, margin: 0, lineHeight: 1.75, fontFamily: FF }}>{value || "—"}</p>
+      </div>
+    );
+
+    let cardBody;
+    if (cardIsStack) {
+      // Stack Fit layout: left accent bar, 2-col top grid, then full-width rows
+      cardBody = (
+        <div style={{ border: "1px solid " + C.border, borderTop: "none", borderRadius: "0 0 6px 6px" }}>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0 40px", borderBottom: "1px solid " + C.border, padding: "14px 20px" }}>
+            <div style={{ paddingRight: 8 }}>
+              <p style={{ fontSize: 11, fontWeight: 700, letterSpacing: 1.5, textTransform: "uppercase", color: labelColor, margin: "0 0 6px", fontFamily: FF }}>Native integrations</p>
+              <p style={{ fontSize: 15, color: C.textMid, margin: 0, lineHeight: 1.75, fontFamily: FF }}>{fieldData["Native integrations"] || "—"}</p>
+            </div>
+            <div>
+              <p style={{ fontSize: 11, fontWeight: 700, letterSpacing: 1.5, textTransform: "uppercase", color: labelColor, margin: "0 0 6px", fontFamily: FF }}>Custom work required</p>
+              <p style={{ fontSize: 15, color: C.textMid, margin: 0, lineHeight: 1.75, fontFamily: FF }}>{fieldData["Custom work required"] || "—"}</p>
+            </div>
           </div>
-        ))}
-      </div>
-    ));
-
-    const integrationContent = fieldData["Integration requirements"] ? (
-      <div style={{ padding: "16px 20px", borderBottom: "1px solid " + C.border }}>
-        <p style={{ fontSize: 11, fontWeight: 700, letterSpacing: 1.5, textTransform: "uppercase", color: C.accent, margin: "0 0 6px", fontFamily: FF }}>Integration requirements</p>
-        <p style={{ fontSize: 15, color: C.textMid, margin: 0, lineHeight: 1.75, fontFamily: FF }}>{fieldData["Integration requirements"]}</p>
-      </div>
-    ) : null;
-
-    const bottomLine = fieldData["Bottom line"] ? (
-      <div style={{ padding: "16px 20px" }}>
-        <p style={{ fontSize: 11, fontWeight: 700, letterSpacing: 1.5, textTransform: "uppercase", color: C.accent, margin: "0 0 6px", fontFamily: FF }}>Bottom line</p>
-        <p style={{ fontSize: 15, color: C.textMid, margin: 0, lineHeight: 1.75, fontFamily: FF, fontStyle: "italic" }}>{fieldData["Bottom line"]}</p>
-      </div>
-    ) : null;
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0 40px", borderBottom: "1px solid " + C.border, padding: "14px 20px" }}>
+            <div style={{ paddingRight: 8 }}>
+              <p style={{ fontSize: 11, fontWeight: 700, letterSpacing: 1.5, textTransform: "uppercase", color: labelColor, margin: "0 0 6px", fontFamily: FF }}>Data flow</p>
+              <p style={{ fontSize: 15, color: C.textMid, margin: 0, lineHeight: 1.75, fontFamily: FF }}>{fieldData["Data flow"] || "—"}</p>
+            </div>
+            <div>
+              <p style={{ fontSize: 11, fontWeight: 700, letterSpacing: 1.5, textTransform: "uppercase", color: labelColor, margin: "0 0 6px", fontFamily: FF }}>Implementation timeline</p>
+              <p style={{ fontSize: 15, color: C.textMid, margin: 0, lineHeight: 1.75, fontFamily: FF }}>{fieldData["Implementation timeline"] || "—"}</p>
+            </div>
+          </div>
+          {fieldData["Integration requirements"] && fieldRow("Integration requirements", fieldData["Integration requirements"])}
+          {fieldData["Bottom line"] && (
+            <div style={{ padding: "14px 20px" }}>
+              <p style={{ fontSize: 11, fontWeight: 700, letterSpacing: 1.5, textTransform: "uppercase", color: labelColor, margin: "0 0 6px", fontFamily: FF }}>Bottom line</p>
+              <p style={{ fontSize: 15, color: C.textMid, margin: 0, lineHeight: 1.75, fontFamily: FF, fontStyle: "italic" }}>{fieldData["Bottom line"]}</p>
+            </div>
+          )}
+        </div>
+      );
+    } else {
+      // Eval layout: original 2x2 grid
+      const gridFields = [
+        ["What it does well", "What it does not do well"],
+        ["Implementation timeline", "Pricing"],
+      ];
+      cardBody = (
+        <div style={{ border: "1px solid " + C.border, borderTop: "none", borderRadius: "0 0 6px 6px" }}>
+          {gridFields.map((pair, pi) => (
+            <div key={`grid-${pi}`} style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0 40px", borderBottom: "1px solid " + C.border, padding: "16px 20px" }}>
+              {pair.map((field, fi) => (
+                <div key={field} style={{ paddingRight: fi === 0 ? 8 : 0 }}>
+                  <p style={{ fontSize: 11, fontWeight: 700, letterSpacing: 1.5, textTransform: "uppercase", color: labelColor, margin: "0 0 6px", fontFamily: FF }}>{field}</p>
+                  <p style={{ fontSize: 15, color: C.textMid, margin: 0, lineHeight: 1.75, fontFamily: FF }}>{fieldData[field] || "—"}</p>
+                </div>
+              ))}
+            </div>
+          ))}
+          {fieldData["Integration requirements"] && (
+            <div style={{ padding: "16px 20px", borderBottom: "1px solid " + C.border }}>
+              <p style={{ fontSize: 11, fontWeight: 700, letterSpacing: 1.5, textTransform: "uppercase", color: labelColor, margin: "0 0 6px", fontFamily: FF }}>Integration requirements</p>
+              <p style={{ fontSize: 15, color: C.textMid, margin: 0, lineHeight: 1.75, fontFamily: FF }}>{fieldData["Integration requirements"]}</p>
+            </div>
+          )}
+          {fieldData["Bottom line"] && (
+            <div style={{ padding: "16px 20px" }}>
+              <p style={{ fontSize: 11, fontWeight: 700, letterSpacing: 1.5, textTransform: "uppercase", color: labelColor, margin: "0 0 6px", fontFamily: FF }}>Bottom line</p>
+              <p style={{ fontSize: 15, color: C.textMid, margin: 0, lineHeight: 1.75, fontFamily: FF, fontStyle: "italic" }}>{fieldData["Bottom line"]}</p>
+            </div>
+          )}
+        </div>
+      );
+    }
 
     elements.push(
       <div key={`vendor-${key}`} style={{ marginBottom: 28 }}>
-        <div style={{ background: C.accent, borderRadius: "6px 6px 0 0", padding: "14px 20px", display: "flex", alignItems: "flex-start", justifyContent: "space-between" }}>
+        <div style={{ background: headerColor, borderRadius: "6px 6px 0 0", padding: "14px 20px", display: "flex", alignItems: "flex-start", justifyContent: "space-between" }}>
           <div>
             <p style={{ fontSize: 18, fontWeight: 700, color: C.white, fontFamily: FFD, margin: "0 0 4px" }}>{cardToolName}</p>
             {cardMeta && <p style={{ fontSize: 13, color: "rgba(255,255,255,0.75)", margin: 0, fontFamily: FF }}>{cardMeta}</p>}
           </div>
-          {cardIsRecommended && (
-            <span style={{ background: "rgba(255,255,255,0.2)", borderRadius: 4, padding: "3px 10px", fontSize: 11, color: C.white, letterSpacing: 1.5, textTransform: "uppercase", fontWeight: 700, flexShrink: 0, marginLeft: 12 }}>Recommended</span>
+          {(cardIsRecommended || cardIsStack) && (
+            <span style={{ background: "rgba(255,255,255,0.2)", borderRadius: 4, padding: "3px 10px", fontSize: 11, color: C.white, letterSpacing: 1.5, textTransform: "uppercase", fontWeight: 700, flexShrink: 0, marginLeft: 12 }}>
+              {badgeText}
+            </span>
           )}
         </div>
-        <div style={{ border: "1px solid " + C.border, borderTop: "none", borderRadius: "0 0 6px 6px" }}>
-          {gridContent}
-          {integrationContent}
-          {bottomLine}
-        </div>
+        {cardBody}
       </div>
     );
-    cardToolName = null; cardMeta = null; cardRawLines = []; cardIsRecommended = false; inVendorCard = false;
+    cardToolName = null; cardMeta = null; cardRawLines = []; cardIsRecommended = false; cardIsStack = false; inVendorCard = false;
   };
 
   const flushQuestionGroup = (key) => {
@@ -1167,8 +1217,11 @@ function renderContent(content, sectionTitle) {
          .replace(/Readiness:\s*/i, "")
          .replace(/Stack Compatibility:\s*/i, "")
          .replace(/Integration Complexity:\s*/i, "")
+         .replace(/Compatibility:\s*/i, "")
+         .replace(/Complexity:\s*/i, "")
          .replace(/\*\*/g, "")
       ).join(" · ");
+      cardIsStack = sectionTitle === "Stack Compatibility Assessment";
       cardIsRecommended = vendorCardCount === 0;
       vendorCardCount++;
       inVendorCard = true;
@@ -1258,7 +1311,8 @@ function renderContent(content, sectionTitle) {
       const match = line.match(/(\d(?:\.\d)?)\s*\/\s*5/);
       const score = match ? parseFloat(match[1]) : null;
       if (score !== null) {
-        const color = score <= 2 ? C.red : score <= 3 ? C.amber : C.accent;
+        const isCompat = /COMPATIBILITY/i.test(line);
+        const color = score <= 2 ? C.red : score <= 3 ? C.amber : (isCompat ? C.stack : C.accent);
         const label = score <= 2 ? "Needs attention before purchasing" : score <= 3 ? "Proceed with preparation" : "Well positioned";
         elements.push(
           <div key={i} style={{ background: color, borderRadius: 8, padding: "20px 24px", margin: "16px 0 24px", display: "flex", alignItems: "center", gap: 24 }}>
@@ -1286,10 +1340,11 @@ function renderContent(content, sectionTitle) {
       if (dimMatch && !stripped.startsWith("|")) {
         const dimName = dimMatch[1].trim();
         const dimScore = dimMatch[2].trim();
+        const dimColor = sectionTitle === "Integration Readiness" ? C.stack : C.accent;
         elements.push(
           <div key={i} style={{ borderBottom: "1px solid " + C.border, paddingBottom: 6, marginTop: 28, marginBottom: 8, display: "flex", alignItems: "baseline", gap: 12 }}>
             <p style={{ fontSize: 16, fontWeight: 700, color: C.text, margin: 0, fontFamily: FFD }}>{dimName}</p>
-            <p style={{ fontSize: 14, fontWeight: 600, color: C.accent, margin: 0, fontFamily: FF }}>{dimScore}</p>
+            <p style={{ fontSize: 14, fontWeight: 600, color: dimColor, margin: 0, fontFamily: FF }}>{dimScore}</p>
           </div>
         );
         i++; continue;
@@ -1693,10 +1748,11 @@ export default function Delphi({ paymentStatus, startCheckout, onHome }) {
           <nav style={{ display: "flex", flexDirection: "column", gap: 4, flex: 1 }}>
             {reportSections.map((sec, i) => {
               const isActive = activeSection === i;
+              const navColor = reportType === "stack_fit" ? C.stack : C.accent;
               return (
                 <button key={i} onClick={() => setActiveSection(i)}
-                  style={{ background: isActive ? C.accent : "transparent", border: "none", borderRadius: 4, padding: "10px 12px", textAlign: "left", cursor: "pointer", display: "flex", alignItems: "flex-start", gap: 10 }}>
-                  <span style={{ fontSize: 11, color: isActive ? C.white : C.accent, marginTop: 2, flexShrink: 0 }}>{sectionIcons[sec.title] || "○"}</span>
+                  style={{ background: isActive ? navColor : "transparent", border: "none", borderRadius: 4, padding: "10px 12px", textAlign: "left", cursor: "pointer", display: "flex", alignItems: "flex-start", gap: 10 }}>
+                  <span style={{ fontSize: 11, color: isActive ? C.white : navColor, marginTop: 2, flexShrink: 0 }}>{sectionIcons[sec.title] || "○"}</span>
                   <span style={{ fontSize: 13, fontWeight: 600, lineHeight: 1.4, color: isActive ? C.white : C.textMid }}>{sec.title}</span>
                 </button>
               );
@@ -1796,3 +1852,4 @@ export default function Delphi({ paymentStatus, startCheckout, onHome }) {
     </div>
   );
 }
+
