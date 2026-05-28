@@ -775,7 +775,7 @@ READING THE BUYER'S ANSWERS:
 
 TONE: Matter-of-fact. Balanced.
 
-Use ONLY these exact section headers, in this order:
+Use ONLY these exact section headers, in this order. Each must appear on its own line starting with ##:
 ## What We Heard
 ## Stack Compatibility Assessment
 ## Integration Readiness
@@ -791,42 +791,75 @@ SECTION REQUIREMENTS:
 Immediately after the summary paragraph:
 | Tool | Score | Stack Compatibility | Integration Complexity | Our Take |
 
-**Stack Compatibility Assessment** — Order most to least compatible. For each tool, open with a header line in EXACTLY this format:
+---
+
+**Stack Compatibility Assessment**
+
+Order tools from most to least compatible. For each tool use EXACTLY this structure — every field label must appear on its own line followed by the content on the next line:
+
 ToolName | X/5 | Compatibility: [one word] | Complexity: [one word]
 
-Then write the assessment using these exact field labels on their own lines. Use plain prose only — no bullet points.
-
 Native integrations:
-[What connects out of the box with their specific stack]
+[prose]
 
 Custom work required:
-[What will need to be built, configured, or middleware-connected]
+[prose]
 
 Data flow:
-[How data moves — direction, frequency, source of truth]
+[prose]
 
 Implementation timeline:
-[X to Y weeks with specific dependency]
+[prose]
 
 Integration requirements:
-[API approach, permissions, field mapping needs]
+[prose]
 
 Bottom line:
-[One direct sentence on stack fit for this buyer]
+[one sentence]
 
-**Integration Readiness** — Structure in this exact order:
-1. Opening paragraph: 2-3 sentences on what Integration Readiness measures. End after "implement successfully."
-2. OVERALL COMPATIBILITY: X/5
-3. | Dimension | Score | Status |
-4. | Score | What It Means |
-   | 1-2 | Address before go-live |
-   | 3 | Manageable with preparation |
-   | 4-5 | Strong foundation |
+EXAMPLE (follow this format exactly):
+6sense | 4/5 | Compatibility: Strong | Complexity: Moderate
 
-For each dimension, write the header in EXACTLY this format on its own line — no bold, no asterisks, no colon:
+Native integrations:
+6sense connects natively to Salesforce via AppExchange and to Marketo via LaunchPoint.
+
+Custom work required:
+Field mapping for intent scores and custom objects requires ops configuration before go-live.
+
+Data flow:
+Bi-directional nightly sync from Salesforce into 6sense; intent signals flow back to Salesforce and Marketo in real time.
+
+Implementation timeline:
+8 to 12 weeks depending on custom object complexity.
+
+Integration requirements:
+External Client App install in Salesforce, API-enabled user, LaunchPoint service configuration in Marketo.
+
+Bottom line:
+6sense is the strongest fit for a Salesforce-primary stack with native connector requirements.
+
+---
+
+**Integration Readiness**
+
+Write 2-3 sentences introducing what this section measures. End with "implement successfully."
+
+Then on its own line:
+OVERALL COMPATIBILITY: X/5
+
+Then the dimension summary table:
+| Dimension | Score | Status |
+
+Then the legend table:
+| Score | What It Means |
+| 1-2 | Address before go-live |
+| 3 | Manageable with preparation |
+| 4-5 | Strong foundation |
+
+Then for each of the five dimensions, write the header on its own line in EXACTLY this format:
 Dimension Name | X/5
 
-Then write analysis in plain prose on the following lines.
+Followed by analysis in plain prose.
 
 The five dimensions:
 1. Integration Ownership Clarity
@@ -835,7 +868,11 @@ The five dimensions:
 4. Team Capacity for New Integrations
 5. Historical Integration Track Record
 
+---
+
 **What You Should Know** — Vendor-specific integration gotchas only. No general advice. No tools not on the shortlist.
+
+---
 
 **Questions to Ask Before You Integrate** —
 Ask All Vendors:
@@ -848,14 +885,18 @@ What to listen for: [one sentence]
 
 Numbers restart at 1 for each vendor group.
 
+---
+
 **Our Compatibility Verdict** —
 We recommend [Tool] for integration.
-[Two to four sentences: why this tool fits this buyer's specific stack.]
+[Two to four sentences on why.]
 
-For each tool NOT recommended, write one sentence:
-[Tool] is [genuine strength] but is not the best stack fit because [specific reason tied to their stack].
+For each tool NOT recommended:
+[Tool] is [genuine strength] but not the best stack fit because [specific reason].
 
-**Sources** — Real URLs only. Plain label, plain URL, one per line.`;
+---
+
+**Sources** — Real URLs only. Plain label on one line, plain URL on next line.`;
 
 // ─── PROMPT BUILDERS ──────────────────────────────────────────────────────────
 function buildEvalPrompt(answers) {
@@ -1013,20 +1054,30 @@ function renderContent(content, sectionTitle) {
     let currentField = null;
     let currentText = [];
 
-    // Field labels differ by card type
     const EVAL_FIELDS = ["What it does well:", "What it does not do well:", "Implementation timeline:", "Pricing:", "Integration requirements:", "Bottom line:"];
     const STACK_FIELDS = ["Native integrations:", "Custom work required:", "Data flow:", "Implementation timeline:", "Integration requirements:", "Bottom line:"];
     const FIELD_LABELS = cardIsStack ? STACK_FIELDS : EVAL_FIELDS;
 
     cardRawLines.forEach(line => {
-      const matched = FIELD_LABELS.find(l => line.trim().startsWith(l));
+      const t = line.trim();
+      const matched = FIELD_LABELS.find(l => t.startsWith(l));
       if (matched) {
         if (currentField) fieldData[currentField] = currentText.join(" ").trim().replace(/^\.\s*/, "");
         currentField = matched.replace(":", "");
-        currentText = [line.trim().slice(matched.length).trim()];
-      } else if (currentField && line.trim()) {
-        const cl = line.trim().replace(/^\.\s+/, "").replace(/^[-•]\s+/, "");
-        if (cl) currentText.push(cl);
+        // Content may be on same line as label OR on next line
+        const inline = t.slice(matched.length).trim();
+        currentText = inline ? [inline] : [];
+      } else if (currentField && t) {
+        // Also catch "Field name: content" mid-paragraph (model sometimes writes inline)
+        const inlineMatch = FIELD_LABELS.find(l => t.startsWith(l));
+        if (inlineMatch) {
+          if (currentField) fieldData[currentField] = currentText.join(" ").trim().replace(/^\.\s*/, "");
+          currentField = inlineMatch.replace(":", "");
+          currentText = [t.slice(inlineMatch.length).trim()];
+        } else {
+          const cl = t.replace(/^\.\s+/, "").replace(/^[-•]\s+/, "");
+          if (cl) currentText.push(cl);
+        }
       }
     });
     if (currentField) fieldData[currentField] = currentText.join(" ").trim().replace(/^\.\s*/, "");
@@ -1852,4 +1903,3 @@ export default function Delphi({ paymentStatus, startCheckout, onHome }) {
     </div>
   );
 }
-
