@@ -818,26 +818,22 @@ Bottom line:
 
 Write 2-3 sentences introducing what this section measures. End with "implement successfully."
 
+Then on its own line:
 OVERALL COMPATIBILITY: X/5
 
-CRITICAL ORDER — output EXACTLY in this sequence, no deviations:
-1. The intro sentences
-2. OVERALL COMPATIBILITY: X/5 on its own line
-3. The dimension summary table
-4. The legend table
-5. Each dimension header + prose
-
+Then the dimension summary table:
 | Dimension | Score | Status |
 
+Then the legend table:
 | Score | What It Means |
 | 1-2 | Address before go-live |
 | 3 | Manageable with preparation |
 | 4-5 | Strong foundation |
 
-For each of the five dimensions, write the header on its own line in EXACTLY this format — NO bold, NO asterisks, NO brackets:
+Then for each of the five dimensions, write the header on its own line in EXACTLY this format:
 Dimension Name | X/5
 
-Then write analysis in plain prose on the following lines. Do NOT continue with the next dimension header on the same line as prose — each dimension header must be on its own line.
+Followed by analysis in plain prose.
 
 The five dimensions:
 1. Integration Ownership Clarity
@@ -953,62 +949,20 @@ function cleanModelText(text) {
   let cleaned = text
     // 1. Force a newline before any ## header if it's currently inline
     .replace(/([^\n])(##\s)/g, "$1\n$2")
-    // 2. Strip --- separator lines
+    // 2. Force a newline before **ToolName | X/5 card headers (model sometimes wraps these in **)
+    .replace(/([^\n])(\*\*[A-Za-z0-9][^*\n]{1,35}\|\s*\d+\/5)/g, "$1\n$2")
+    // 3. Force OVERALL COMPATIBILITY/READINESS onto its own line
+    .replace(/([^\n])(OVERALL (?:READINESS|COMPATIBILITY):)/g, "$1\n$2")
+    // 4. Strip --- separator lines
     .replace(/---+/g, "")
-    // 3. Strip existing citation markers
+    // 5. Strip existing citation markers
     .replace(/\s*\[\d+(?:,\s*\d+)*\]/g, "")
-    .replace(/\s*\[Source[^\]]*\]/gi, "")
-    // 4a. Force "Tool | Score" table header onto its own line (handles no leading pipe)
-    .replace(/([^\n])\s+(Tool\s*\|[^\n]*)/g, "$1\n$2")
-    // 4b. Force any pipe-table header keyword row onto its own line
-    .replace(/([^\n])(\s*\|\s*(?:Tool|Score|Dimension|Stack|Integration|Budget|Readiness|Compatibility|Complexity|Our Take|What It Means|Status)[^\n]*\|)/gi, "$1\n$2")
-    // 4c. Strip stray isolated pipe remnants left by 4b splitting
-    .replace(/^\s*\|\s*$/gm, "")
-    // 4d. Strip stray isolated ** lines (model artifact)
-    .replace(/^\s*\*\*\s*$/gm, "")
-    // 5. Force "Bottom line:" onto its own line
-    .replace(/([^\n])(Bottom line:)/gi, "$1\n$2")
-    // 5b. Force next tool header away from end of Bottom line content
-    .replace(/(Bottom line:[^\n]+?)([A-Z][a-zA-Z]+(?:\s[A-Z][a-zA-Z]+)?\s*\|\s*\d+\/5)/g, "$1\n$2")
-    // 7. Force OVERALL READINESS/COMPATIBILITY score onto its own line
-    .replace(/([^\n])\s*(OVERALL\s+(?:READINESS|COMPATIBILITY):)/g, "$1\n$2");
+    .replace(/\s*\[Source[^\]]*\]/gi, "");
 
-  // 6: Isolate **Dim Name | X/5** bold dimension headers onto their own line
-  // Uses two-pass approach: first split before, then split after
-  const dimHeaderRe = /\*\*[A-Za-z][A-Za-z\s]+\|\s*\d+\/5\*\*/g;
-  cleaned = cleaned.replace(/([^\n])(\*\*[A-Za-z][A-Za-z\s]+\|\s*\d+\/5\*\*)/g, "$1\n$2");
-  cleaned = cleaned.replace(/(\*\*[A-Za-z][A-Za-z\s]+\|\s*\d+\/5\*\*)([^\n]+)/g, "$1\n$2");
-
-  // Fix floating punctuation (use [^\S\n] to avoid collapsing intentional newlines)
+  // Fix floating punctuation
   cleaned = cleaned
-    .replace(/[^\S\n]+([.,;:!?])/g, "$1")
-    .replace(/([.,;:!?])[^\S\n]{2,}/g, "$1 ");
-
-  // Join fragmented prose lines: if a line is a continuation (starts with lowercase,
-  // comma, conjunction, or mid-sentence punctuation), join it to the previous line.
-  // Never join lines that are structural (##, **, tool headers, Bottom line, OVERALL, |, numbered)
-  const proselines = cleaned.split("\n");
-  const joined = [];
-  for (let i = 0; i < proselines.length; i++) {
-    const line = proselines[i];
-    const t = line.trim();
-    const prev = joined.length > 0 ? joined[joined.length - 1].trim() : "";
-    const isContinuation = t && prev &&
-      !t.startsWith("##") &&
-      !t.startsWith("**") &&
-      !t.startsWith("|") &&
-      !t.startsWith("Bottom line:") &&
-      !t.startsWith("OVERALL") &&
-      !t.match(/^\d+\./) &&
-      !t.match(/^[A-Za-z][A-Za-z\s]+\|\s*\d+\/5/) &&
-      (t.startsWith(",") || t.startsWith(";") || t.match(/^(and|or|but|the|that|which|who|when|while|with|plus|also|this|these|those|it|its|their|your|our|so|yet|for|nor|a |an )\b/i));
-    if (isContinuation) {
-      joined[joined.length - 1] = joined[joined.length - 1].trimEnd() + " " + t;
-    } else {
-      joined.push(line);
-    }
-  }
-  cleaned = joined.join("\n");
+    .replace(/\s+([.,;:!?])/g, "$1")
+    .replace(/([.,;:!?])\s{2,}/g, "$1 ");
 
   return cleaned;
 }
@@ -1050,7 +1004,7 @@ function parseReport(text, type = "evaluation") {
   return sections;
 }
 
-function renderContent(content, sectionTitle, reportType) {
+function renderContent(content, sectionTitle) {
   const lines = content.join("\n").split("\n");
   const elements = [];
   let i = 0;
@@ -1109,9 +1063,13 @@ function renderContent(content, sectionTitle, reportType) {
     let cardBody;
     if (cardIsStack) {
       // Stack Fit: simple prose layout — bold tool name, thin blue rule, prose paragraph
-      const proseLines = cardRawLines.map(l => l.trim()).filter(l => l);
+      const proseLines = cardRawLines.map(l => l.trim()).filter(l => l)
+        // Strip orphaned metadata lines like "| Compatibility: Strong | Complexity: Moderate**"
+        .filter(l => !l.match(/^\|\s*(Compatibility|Complexity|Budget|Readiness)/i))
+        .filter(l => !l.match(/^\*\*$/));
       const bottomLineIdx = proseLines.findIndex(l => /^bottom line:/i.test(l));
-      const prose = (bottomLineIdx > -1 ? proseLines.slice(0, bottomLineIdx) : proseLines).join(" ").trim();
+      // Join all prose into one paragraph
+      const proseRaw = (bottomLineIdx > -1 ? proseLines.slice(0, bottomLineIdx) : proseLines).join(" ").trim();
       const bottomLine = bottomLineIdx > -1 ? proseLines[bottomLineIdx].replace(/^bottom line:\s*/i, "").trim() : "";
 
       elements.push(
@@ -1121,7 +1079,7 @@ function renderContent(content, sectionTitle, reportType) {
             {cardMeta && <p style={{ fontSize: 14, color: C.stack, margin: 0, fontFamily: FF, fontWeight: 600 }}>{cardMeta}</p>}
           </div>
           <div style={{ height: 2, background: C.stack, borderRadius: 1, marginBottom: 16, opacity: 0.35 }} />
-          {prose && <p style={{ fontSize: 16, color: C.textMid, margin: "0 0 10px", lineHeight: 1.9, fontFamily: FF }}>{prose}</p>}
+          {proseRaw && <p style={{ fontSize: 16, color: C.textMid, margin: "0 0 10px", lineHeight: 1.9, fontFamily: FF }}>{proseRaw}</p>}
           {bottomLine && <p style={{ fontSize: 16, color: C.textMid, margin: 0, lineHeight: 1.75, fontFamily: FF, fontStyle: "italic" }}>{bottomLine}</p>}
         </div>
       );
@@ -1205,27 +1163,13 @@ function renderContent(content, sectionTitle, reportType) {
     const clean = line.replace(/\*\*(.*?)\*\*/g, "$1");
 
     // ── TABLE ────────────────────────────────────────────────────────
-    // Exclude dimension headers (DimName | X/5) and Stack Compatibility tool headers
-    const isVendorCardLine = (sectionTitle === "Your Shortlist, Assessed" || sectionTitle === "Stack Compatibility Assessment")
-      && line.trim().match(/\|\s*\d+\/5/i)
-      && !line.trim().startsWith("|");
-    if (!isVendorCardLine && (line.trim().startsWith("|") || (line.trim().includes("|") && line.trim().split("|").length >= 3 && !line.trim().match(/^[A-Za-z\s]+\|\s*\d+\/5$/)))) {
+    if (line.trim().startsWith("|")) {
       if (inVendorCard) flushVendorCard(i);
       if (inQuestionGroup) flushQuestionGroup(i);
       const rows = [];
       let j = i;
-      let headerColCount = -1;
-      while (j < lines.length) {
-        const t = lines[j].trim();
-        const isTableRow = t.startsWith("|") || (t.includes("|") && t.split("|").length >= 3 && !t.match(/^[A-Za-z\s]+\|\s*\d+\/5$/));
-        if (!isTableRow) break;
-        if (!t.match(/^\s*\|[\s-:]+\|/)) {
-          const colCount = t.split("|").filter(Boolean).length;
-          // Stop collecting if column count changes (new table starting)
-          if (headerColCount === -1) headerColCount = colCount;
-          else if (colCount !== headerColCount && colCount >= 2) break;
-          rows.push(lines[j]);
-        }
+      while (j < lines.length && lines[j].trim().startsWith("|")) {
+        if (!lines[j].match(/^\s*\|[\s-:]+\|/)) rows.push(lines[j]);
         j++;
       }
       if (rows.length >= 2) {
@@ -1248,7 +1192,7 @@ function renderContent(content, sectionTitle, reportType) {
           i = j; continue;
         }
 
-        const isStackSection = reportType === "stack_fit" || ["Stack Compatibility Assessment","Integration Readiness","What You Should Know","Questions to Ask in the Demo","Our Compatibility Verdict","Sources"].includes(sectionTitle);
+        const isStackSection = ["Stack Compatibility Assessment","Integration Readiness","What You Should Know","Questions to Ask in the Demo","Our Compatibility Verdict","Sources"].includes(sectionTitle);
         const tableHeaderColor = isStackSection ? C.stack : C.accent;
 
         elements.push(
@@ -1304,21 +1248,7 @@ function renderContent(content, sectionTitle, reportType) {
     }
 
     // ── FIELD LABELS inside vendor card ─────────────────────────────
-    if (inVendorCard) {
-      // Skip lines that are just the card meta repeated (| Compatibility: X | Complexity: Y **)
-      const isMetaRepeat = /^\|?\s*Compatibility:\s*\w+\s*\|?\s*Complexity:\s*\w+/i.test(line.trim())
-        || /^\|?\s*Budget:\s*[\w\s]+\|?\s*Readiness:/i.test(line.trim());
-      // Also skip stray ** at start/end of a line that's just punctuation
-      const isStrayAsterisks = /^\*\*\s*$/.test(line.trim());
-      if (!isMetaRepeat && !isStrayAsterisks) {
-        cardRawLines.push(line);
-      }
-      // For stack cards: flush immediately after collecting the Bottom line row
-      if (cardIsStack && /^bottom line:/i.test(line.trim())) {
-        flushVendorCard(i);
-      }
-      i++; continue;
-    }
+    if (inVendorCard) { cardRawLines.push(line); i++; continue; }
 
     // ── QUESTIONS SECTION LOGIC ──────────────────────────────────────
     if (isQuestionsSection) {
@@ -1528,9 +1458,9 @@ const STACK_ICONS = {
 };
 
 // ─── SHARED UI COMPONENTS ─────────────────────────────────────────────────────
-const Logo = ({ small, color }) => (
+const Logo = ({ small }) => (
   <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: small ? 4 : 40 }}>
-    <div style={{ width: small ? 34 : 36, height: small ? 34 : 36, borderRadius: "50%", background: color || C.accent, color: C.white, display: "flex", alignItems: "center", justifyContent: "center", fontSize: small ? 15 : 16, fontWeight: 700, fontFamily: FFD }}>D</div>
+    <div style={{ width: small ? 34 : 36, height: small ? 34 : 36, borderRadius: "50%", background: C.accent, color: C.white, display: "flex", alignItems: "center", justifyContent: "center", fontSize: small ? 15 : 16, fontWeight: 700, fontFamily: FFD }}>D</div>
     {!small && (
       <div>
         <p style={{ fontSize: 18, fontWeight: 700, color: C.text, fontFamily: FFD }}>Delphi</p>
@@ -1832,7 +1762,7 @@ export default function Delphi({ paymentStatus, startCheckout, onHome }) {
       <div style={{ minHeight: "100vh", background: C.bg, display: "flex", fontFamily: FF }}>
         <style>{GS}</style>
         <div style={{ width: 240, minWidth: 240, background: C.sidebar, borderRight: "1px solid " + C.border, padding: "32px 20px", display: "flex", flexDirection: "column", position: "sticky", top: 0, height: "100vh", overflowY: "auto" }}>
-          <Logo small color={reportType === "stack_fit" ? C.stack : C.accent} />
+          <Logo small />
           <p style={{ fontSize: 11, fontWeight: 700, color: C.textLight, letterSpacing: 1.5, textTransform: "uppercase", marginBottom: 24, marginLeft: 44 }}>
             {reportType === "stack_fit" ? "Stack Fit Report" : "Evaluation Report"}
           </p>
@@ -1859,14 +1789,14 @@ export default function Delphi({ paymentStatus, startCheckout, onHome }) {
             <h2 style={{ fontSize: 26, fontWeight: 700, color: C.text, fontFamily: FFD }}>{section?.title}</h2>
             <span style={{ fontSize: 13, fontWeight: 500, color: C.textLight, marginTop: 6 }}>{activeSection + 1} / {reportSections.length}</span>
           </div>
-          <div style={{ marginBottom: 32 }}>{section && renderContent(section.content, section.title, reportType)}</div>
+          <div style={{ marginBottom: 32 }}>{section && renderContent(section.content, section.title)}</div>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", paddingTop: 20, borderTop: "1px solid " + C.border }}>
             <button onClick={() => activeSection > 0 && setActiveSection(activeSection - 1)}
               style={{ background: "none", border: "none", color: C.textMid, fontSize: 15, fontWeight: 500, opacity: activeSection === 0 ? 0.3 : 1, cursor: activeSection === 0 ? "default" : "pointer", fontFamily: FF }}>← Previous</button>
             <div style={{ display: "flex", gap: 7 }}>
               {reportSections.map((_, i) => (
                 <div key={i} onClick={() => setActiveSection(i)}
-                  style={{ width: 7, height: 7, borderRadius: "50%", background: i === activeSection ? (reportType === "stack_fit" ? C.stack : C.accent) : C.border, cursor: "pointer", transition: "background 0.2s" }} />
+                  style={{ width: 7, height: 7, borderRadius: "50%", background: i === activeSection ? C.accent : C.border, cursor: "pointer", transition: "background 0.2s" }} />
               ))}
             </div>
             {activeSection < reportSections.length - 1 ? (
