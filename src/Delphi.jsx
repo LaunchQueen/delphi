@@ -964,6 +964,8 @@ function cleanModelText(text) {
     .replace(/([^\n])(\s*\|\s*(?:Tool|Score|Dimension|Stack|Integration|Budget|Readiness|Compatibility|Complexity|Our Take|What It Means|Status)[^\n]*\|)/gi, "$1\n$2")
     // 4c. Strip stray isolated pipe remnants left by 4b splitting
     .replace(/^\s*\|\s*$/gm, "")
+    // 4d. Strip stray isolated ** lines (model artifact)
+    .replace(/^\s*\*\*\s*$/gm, "")
     // 5. Force "Bottom line:" onto its own line
     .replace(/([^\n])(Bottom line:)/gi, "$1\n$2")
     // 5b. Force next tool header away from end of Bottom line content
@@ -981,6 +983,32 @@ function cleanModelText(text) {
   cleaned = cleaned
     .replace(/[^\S\n]+([.,;:!?])/g, "$1")
     .replace(/([.,;:!?])[^\S\n]{2,}/g, "$1 ");
+
+  // Join fragmented prose lines: if a line is a continuation (starts with lowercase,
+  // comma, conjunction, or mid-sentence punctuation), join it to the previous line.
+  // Never join lines that are structural (##, **, tool headers, Bottom line, OVERALL, |, numbered)
+  const proselines = cleaned.split("\n");
+  const joined = [];
+  for (let i = 0; i < proselines.length; i++) {
+    const line = proselines[i];
+    const t = line.trim();
+    const prev = joined.length > 0 ? joined[joined.length - 1].trim() : "";
+    const isContinuation = t && prev &&
+      !t.startsWith("##") &&
+      !t.startsWith("**") &&
+      !t.startsWith("|") &&
+      !t.startsWith("Bottom line:") &&
+      !t.startsWith("OVERALL") &&
+      !t.match(/^\d+\./) &&
+      !t.match(/^[A-Za-z][A-Za-z\s]+\|\s*\d+\/5/) &&
+      (t.startsWith(",") || t.startsWith(";") || t.match(/^(and|or|but|the|that|which|who|when|while|with|plus|also|this|these|those|it|its|their|your|our|so|yet|for|nor|a |an )\b/i));
+    if (isContinuation) {
+      joined[joined.length - 1] = joined[joined.length - 1].trimEnd() + " " + t;
+    } else {
+      joined.push(line);
+    }
+  }
+  cleaned = joined.join("\n");
 
   return cleaned;
 }
@@ -1277,7 +1305,14 @@ function renderContent(content, sectionTitle, reportType) {
 
     // ── FIELD LABELS inside vendor card ─────────────────────────────
     if (inVendorCard) {
-      cardRawLines.push(line);
+      // Skip lines that are just the card meta repeated (| Compatibility: X | Complexity: Y **)
+      const isMetaRepeat = /^\|?\s*Compatibility:\s*\w+\s*\|?\s*Complexity:\s*\w+/i.test(line.trim())
+        || /^\|?\s*Budget:\s*[\w\s]+\|?\s*Readiness:/i.test(line.trim());
+      // Also skip stray ** at start/end of a line that's just punctuation
+      const isStrayAsterisks = /^\*\*\s*$/.test(line.trim());
+      if (!isMetaRepeat && !isStrayAsterisks) {
+        cardRawLines.push(line);
+      }
       // For stack cards: flush immediately after collecting the Bottom line row
       if (cardIsStack && /^bottom line:/i.test(line.trim())) {
         flushVendorCard(i);
@@ -1493,9 +1528,9 @@ const STACK_ICONS = {
 };
 
 // ─── SHARED UI COMPONENTS ─────────────────────────────────────────────────────
-const Logo = ({ small }) => (
+const Logo = ({ small, color }) => (
   <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: small ? 4 : 40 }}>
-    <div style={{ width: small ? 34 : 36, height: small ? 34 : 36, borderRadius: "50%", background: C.accent, color: C.white, display: "flex", alignItems: "center", justifyContent: "center", fontSize: small ? 15 : 16, fontWeight: 700, fontFamily: FFD }}>D</div>
+    <div style={{ width: small ? 34 : 36, height: small ? 34 : 36, borderRadius: "50%", background: color || C.accent, color: C.white, display: "flex", alignItems: "center", justifyContent: "center", fontSize: small ? 15 : 16, fontWeight: 700, fontFamily: FFD }}>D</div>
     {!small && (
       <div>
         <p style={{ fontSize: 18, fontWeight: 700, color: C.text, fontFamily: FFD }}>Delphi</p>
@@ -1797,7 +1832,7 @@ export default function Delphi({ paymentStatus, startCheckout, onHome }) {
       <div style={{ minHeight: "100vh", background: C.bg, display: "flex", fontFamily: FF }}>
         <style>{GS}</style>
         <div style={{ width: 240, minWidth: 240, background: C.sidebar, borderRight: "1px solid " + C.border, padding: "32px 20px", display: "flex", flexDirection: "column", position: "sticky", top: 0, height: "100vh", overflowY: "auto" }}>
-          <Logo small />
+          <Logo small color={reportType === "stack_fit" ? C.stack : C.accent} />
           <p style={{ fontSize: 11, fontWeight: 700, color: C.textLight, letterSpacing: 1.5, textTransform: "uppercase", marginBottom: 24, marginLeft: 44 }}>
             {reportType === "stack_fit" ? "Stack Fit Report" : "Evaluation Report"}
           </p>
@@ -1831,7 +1866,7 @@ export default function Delphi({ paymentStatus, startCheckout, onHome }) {
             <div style={{ display: "flex", gap: 7 }}>
               {reportSections.map((_, i) => (
                 <div key={i} onClick={() => setActiveSection(i)}
-                  style={{ width: 7, height: 7, borderRadius: "50%", background: i === activeSection ? C.accent : C.border, cursor: "pointer", transition: "background 0.2s" }} />
+                  style={{ width: 7, height: 7, borderRadius: "50%", background: i === activeSection ? (reportType === "stack_fit" ? C.stack : C.accent) : C.border, cursor: "pointer", transition: "background 0.2s" }} />
               ))}
             </div>
             {activeSection < reportSections.length - 1 ? (
