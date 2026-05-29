@@ -20,12 +20,19 @@ export default async function handler(req, res) {
         "Content-Type": "application/json",
         "x-api-key": process.env.ANTHROPIC_API_KEY,
         "anthropic-version": "2023-06-01",
+        "anthropic-beta": "prompt-caching-2024-07-31",
       },
       body: JSON.stringify({
         model: process.env.ANTHROPIC_MODEL || "claude-sonnet-4-6",
-        max_tokens: 8000,
+        max_tokens: 5000,
         tools: [{ type: "web_search_20250305", name: "web_search" }],
-        system,
+        system: [
+          {
+            type: "text",
+            text: system,
+            cache_control: { type: "ephemeral" },
+          },
+        ],
         messages: [{ role: "user", content: prompt }],
       }),
     });
@@ -33,6 +40,12 @@ export default async function handler(req, res) {
     if (!response.ok) throw new Error(await response.text());
 
     const data = await response.json();
+
+    // Log token usage to Vercel logs for cost monitoring
+    if (data.usage) {
+      console.log("Token usage:", JSON.stringify(data.usage));
+    }
+
     const text = data.content
       .filter((b) => b.type === "text")
       .map((b) => b.text)
