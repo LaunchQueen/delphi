@@ -947,15 +947,11 @@ function buildStackPrompt(answers) {
 // FIX: Force headers onto new lines and ensure clean parsing
 function cleanModelText(text) {
   let cleaned = text
-    // Force a newline before any ## header if it's currently inline
+    // 1. Force a newline before any ## header if it's currently inline
     .replace(/([^\n])(##\s)/g, "$1\n$2")
-    // Force OVERALL READINESS/COMPATIBILITY onto its own line
-    .replace(/([^\n])(OVERALL (?:READINESS|COMPATIBILITY):)/g, "$1\n$2")
-    // Force dimension headers "Words | X/5" onto their own line (after sentence-ending punctuation)
-    .replace(/([.!?])\s+([A-Z][A-Za-z ]{3,}\|\s*\d+\/5)/g, "$1\n$2")
-    // Strip --- separator lines
+    // 2. Strip --- separator lines
     .replace(/---+/g, "")
-    // Strip citation markers
+    // 3. Strip existing citation markers
     .replace(/\s*\[\d+(?:,\s*\d+)*\]/g, "")
     .replace(/\s*\[Source[^\]]*\]/gi, "");
 
@@ -1000,7 +996,7 @@ function parseReport(text, type = "evaluation") {
   }
 
   if (current && current.content.length > 0) sections.push(current);
-
+  console.log("SECTIONS PARSED:", sections.map(s => s.title));
   return sections;
 }
 
@@ -1063,21 +1059,20 @@ function renderContent(content, sectionTitle) {
     let cardBody;
     if (cardIsStack) {
       // Stack Fit: simple prose layout — bold tool name, thin blue rule, prose paragraph
-      // Extract just the prose — everything up to "Bottom line:"
       const proseLines = cardRawLines.map(l => l.trim()).filter(l => l);
-      const bottomLineIdx = proseLines.findIndex(l => l.startsWith("Bottom line:"));
+      const bottomLineIdx = proseLines.findIndex(l => /^bottom line:/i.test(l));
       const prose = (bottomLineIdx > -1 ? proseLines.slice(0, bottomLineIdx) : proseLines).join(" ").trim();
-      const bottomLine = bottomLineIdx > -1 ? proseLines[bottomLineIdx].replace("Bottom line:", "").trim() : "";
+      const bottomLine = bottomLineIdx > -1 ? proseLines[bottomLineIdx].replace(/^bottom line:\s*/i, "").trim() : "";
 
       elements.push(
-        <div key={`vendor-${key}`} style={{ marginBottom: 32 }}>
-          <div style={{ display: "flex", alignItems: "baseline", gap: 12, marginBottom: 6 }}>
-            <p style={{ fontSize: 17, fontWeight: 700, color: C.text, margin: 0, fontFamily: FFD }}>{cardToolName}</p>
-            {cardMeta && <p style={{ fontSize: 13, color: C.stack, margin: 0, fontFamily: FF, fontWeight: 600 }}>{cardMeta}</p>}
+        <div key={`vendor-${key}`} style={{ marginBottom: 36 }}>
+          <div style={{ display: "flex", alignItems: "baseline", gap: 14, marginBottom: 8 }}>
+            <p style={{ fontSize: 20, fontWeight: 700, color: C.text, margin: 0, fontFamily: FFD }}>{cardToolName}</p>
+            {cardMeta && <p style={{ fontSize: 14, color: C.stack, margin: 0, fontFamily: FF, fontWeight: 600 }}>{cardMeta}</p>}
           </div>
-          <div style={{ height: 2, background: C.stack, borderRadius: 1, marginBottom: 14, opacity: 0.4 }} />
-          {prose && <p style={{ fontSize: 15, color: C.textMid, margin: "0 0 8px", lineHeight: 1.9, fontFamily: FF }}>{prose}</p>}
-          {bottomLine && <p style={{ fontSize: 15, color: C.textMid, margin: 0, lineHeight: 1.75, fontFamily: FF, fontStyle: "italic" }}>{bottomLine}</p>}
+          <div style={{ height: 2, background: C.stack, borderRadius: 1, marginBottom: 16, opacity: 0.35 }} />
+          {prose && <p style={{ fontSize: 16, color: C.textMid, margin: "0 0 10px", lineHeight: 1.9, fontFamily: FF }}>{prose}</p>}
+          {bottomLine && <p style={{ fontSize: 16, color: C.textMid, margin: 0, lineHeight: 1.75, fontFamily: FF, fontStyle: "italic" }}>{bottomLine}</p>}
         </div>
       );
       cardToolName = null; cardMeta = null; cardRawLines = []; cardIsRecommended = false; cardIsStack = false; inVendorCard = false;
@@ -1217,8 +1212,7 @@ function renderContent(content, sectionTitle) {
     // ── VENDOR HEADER: "ToolName | X/5 | ..." ───────────────────────
     // Only fire for Shortlist/Compatibility Assessment sections, not Integration Readiness dimensions
     const isVendorCardSection = sectionTitle === "Your Shortlist, Assessed" || sectionTitle === "Stack Compatibility Assessment";
-    const rawHeaderLine = line.trim().startsWith("### ") ? line.trim().replace("### ", "") : line.trim();
-    // Card header: must have | X/5 AND the part before the first | must be short (a tool name, not a sentence)
+    const rawHeaderLine = line.trim().startsWith("### ") ? line.trim().replace("### ", "") : line.trim().replace(/^\*\*/, "").replace(/\*\*$/, "");
     const firstPipe = rawHeaderLine.indexOf("|");
     const toolNamePart = firstPipe > 0 ? rawHeaderLine.slice(0, firstPipe).trim() : "";
     const isCardHeader = isVendorCardSection && !isQuestionsSection && !rawHeaderLine.startsWith("|")
@@ -1227,16 +1221,17 @@ function renderContent(content, sectionTitle) {
     if (isCardHeader) {
       if (inVendorCard) flushVendorCard(i);
       const parts = rawHeaderLine.split("|").map(p => p.trim()).filter(p => p);
-      cardToolName = parts[0].replace(/\*\*/g, "");
+      cardToolName = parts[0].replace(/\*\*/g, "").trim();
+      // For stack cards: show score · Compatibility word · Complexity word
+      // Strip label prefixes and join cleanly
       cardMeta = parts.slice(1).map(p =>
         p.replace(/Budget:\s*/i, "")
          .replace(/Readiness:\s*/i, "")
-         .replace(/Stack Compatibility:\s*/i, "")
-         .replace(/Integration Complexity:\s*/i, "")
          .replace(/Compatibility:\s*/i, "")
          .replace(/Complexity:\s*/i, "")
          .replace(/\*\*/g, "")
-      ).join(" · ");
+         .trim()
+      ).filter(Boolean).join(" · ");
       cardIsStack = sectionTitle === "Stack Compatibility Assessment";
       cardIsRecommended = vendorCardCount === 0;
       vendorCardCount++;
