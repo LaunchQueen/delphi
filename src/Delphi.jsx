@@ -818,22 +818,26 @@ Bottom line:
 
 Write 2-3 sentences introducing what this section measures. End with "implement successfully."
 
-Then on its own line:
 OVERALL COMPATIBILITY: X/5
 
-Then the dimension summary table:
+CRITICAL ORDER — output EXACTLY in this sequence, no deviations:
+1. The intro sentences
+2. OVERALL COMPATIBILITY: X/5 on its own line
+3. The dimension summary table
+4. The legend table
+5. Each dimension header + prose
+
 | Dimension | Score | Status |
 
-Then the legend table:
 | Score | What It Means |
 | 1-2 | Address before go-live |
 | 3 | Manageable with preparation |
 | 4-5 | Strong foundation |
 
-Then for each of the five dimensions, write the header on its own line in EXACTLY this format:
+For each of the five dimensions, write the header on its own line in EXACTLY this format — NO bold, NO asterisks, NO brackets:
 Dimension Name | X/5
 
-Followed by analysis in plain prose.
+Then write analysis in plain prose on the following lines. Do NOT continue with the next dimension header on the same line as prose — each dimension header must be on its own line.
 
 The five dimensions:
 1. Integration Ownership Clarity
@@ -954,19 +958,29 @@ function cleanModelText(text) {
     // 3. Strip existing citation markers
     .replace(/\s*\[\d+(?:,\s*\d+)*\]/g, "")
     .replace(/\s*\[Source[^\]]*\]/gi, "")
-    // 4. Force pipe-table rows onto their own lines (model sometimes writes them inline)
+    // 4a. Force "Tool | Score" table header onto its own line (handles no leading pipe)
+    .replace(/([^\n])\s+(Tool\s*\|[^\n]*)/g, "$1\n$2")
+    // 4b. Force any pipe-table header keyword row onto its own line
     .replace(/([^\n])(\s*\|\s*(?:Tool|Score|Dimension|Stack|Integration|Budget|Readiness|Compatibility|Complexity|Our Take|What It Means|Status)[^\n]*\|)/gi, "$1\n$2")
+    // 4c. Strip stray isolated pipe remnants left by 4b splitting
+    .replace(/^\s*\|\s*$/gm, "")
     // 5. Force "Bottom line:" onto its own line
     .replace(/([^\n])(Bottom line:)/gi, "$1\n$2")
-    // 6. Force dimension headers like **Dim Name | X/5** onto their own lines
-    .replace(/([^\n])(\s*\*\*[A-Za-z][A-Za-z\s]{2,}\|\s*\d+\/5)/g, "$1\n$2")
+    // 5b. Force next tool header away from end of Bottom line content
+    .replace(/(Bottom line:[^\n]+?)([A-Z][a-zA-Z]+(?:\s[A-Z][a-zA-Z]+)?\s*\|\s*\d+\/5)/g, "$1\n$2")
     // 7. Force OVERALL READINESS/COMPATIBILITY score onto its own line
-    .replace(/([^\n])(OVERALL (?:READINESS|COMPATIBILITY):)/g, "$1\n$2");
+    .replace(/([^\n])\s*(OVERALL\s+(?:READINESS|COMPATIBILITY):)/g, "$1\n$2");
 
-  // Fix floating punctuation
+  // 6: Isolate **Dim Name | X/5** bold dimension headers onto their own line
+  // Uses two-pass approach: first split before, then split after
+  const dimHeaderRe = /\*\*[A-Za-z][A-Za-z\s]+\|\s*\d+\/5\*\*/g;
+  cleaned = cleaned.replace(/([^\n])(\*\*[A-Za-z][A-Za-z\s]+\|\s*\d+\/5\*\*)/g, "$1\n$2");
+  cleaned = cleaned.replace(/(\*\*[A-Za-z][A-Za-z\s]+\|\s*\d+\/5\*\*)([^\n]+)/g, "$1\n$2");
+
+  // Fix floating punctuation (use [^\S\n] to avoid collapsing intentional newlines)
   cleaned = cleaned
-    .replace(/\s+([.,;:!?])/g, "$1")
-    .replace(/([.,;:!?])\s{2,}/g, "$1 ");
+    .replace(/[^\S\n]+([.,;:!?])/g, "$1")
+    .replace(/([.,;:!?])[^\S\n]{2,}/g, "$1 ");
 
   return cleaned;
 }
@@ -1172,11 +1186,18 @@ function renderContent(content, sectionTitle, reportType) {
       if (inQuestionGroup) flushQuestionGroup(i);
       const rows = [];
       let j = i;
+      let headerColCount = -1;
       while (j < lines.length) {
         const t = lines[j].trim();
         const isTableRow = t.startsWith("|") || (t.includes("|") && t.split("|").length >= 3 && !t.match(/^[A-Za-z\s]+\|\s*\d+\/5$/));
         if (!isTableRow) break;
-        if (!t.match(/^\s*\|[\s-:]+\|/)) rows.push(lines[j]);
+        if (!t.match(/^\s*\|[\s-:]+\|/)) {
+          const colCount = t.split("|").filter(Boolean).length;
+          // Stop collecting if column count changes (new table starting)
+          if (headerColCount === -1) headerColCount = colCount;
+          else if (colCount !== headerColCount && colCount >= 2) break;
+          rows.push(lines[j]);
+        }
         j++;
       }
       if (rows.length >= 2) {
