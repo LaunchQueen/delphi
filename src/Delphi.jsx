@@ -1062,46 +1062,49 @@ function renderContent(content, sectionTitle) {
 
     let cardBody;
     if (cardIsStack) {
-      // Stack Fit: bordered box with tool name header, prose lines inside, bottom line italic footer
-      const filteredLines = cardRawLines.map(l => l.trim()).filter(l => l)
-        .filter(l => !l.match(/^\|\s*(Compatibility|Complexity|Budget|Readiness)/i))
+      const stripMd = s => s.replace(/\*\*(.*?)\*\*/g, "$1").trim();
+
+      const filteredLines = cardRawLines
+        .map(l => l.trim())
+        .filter(l => l)
+        .filter(l => !l.match(/^\|\s*(Tool|Compatibility|Complexity|Budget|Readiness)/i))
         .filter(l => !l.match(/^\*\*$/))
         .filter(l => !l.match(/^Compatibility:\s*\w+\s*\|/i));
 
-      // Split into body lines and bottom line
       const bottomLineIdx = filteredLines.findIndex(l => /^bottom line:/i.test(l));
-      const bodyLines = bottomLineIdx > -1 ? filteredLines.slice(0, bottomLineIdx) : filteredLines;
-      // Bottom line may be on the same line as "Bottom line:" or the next line
+      const rawBodyLines = bottomLineIdx > -1 ? filteredLines.slice(0, bottomLineIdx) : filteredLines;
+      const bodyLines = rawBodyLines.map(stripMd).filter(l => l);
+
       let bottomLine = "";
       if (bottomLineIdx > -1) {
-        const bl = filteredLines[bottomLineIdx].replace(/^bottom line:\s*/i, "").trim();
-        bottomLine = bl || (filteredLines[bottomLineIdx + 1] || "");
+        const inline = filteredLines[bottomLineIdx].replace(/^bottom line:\s*/i, "").trim();
+        bottomLine = stripMd(inline || (filteredLines[bottomLineIdx + 1] || ""));
       }
 
       elements.push(
         <div key={`vendor-${key}`} style={{
           marginBottom: 32,
-          borderLeft: `4px solid ${C.stack}`,
           borderRadius: 6,
-          border: `1px solid ${C.border}`,
-          borderLeftWidth: 4,
-          borderLeftColor: C.stack,
+          borderTop: `1px solid ${C.border}`,
+          borderRight: `1px solid ${C.border}`,
+          borderBottom: `1px solid ${C.border}`,
+          borderLeft: `4px solid ${C.stack}`,
           overflow: "hidden"
         }}>
           {/* Header */}
-          <div style={{ padding: "14px 20px 10px", borderBottom: "1px solid " + C.border, display: "flex", alignItems: "baseline", gap: 12, background: C.card }}>
+          <div style={{ padding: "14px 20px 10px", borderBottom: `1px solid ${C.border}`, display: "flex", alignItems: "baseline", gap: 12, background: C.card }}>
             <p style={{ fontSize: 19, fontWeight: 700, color: C.text, margin: 0, fontFamily: FFD }}>{cardToolName}</p>
             {cardMeta && <p style={{ fontSize: 13, color: C.stack, margin: 0, fontFamily: FF, fontWeight: 600 }}>{cardMeta}</p>}
           </div>
           {/* Body */}
           <div style={{ padding: "16px 20px" }}>
-            {bodyLines.map((line, idx) => (
-              <p key={idx} style={{ fontSize: 16, color: C.textMid, margin: idx < bodyLines.length - 1 ? "0 0 12px" : 0, lineHeight: 1.85, fontFamily: FF }}>{line}</p>
+            {bodyLines.map((para, idx) => (
+              <p key={idx} style={{ fontSize: 16, color: C.textMid, margin: idx < bodyLines.length - 1 ? "0 0 12px" : 0, lineHeight: 1.85, fontFamily: FF }}>{para}</p>
             ))}
           </div>
           {/* Bottom line footer */}
           {bottomLine && (
-            <div style={{ padding: "10px 20px 14px", borderTop: "1px solid " + C.border }}>
+            <div style={{ padding: "10px 20px 14px", borderTop: `1px solid ${C.border}` }}>
               <p style={{ fontSize: 15, color: C.textMid, margin: 0, lineHeight: 1.75, fontFamily: FF, fontStyle: "italic" }}>{bottomLine}</p>
             </div>
           )}
