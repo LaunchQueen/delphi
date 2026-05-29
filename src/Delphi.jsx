@@ -949,13 +949,9 @@ function cleanModelText(text) {
   let cleaned = text
     // 1. Force a newline before any ## header if it's currently inline
     .replace(/([^\n])(##\s)/g, "$1\n$2")
-    // 2. Force a newline before **ToolName | X/5 card headers (model sometimes wraps these in **)
-    .replace(/([^\n])(\*\*[A-Za-z0-9][^*\n]{1,35}\|\s*\d+\/5)/g, "$1\n$2")
-    // 3. Force OVERALL COMPATIBILITY/READINESS onto its own line
-    .replace(/([^\n])(OVERALL (?:READINESS|COMPATIBILITY):)/g, "$1\n$2")
-    // 4. Strip --- separator lines
+    // 2. Strip --- separator lines
     .replace(/---+/g, "")
-    // 5. Strip existing citation markers
+    // 3. Strip existing citation markers
     .replace(/\s*\[\d+(?:,\s*\d+)*\]/g, "")
     .replace(/\s*\[Source[^\]]*\]/gi, "");
 
@@ -1062,52 +1058,21 @@ function renderContent(content, sectionTitle) {
 
     let cardBody;
     if (cardIsStack) {
-      const stripMd = s => s.replace(/\*\*(.*?)\*\*/g, "$1").trim();
-
-      const filteredLines = cardRawLines
-        .map(l => l.trim())
-        .filter(l => l)
-        .filter(l => !l.match(/^\|\s*(Tool|Compatibility|Complexity|Budget|Readiness)/i))
-        .filter(l => !l.match(/^\*\*$/))
-        .filter(l => !l.match(/^Compatibility:\s*\w+\s*\|/i));
-
-      const bottomLineIdx = filteredLines.findIndex(l => /^bottom line:/i.test(l));
-      const rawBodyLines = bottomLineIdx > -1 ? filteredLines.slice(0, bottomLineIdx) : filteredLines;
-      const bodyLines = rawBodyLines.map(stripMd).filter(l => l);
-
-      let bottomLine = "";
-      if (bottomLineIdx > -1) {
-        const inline = filteredLines[bottomLineIdx].replace(/^bottom line:\s*/i, "").trim();
-        bottomLine = stripMd(inline || (filteredLines[bottomLineIdx + 1] || ""));
-      }
+      // Stack Fit: simple prose layout — bold tool name, thin blue rule, prose paragraph
+      const proseLines = cardRawLines.map(l => l.trim()).filter(l => l);
+      const bottomLineIdx = proseLines.findIndex(l => /^bottom line:/i.test(l));
+      const prose = (bottomLineIdx > -1 ? proseLines.slice(0, bottomLineIdx) : proseLines).join(" ").trim();
+      const bottomLine = bottomLineIdx > -1 ? proseLines[bottomLineIdx].replace(/^bottom line:\s*/i, "").trim() : "";
 
       elements.push(
-        <div key={`vendor-${key}`} style={{
-          marginBottom: 32,
-          borderRadius: 6,
-          borderTop: `1px solid ${C.border}`,
-          borderRight: `1px solid ${C.border}`,
-          borderBottom: `1px solid ${C.border}`,
-          borderLeft: `4px solid ${C.stack}`,
-          overflow: "hidden"
-        }}>
-          {/* Header */}
-          <div style={{ padding: "14px 20px 10px", borderBottom: `1px solid ${C.border}`, display: "flex", alignItems: "baseline", gap: 12, background: C.card }}>
-            <p style={{ fontSize: 19, fontWeight: 700, color: C.text, margin: 0, fontFamily: FFD }}>{cardToolName}</p>
-            {cardMeta && <p style={{ fontSize: 13, color: C.stack, margin: 0, fontFamily: FF, fontWeight: 600 }}>{cardMeta}</p>}
+        <div key={`vendor-${key}`} style={{ marginBottom: 36 }}>
+          <div style={{ display: "flex", alignItems: "baseline", gap: 14, marginBottom: 8 }}>
+            <p style={{ fontSize: 20, fontWeight: 700, color: C.text, margin: 0, fontFamily: FFD }}>{cardToolName}</p>
+            {cardMeta && <p style={{ fontSize: 14, color: C.stack, margin: 0, fontFamily: FF, fontWeight: 600 }}>{cardMeta}</p>}
           </div>
-          {/* Body */}
-          <div style={{ padding: "16px 20px" }}>
-            {bodyLines.map((para, idx) => (
-              <p key={idx} style={{ fontSize: 16, color: C.textMid, margin: idx < bodyLines.length - 1 ? "0 0 12px" : 0, lineHeight: 1.85, fontFamily: FF }}>{para}</p>
-            ))}
-          </div>
-          {/* Bottom line footer */}
-          {bottomLine && (
-            <div style={{ padding: "10px 20px 14px", borderTop: `1px solid ${C.border}` }}>
-              <p style={{ fontSize: 15, color: C.textMid, margin: 0, lineHeight: 1.75, fontFamily: FF, fontStyle: "italic" }}>{bottomLine}</p>
-            </div>
-          )}
+          <div style={{ height: 2, background: C.stack, borderRadius: 1, marginBottom: 16, opacity: 0.35 }} />
+          {prose && <p style={{ fontSize: 16, color: C.textMid, margin: "0 0 10px", lineHeight: 1.9, fontFamily: FF }}>{prose}</p>}
+          {bottomLine && <p style={{ fontSize: 16, color: C.textMid, margin: 0, lineHeight: 1.75, fontFamily: FF, fontStyle: "italic" }}>{bottomLine}</p>}
         </div>
       );
       cardToolName = null; cardMeta = null; cardRawLines = []; cardIsRecommended = false; cardIsStack = false; inVendorCard = false;
