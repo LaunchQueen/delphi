@@ -1167,7 +1167,7 @@ function renderContent(content, sectionTitle) {
   const flushQuestionGroup = (key) => {
     if (!questionGroupHeader) return;
     questionCounter = 0;
-    const qHeaderColor = ["Stack Compatibility Assessment","Integration Readiness","What You Should Know","Questions to Ask in the Demo","Our Compatibility Verdict"].includes(sectionTitle) ? C.stack : C.accent;
+    const qHeaderColor = reportType === "stack_fit" ? C.stack : C.accent;
     elements.push(
       <div key={`qgroup-${key}`} style={{ marginBottom: 24 }}>
         <div style={{ background: qHeaderColor, borderRadius: "6px 6px 0 0", padding: "10px 18px" }}>
@@ -1190,7 +1190,7 @@ function renderContent(content, sectionTitle) {
 
     // ── TABLE ────────────────────────────────────────────────────────
     if (line.trim().startsWith("|")) {
-      if (inVendorCard) flushVendorCard(i);
+      if (inVendorCard) { cardRawLines.push(line); i++; continue; }
       if (inQuestionGroup) flushQuestionGroup(i);
       const rows = [];
       let j = i;
@@ -1509,6 +1509,7 @@ function renderContent(content, sectionTitle) {
     // ── DEFAULT PARAGRAPH ────────────────────────────────────────────
     // For Sources: handle "Label https://url" on one line, or plain label before a URL line
     if (sectionTitle === "Sources") {
+      if (/not available from search results/i.test(line.trim())) { i++; continue; }
       const inlineUrlMatch = line.trim().match(/^(.+?)\s+(https?:\/\/\S+)$/);
       if (inlineUrlMatch) {
         elements.push(
