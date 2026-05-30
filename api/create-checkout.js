@@ -1,5 +1,4 @@
 import Stripe from "stripe";
-
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
 const HEADERS = {
@@ -9,9 +8,7 @@ const HEADERS = {
 };
 
 const PRICES = {
-  single_report: { amount: 17500, name: "Delphi Report — Single Evaluation", mode: "payment" },
-  annual:        { amount: 30000, name: "Delphi — Annual Subscription",       mode: "subscription" },
-  fractional:    { amount: 3000,  name: "Delphi — Fractional Stack Report",   mode: "payment" },
+  single_report: "price_1TcsDNCzdpqwekegzRjP3fUF",
 };
 
 export default async function handler(req, res) {
@@ -21,21 +18,13 @@ export default async function handler(req, res) {
 
   try {
     const { priceType, successUrl, cancelUrl } = req.body;
-    const price = PRICES[priceType];
-    if (!price) return res.status(400).json({ error: "Invalid price type" });
+    const priceId = PRICES[priceType];
+    if (!priceId) return res.status(400).json({ error: "Invalid price type" });
 
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ["card"],
-      line_items: [{
-        price_data: {
-          currency: "usd",
-          product_data: { name: price.name },
-          unit_amount: price.amount,
-          ...(price.mode === "subscription" ? { recurring: { interval: "year" } } : {}),
-        },
-        quantity: 1,
-      }],
-      mode: price.mode,
+      line_items: [{ price: priceId, quantity: 1 }],
+      mode: "payment",
       success_url: successUrl + "?session_id={CHECKOUT_SESSION_ID}",
       cancel_url: cancelUrl,
       allow_promotion_codes: true,
