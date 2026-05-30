@@ -1185,7 +1185,7 @@ function renderContent(content, sectionTitle, reportType) {
 
   while (i < lines.length) {
     const line = lines[i];
-    if (!line || !line.trim()) { i++; continue; }
+    if (!line || !line.trim() || line.trim() === "**") { i++; continue; }
     const clean = line.replace(/\*\*(.*?)\*\*/g, "$1");
 
     // ── TABLE ────────────────────────────────────────────────────────
@@ -1353,7 +1353,7 @@ function renderContent(content, sectionTitle, reportType) {
         questionGroupItems.push(
           <div key={`q-${i}`} style={{ padding: "14px 20px", borderBottom: "0.5px solid " + C.border }}>
             <div style={{ display: "flex", gap: 14, alignItems: "flex-start" }}>
-              <span style={{ fontSize: 15, fontWeight: 700, color: isQuestionsSection && ["Stack Compatibility Assessment","Integration Readiness","What You Should Know","Questions to Ask in the Demo","Our Compatibility Verdict"].includes(sectionTitle) ? C.stack : C.accent, flexShrink: 0, minWidth: 22, lineHeight: 1.75 }}>{questionCounter}.</span>
+              <span style={{ fontSize: 15, fontWeight: 700, color: reportType === "stack_fit" ? C.stack : C.accent, flexShrink: 0, minWidth: 22, lineHeight: 1.75 }}>{questionCounter}.</span>
               <div style={{ flex: 1 }}>
                 <p style={{ fontSize: 15, color: C.text, margin: "0 0 6px", lineHeight: 1.75, fontFamily: FF }}>{questionText}</p>
                 {guidance && <p style={{ fontSize: 15, color: C.textLight, margin: 0, lineHeight: 1.6, fontStyle: "italic", fontFamily: FF }}>{guidance}</p>}
