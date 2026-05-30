@@ -1185,7 +1185,7 @@ function renderContent(content, sectionTitle) {
 
   while (i < lines.length) {
     const line = lines[i];
-    if (!line.trim()) { i++; continue; }
+    if (!line || !line.trim()) { i++; continue; }
     const clean = line.replace(/\*\*(.*?)\*\*/g, "$1");
 
     // ── TABLE ────────────────────────────────────────────────────────
@@ -1239,7 +1239,7 @@ function renderContent(content, sectionTitle) {
           i = j; continue;
         }
 
-        const isStackSection = ["What We Heard", "Stack Compatibility Assessment","Integration Readiness","What You Should Know","Questions to Ask in the Demo","Our Compatibility Verdict","Sources"].includes(sectionTitle);
+        const isStackSection = reportType === "stack_fit" && ["What We Heard", "Stack Compatibility Assessment","Integration Readiness","What You Should Know","Questions to Ask in the Demo","Our Compatibility Verdict","Sources"].includes(sectionTitle);
         const tableHeaderColor = isStackSection ? C.stack : C.accent;
 
         elements.push(
@@ -1291,13 +1291,17 @@ function renderContent(content, sectionTitle) {
       trailingProse = rawHeaderLine.slice(closingIdx + 2).trim();
       rawHeaderLine = rawHeaderLine.slice(0, closingIdx);
     }
-    if (rawHeaderLine.startsWith("### ")) rawHeaderLine = rawHeaderLine.replace("### ", "");
+    if (rawHeaderLine.match(/^#+\s/)) rawHeaderLine = rawHeaderLine.replace(/^#+\s+/, "");
     const firstPipe = rawHeaderLine.indexOf("|");
     const toolNamePart = firstPipe > 0 ? rawHeaderLine.slice(0, firstPipe).trim() : "";
     const isCardHeader = isVendorCardSection && !isQuestionsSection && !rawHeaderLine.startsWith("|")
       && rawHeaderLine.match(/\|\s*\d+\/5/i)
       && toolNamePart.length > 0 && toolNamePart.length < 40 && !toolNamePart.includes(".");
-    if (isCardHeader) {
+    const isCardHeaderNoScore = isVendorCardSection && !isQuestionsSection && !rawHeaderLine.startsWith("|")
+      && !rawHeaderLine.match(/\|\s*\d+\/5/i) && line.trim().match(/^#{1,3}\s+\S/)
+      && rawHeaderLine.length > 0 && rawHeaderLine.length < 40 && !rawHeaderLine.includes(".")
+      && !rawHeaderLine.includes("|");
+    if (isCardHeader || isCardHeaderNoScore) {
       if (inVendorCard) flushVendorCard(i);
       const parts = rawHeaderLine.split("|").map(p => p.trim()).filter(p => p);
       cardToolName = parts[0].replace(/\*\*/g, "").trim();
