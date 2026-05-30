@@ -1202,18 +1202,36 @@ function renderContent(content, sectionTitle) {
       if (rows.length === 0) { i = j; continue; }
       if (rows.length === 1) { i = j; continue; }
       if (rows.length >= 2) {
-        const headers = rows[0].split("|").map(h => h.trim()).filter(Boolean);
-        const data = rows.slice(1).map(r => r.split("|").map(c => c.trim()).filter(Boolean));
+        // Split off legend rows (2-col rows where first cell is "Score") from main table rows
+        const mainRows = [];
+        const legendRows = [];
+        let inLegend = false;
+        for (const r of rows) {
+          const cells = r.split("|").map(c => c.trim()).filter(Boolean);
+          if (!inLegend && cells.length === 2 && cells[0].toLowerCase() === "score") {
+            inLegend = true;
+          }
+          if (inLegend) legendRows.push(r);
+          else mainRows.push(r);
+        }
+        const tableRows = mainRows.length >= 2 ? mainRows : rows;
+        const legendData = legendRows.length >= 2
+          ? legendRows.slice(1).map(r => r.split("|").map(c => c.trim()).filter(Boolean))
+          : null;
+
+        const headers = tableRows[0].split("|").map(h => h.trim()).filter(Boolean);
+        const data = tableRows.slice(1).map(r => r.split("|").map(c => c.trim()).filter(Boolean));
 
         const isLegendTable = headers.length === 2 && headers[0].toLowerCase().includes("score") && headers[1].toLowerCase().includes("mean");
         if (isLegendTable) {
+          const legendItems = data;
           elements.push(
             <div key={i} style={{ display: "flex", gap: 16, flexWrap: "wrap", margin: "8px 0 20px", padding: "10px 14px", background: C.card, borderRadius: 6, border: "1px solid " + C.border }}>
-              {data.map((row, j) => (
+              {legendItems.map((row, j) => (
                 <div key={j} style={{ display: "flex", alignItems: "center", gap: 8 }}>
                   <span style={{ fontSize: 13, fontWeight: 700, color: sectionTitle === "Integration Readiness" ? C.stack : C.accent, fontFamily: FF }}>{row[0]}</span>
                   <span style={{ fontSize: 13, color: C.textMid, fontFamily: FF }}>— {row[1]}</span>
-                  {j < data.length - 1 && <span style={{ color: C.border, marginLeft: 8 }}>·</span>}
+                  {j < legendItems.length - 1 && <span style={{ color: C.border, marginLeft: 8 }}>·</span>}
                 </div>
               ))}
             </div>
@@ -1242,6 +1260,22 @@ function renderContent(content, sectionTitle) {
             </table>
           </div>
         );
+
+        // Render legend as footnote if it was merged into same table block
+        if (legendData) {
+          elements.push(
+            <div key={i + "-legend"} style={{ display: "flex", gap: 16, flexWrap: "wrap", margin: "8px 0 20px", padding: "10px 14px", background: C.card, borderRadius: 6, border: "1px solid " + C.border }}>
+              {legendData.map((row, j) => (
+                <div key={j} style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                  <span style={{ fontSize: 13, fontWeight: 700, color: sectionTitle === "Integration Readiness" ? C.stack : C.accent, fontFamily: FF }}>{row[0]}</span>
+                  <span style={{ fontSize: 13, color: C.textMid, fontFamily: FF }}>— {row[1]}</span>
+                  {j < legendData.length - 1 && <span style={{ color: C.border, marginLeft: 8 }}>·</span>}
+                </div>
+              ))}
+            </div>
+          );
+        }
+
         i = j; continue;
       }
     }
