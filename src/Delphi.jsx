@@ -1194,16 +1194,13 @@ function renderContent(content, sectionTitle) {
       if (inQuestionGroup) flushQuestionGroup(i);
       const rows = [];
       let j = i;
-      let firstColCount = -1;
       while (j < lines.length && lines[j].trim().startsWith("|")) {
-        if (!lines[j].match(/^\s*\|[\s-:]+\|/)) {
-          const colCount = lines[j].split("|").filter(Boolean).length;
-          if (firstColCount === -1) firstColCount = colCount;
-          else if (colCount !== firstColCount) break;
-          rows.push(lines[j]);
-        }
+        const trimmed = lines[j].trim();
+        if (!trimmed.match(/^\s*\|[\s-:]+\|/) && !trimmed.match(/^\|+$/)) rows.push(lines[j]);
         j++;
       }
+      if (rows.length === 0) { i = j; continue; }
+      if (rows.length === 1) { i = j; continue; }
       if (rows.length >= 2) {
         const headers = rows[0].split("|").map(h => h.trim()).filter(Boolean);
         const data = rows.slice(1).map(r => r.split("|").map(c => c.trim()).filter(Boolean));
