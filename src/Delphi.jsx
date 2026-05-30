@@ -946,32 +946,40 @@ function buildStackPrompt(answers) {
 
 // FIX: Force headers onto new lines and ensure clean parsing
 function cleanModelText(text) {
-  // Strip any preamble before the first ## header
-  const firstHeader = text.indexOf("\n## ");
-  const startsWithHeader = text.trimStart().startsWith("## ");
-  if (!startsWithHeader && firstHeader !== -1) {
-    text = text.slice(firstHeader + 1);
+  // Step 1: Strip preamble before first ## header
+  const firstHeaderIdx = text.indexOf("\n## ");
+  if (!text.trimStart().startsWith("## ") && firstHeaderIdx !== -1) {
+    text = text.slice(firstHeaderIdx + 1);
   }
 
-  let cleaned = text
-    // 1. Force a newline before any ## header if it's currently inline
-    .replace(/([^\n])(##\s)/g, "$1\n$2")
-    // 2. Force **ToolName | X/5 card headers onto their own line
-    .replace(/([^\n])(\*\*[A-Za-z0-9][^*\n]{1,35}\|\s*\d+\/5)/g, "$1\n$2")
-    // 3. Force OVERALL COMPATIBILITY/READINESS onto its own line
-    .replace(/([^\n])(OVERALL (?:READINESS|COMPATIBILITY):)/g, "$1\n$2")
-    // 4. Strip --- separator lines
+  // Step 2: Strip artifacts
+  text = text
     .replace(/---+/g, "")
-    // 5. Strip existing citation markers
     .replace(/\s*\[\d+(?:,\s*\d+)*\]/g, "")
     .replace(/\s*\[Source[^\]]*\]/gi, "");
 
-  // Fix floating punctuation
-  cleaned = cleaned
+  // Step 3: Force known inline patterns onto their own lines
+  // Each replace finds a non-newline char followed by the pattern and inserts \n between them
+  text = text
+    // ## section headers
+    .replace(/([^\n])(## )/g, "$1\n$2")
+    // **ToolName | X/5 card headers (bold wrapped)
+    .replace(/([^\n])(\*\*[A-Za-z0-9][^*\n]{1,35}\|\s*\d+\/5)/g, "$1\n$2")
+    // Unbolded: ToolName | X/5 | after sentence-ending punctuation or space
+    .replace(/([.!?] )([A-Z][A-Za-z0-9]{1,20} \| \d+\/5 \|)/g, "$1\n$2")
+    // OVERALL COMPATIBILITY/READINESS
+    .replace(/([^\n])(OVERALL (?:READINESS|COMPATIBILITY):)/g, "$1\n$2")
+    // Bottom line: inline
+    .replace(/([^\n])(Bottom line:)/gi, "$1\n$2")
+    // | Tool | table headers inline (pipe at start after non-newline)
+    .replace(/([^\n])(\| Tool \|)/g, "$1\n$2");
+
+  // Step 4: Fix floating punctuation
+  text = text
     .replace(/\s+([.,;:!?])/g, "$1")
     .replace(/([.,;:!?])\s{2,}/g, "$1 ");
 
-  return cleaned;
+  return text;
 }
 
 const VALID_EVAL_SECTIONS = new Set(["What We Heard", "Your Shortlist, Assessed", "Readiness Score", "What You Should Know", "Questions to Ask in the Demo", "Our Recommendation", "Sources"]);
