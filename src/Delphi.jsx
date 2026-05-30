@@ -1004,7 +1004,7 @@ function parseReport(text, type = "evaluation") {
   return sections;
 }
 
-function renderContent(content, sectionTitle) {
+function renderContent(content, sectionTitle, reportType) {
   const lines = content.join("\n").split("\n");
   const elements = [];
   let i = 0;
@@ -1904,7 +1904,7 @@ export default function Delphi({ paymentStatus, startCheckout, onHome }) {
             <h2 style={{ fontSize: 26, fontWeight: 700, color: C.text, fontFamily: FFD }}>{section?.title}</h2>
             <span style={{ fontSize: 13, fontWeight: 500, color: C.textLight, marginTop: 6 }}>{activeSection + 1} / {reportSections.length}</span>
           </div>
-          <div style={{ marginBottom: 32 }}>{section && renderContent(section.content, section.title)}</div>
+          <div style={{ marginBottom: 32 }}>{section && renderContent(section.content, section.title, reportType)}</div>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", paddingTop: 20, borderTop: "1px solid " + C.border }}>
             <button onClick={() => activeSection > 0 && setActiveSection(activeSection - 1)}
               style={{ background: "none", border: "none", color: C.textMid, fontSize: 15, fontWeight: 500, opacity: activeSection === 0 ? 0.3 : 1, cursor: activeSection === 0 ? "default" : "pointer", fontFamily: FF }}>← Previous</button>
