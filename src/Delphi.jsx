@@ -1067,7 +1067,18 @@ function renderContent(content, sectionTitle) {
         .filter(l => l !== "**")
         .map(l => l.replace(/\*\*(.*?)\*\*/g, "$1"));
       const bottomLineIdx = filteredLines.findIndex(l => /^bottom line:/i.test(l));
-      const bodyLines = bottomLineIdx > -1 ? filteredLines.slice(0, bottomLineIdx) : filteredLines;
+      const rawBodyLines = bottomLineIdx > -1 ? filteredLines.slice(0, bottomLineIdx) : filteredLines;
+      const bodyLines = [];
+      let jj = 0;
+      while (jj < rawBodyLines.length) {
+        let para = rawBodyLines[jj];
+        while (jj + 1 < rawBodyLines.length && !/[.!?]$/.test(para.trim())) {
+          jj++;
+          para = para.trimEnd() + " " + rawBodyLines[jj];
+        }
+        bodyLines.push(para);
+        jj++;
+      }
       const bottomLine = bottomLineIdx > -1
         ? filteredLines[bottomLineIdx].replace(/^bottom line:\s*/i, "").trim()
         : "";
@@ -1183,8 +1194,14 @@ function renderContent(content, sectionTitle) {
       if (inQuestionGroup) flushQuestionGroup(i);
       const rows = [];
       let j = i;
+      let firstColCount = -1;
       while (j < lines.length && lines[j].trim().startsWith("|")) {
-        if (!lines[j].match(/^\s*\|[\s-:]+\|/)) rows.push(lines[j]);
+        if (!lines[j].match(/^\s*\|[\s-:]+\|/)) {
+          const colCount = lines[j].split("|").filter(Boolean).length;
+          if (firstColCount === -1) firstColCount = colCount;
+          else if (colCount !== firstColCount) break;
+          rows.push(lines[j]);
+        }
         j++;
       }
       if (rows.length >= 2) {
@@ -1207,7 +1224,7 @@ function renderContent(content, sectionTitle) {
           i = j; continue;
         }
 
-        const isStackSection = ["Stack Compatibility Assessment","Integration Readiness","What You Should Know","Questions to Ask in the Demo","Our Compatibility Verdict","Sources"].includes(sectionTitle);
+        const isStackSection = ["What We Heard", "Stack Compatibility Assessment","Integration Readiness","What You Should Know","Questions to Ask in the Demo","Our Compatibility Verdict","Sources"].includes(sectionTitle);
         const tableHeaderColor = isStackSection ? C.stack : C.accent;
 
         elements.push(
@@ -1459,6 +1476,33 @@ function renderContent(content, sectionTitle) {
     }
 
     // ── DEFAULT PARAGRAPH ────────────────────────────────────────────
+    // For Sources: handle "Label https://url" on one line, or plain label before a URL line
+    if (sectionTitle === "Sources") {
+      const inlineUrlMatch = line.trim().match(/^(.+?)\s+(https?:\/\/\S+)$/);
+      if (inlineUrlMatch) {
+        elements.push(
+          <div key={i} style={{ marginBottom: 14 }}>
+            <p style={{ fontSize: 14, fontWeight: 600, color: C.textMid, margin: "0 0 3px", fontFamily: FF }}>{inlineUrlMatch[1]}</p>
+            <a href={inlineUrlMatch[2]} target="_blank" rel="noopener noreferrer" style={{ color: C.stack, fontSize: 14, fontFamily: FF, wordBreak: "break-all", textDecoration: "underline" }}>{inlineUrlMatch[2]}</a>
+          </div>
+        );
+        i++; continue;
+      }
+      // Plain label with no URL — check if next line is a URL
+      const nextLine = lines[i + 1] ? lines[i + 1].trim() : "";
+      if (nextLine.match(/^https?:\/\//)) {
+        elements.push(
+          <div key={i} style={{ marginBottom: 14 }}>
+            <p style={{ fontSize: 14, fontWeight: 600, color: C.textMid, margin: "0 0 3px", fontFamily: FF }}>{clean}</p>
+            <a href={nextLine} target="_blank" rel="noopener noreferrer" style={{ color: C.stack, fontSize: 14, fontFamily: FF, wordBreak: "break-all", textDecoration: "underline" }}>{nextLine}</a>
+          </div>
+        );
+        i += 2; continue;
+      }
+      elements.push(<p key={i} style={{ fontSize: 14, fontWeight: 600, color: C.textMid, margin: "0 0 16px", fontFamily: FF }}>{clean}</p>);
+      i++; continue;
+    }
+
     // Join continuation lines so sentences broken across lines render as one paragraph
     let paraText = clean;
     while (i + 1 < lines.length) {
@@ -1493,9 +1537,9 @@ const STACK_ICONS = {
 };
 
 // ─── SHARED UI COMPONENTS ─────────────────────────────────────────────────────
-const Logo = ({ small }) => (
+const Logo = ({ small, color }) => (
   <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: small ? 4 : 40 }}>
-    <div style={{ width: small ? 34 : 36, height: small ? 34 : 36, borderRadius: "50%", background: C.accent, color: C.white, display: "flex", alignItems: "center", justifyContent: "center", fontSize: small ? 15 : 16, fontWeight: 700, fontFamily: FFD }}>D</div>
+    <div style={{ width: small ? 34 : 36, height: small ? 34 : 36, borderRadius: "50%", background: color || C.accent, color: C.white, display: "flex", alignItems: "center", justifyContent: "center", fontSize: small ? 15 : 16, fontWeight: 700, fontFamily: FFD }}>D</div>
     {!small && (
       <div>
         <p style={{ fontSize: 18, fontWeight: 700, color: C.text, fontFamily: FFD }}>Delphi</p>
@@ -1797,7 +1841,7 @@ export default function Delphi({ paymentStatus, startCheckout, onHome }) {
       <div style={{ minHeight: "100vh", background: C.bg, display: "flex", fontFamily: FF }}>
         <style>{GS}</style>
         <div style={{ width: 240, minWidth: 240, background: C.sidebar, borderRight: "1px solid " + C.border, padding: "32px 20px", display: "flex", flexDirection: "column", position: "sticky", top: 0, height: "100vh", overflowY: "auto" }}>
-          <Logo small />
+          <Logo small color={reportType === "stack_fit" ? C.stack : C.accent} />
           <p style={{ fontSize: 11, fontWeight: 700, color: C.textLight, letterSpacing: 1.5, textTransform: "uppercase", marginBottom: 24, marginLeft: 44 }}>
             {reportType === "stack_fit" ? "Stack Fit Report" : "Evaluation Report"}
           </p>
