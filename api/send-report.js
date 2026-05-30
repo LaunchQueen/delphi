@@ -74,7 +74,7 @@ export default async function handler(req, res) {
         "Authorization": `Bearer ${process.env.RESEND_API_KEY}`,
       },
       body: JSON.stringify({
-        from: "Delphi <analysis@delphi.report>",
+        from: "Delphi <analysis@email.delphi.report>",
         to: [email],
         subject: `Your Delphi ${reportLabel}`,
         html,
