@@ -9,6 +9,7 @@ const HEADERS = {
 
 const PRICES = {
   single_report: "price_1TcsDNCzdpqwekegzRjP3fUF",
+  beta: "price_1TcsceCzdpqwekegMLNrJcxG",
 };
 
 export default async function handler(req, res) {
