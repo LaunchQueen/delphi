@@ -946,40 +946,25 @@ function buildStackPrompt(answers) {
 
 // FIX: Force headers onto new lines and ensure clean parsing
 function cleanModelText(text) {
-  // Step 1: Strip preamble before first ## header
-  const firstHeaderIdx = text.indexOf("\n## ");
-  if (!text.trimStart().startsWith("## ") && firstHeaderIdx !== -1) {
-    text = text.slice(firstHeaderIdx + 1);
-  }
-
-  // Step 2: Strip artifacts
-  text = text
+  let cleaned = text
+    // 1. Force a newline before any ## header if it's currently inline
+    .replace(/([^\n])(##\s)/g, "$1\n$2")
+    // 2. Force | Tool | table header onto its own line
+    .replace(/([^\n])(\| Tool \|)/g, "$1\n$2")
+    // 3. Force OVERALL COMPATIBILITY/READINESS onto its own line
+    .replace(/([^\n])(OVERALL (?:READINESS|COMPATIBILITY):)/g, "$1\n$2")
+    // 4. Strip --- separator lines
     .replace(/---+/g, "")
+    // 5. Strip existing citation markers
     .replace(/\s*\[\d+(?:,\s*\d+)*\]/g, "")
     .replace(/\s*\[Source[^\]]*\]/gi, "");
 
-  // Step 3: Force known inline patterns onto their own lines
-  // Each replace finds a non-newline char followed by the pattern and inserts \n between them
-  text = text
-    // ## section headers
-    .replace(/([^\n])(## )/g, "$1\n$2")
-    // **ToolName | X/5 card headers (bold wrapped)
-    .replace(/([^\n])(\*\*[A-Za-z0-9][^*\n]{1,35}\|\s*\d+\/5)/g, "$1\n$2")
-    // Unbolded: ToolName | X/5 | after sentence-ending punctuation or space
-    .replace(/([.!?] )([A-Z][A-Za-z0-9]{1,20} \| \d+\/5 \|)/g, "$1\n$2")
-    // OVERALL COMPATIBILITY/READINESS
-    .replace(/([^\n])(OVERALL (?:READINESS|COMPATIBILITY):)/g, "$1\n$2")
-    // Bottom line: inline
-    .replace(/([^\n])(Bottom line:)/gi, "$1\n$2")
-    // | Tool | table headers inline (pipe at start after non-newline)
-    .replace(/([^\n])(\| Tool \|)/g, "$1\n$2");
-
-  // Step 4: Fix floating punctuation
-  text = text
+  // Fix floating punctuation
+  cleaned = cleaned
     .replace(/\s+([.,;:!?])/g, "$1")
-    .replace(/([.,;:!?])\s{2,}/g, "$1 ");
+    .replace(/([.,;:!?])[^\S\n]{2,}/g, "$1 ");
 
-  return text;
+  return cleaned;
 }
 
 const VALID_EVAL_SECTIONS = new Set(["What We Heard", "Your Shortlist, Assessed", "Readiness Score", "What You Should Know", "Questions to Ask in the Demo", "Our Recommendation", "Sources"]);
@@ -1083,8 +1068,9 @@ function renderContent(content, sectionTitle) {
         .map(l => l.replace(/\*\*(.*?)\*\*/g, "$1"));
       const bottomLineIdx = filteredLines.findIndex(l => /^bottom line:/i.test(l));
       const bodyLines = bottomLineIdx > -1 ? filteredLines.slice(0, bottomLineIdx) : filteredLines;
-      const bottomLineFull = bottomLineIdx > -1 ? filteredLines[bottomLineIdx] : "";
-      const bottomLine = bottomLineFull.replace(/^bottom line:\s*/i, "").trim();
+      const bottomLine = bottomLineIdx > -1
+        ? filteredLines[bottomLineIdx].replace(/^bottom line:\s*/i, "").trim()
+        : "";
 
       elements.push(
         <div key={`vendor-${key}`} style={{
@@ -1250,16 +1236,13 @@ function renderContent(content, sectionTitle) {
     // Only fire for Shortlist/Compatibility Assessment sections, not Integration Readiness dimensions
     const isVendorCardSection = sectionTitle === "Your Shortlist, Assessed" || sectionTitle === "Stack Compatibility Assessment";
     let rawHeaderLine = line.trim();
-    // Strip leading **
     if (rawHeaderLine.startsWith("**")) rawHeaderLine = rawHeaderLine.slice(2);
-    // Truncate at closing ** — capture trailing prose to push into card body
     let trailingProse = "";
     const closingIdx = rawHeaderLine.indexOf("**");
     if (closingIdx !== -1) {
       trailingProse = rawHeaderLine.slice(closingIdx + 2).trim();
       rawHeaderLine = rawHeaderLine.slice(0, closingIdx);
     }
-    // Also handle ### prefix
     if (rawHeaderLine.startsWith("### ")) rawHeaderLine = rawHeaderLine.replace("### ", "");
     const firstPipe = rawHeaderLine.indexOf("|");
     const toolNamePart = firstPipe > 0 ? rawHeaderLine.slice(0, firstPipe).trim() : "";
@@ -1282,7 +1265,6 @@ function renderContent(content, sectionTitle) {
       cardIsRecommended = vendorCardCount === 0;
       vendorCardCount++;
       inVendorCard = true;
-      // Push any prose that was on the same line as the header into the card body
       if (trailingProse) cardRawLines.push(trailingProse);
       i++; continue;
     }
