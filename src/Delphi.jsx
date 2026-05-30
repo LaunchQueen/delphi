@@ -1599,9 +1599,9 @@ const Btn = ({ children, onClick, disabled, variant = "primary", full }) => (
 );
 
 // ─── MAIN COMPONENT ───────────────────────────────────────────────────────────
-export default function Delphi({ paymentStatus, startCheckout, onHome }) {
-  const [reportType, setReportType] = useState(null);
-  const [step, setStep] = useState("select");
+export default function Delphi({ paymentStatus, startCheckout, onHome, initialReportType }) {
+  const [reportType, setReportType] = useState(initialReportType || null);
+  const [step, setStep] = useState(initialReportType ? "category_select" : "select");
   const [selectedCategories, setSelectedCategories] = useState([]);
   const [selectedTools, setSelectedTools] = useState([]);
   const [otherToolInputs, setOtherToolInputs] = useState({});
@@ -1708,8 +1708,21 @@ export default function Delphi({ paymentStatus, startCheckout, onHome }) {
       if (!data.text) throw new Error("empty");
       const sections = parseReport(data.text, reportType);
       console.log("SECTIONS PARSED:", sections.map(s => s.title));
-      setReportSections(sections.length ? sections : [{ title: "What We Heard", content: ["Unable to parse report. Please try again."] }]);
+      const parsedSections = sections.length ? sections : [{ title: "What We Heard", content: ["Unable to parse report. Please try again."] }];
+      setReportSections(parsedSections);
       setStep("report");
+      // Send email copy if we have a customer email
+      if (paymentStatus?.email) {
+        fetch("/api/send-report", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            email: paymentStatus.email,
+            sections: parsedSections,
+            reportType,
+          }),
+        }).catch(err => console.error("Email send failed:", err));
+      }
     } catch {
       setReportSections([{ title: "What We Heard", content: ["Unable to generate your report. Please try again."] }]);
       setStep("report");
@@ -1938,7 +1951,15 @@ export default function Delphi({ paymentStatus, startCheckout, onHome }) {
             <div style={{ width: 30, height: 30, borderRadius: "50%", background: C.accent, color: C.white, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13, fontWeight: 700, fontFamily: FFD }}>D</div>
             <span style={{ fontSize: 13, fontWeight: 700, letterSpacing: 1.5, textTransform: "uppercase", color: C.accent }}>{reportType === "stack_fit" ? "The Stack Fit" : "The Evaluation"}</span>
           </div>
-          <span style={{ fontSize: 13, fontWeight: 500, color: C.textLight }}>{currentQ + 1} / {questionQueue.length}</span>
+          <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+            {currentQ > 0 && (
+              <button onClick={() => setCurrentQ(currentQ - 1)}
+                style={{ background: "none", border: "none", color: C.textLight, fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: FF, letterSpacing: 0.5 }}>
+                ← Back
+              </button>
+            )}
+            <span style={{ fontSize: 13, fontWeight: 500, color: C.textLight }}>{currentQ + 1} / {questionQueue.length}</span>
+          </div>
         </div>
 
         <div style={{ width: "100%", height: 3, background: C.border, borderRadius: 2, marginBottom: 36 }}>
