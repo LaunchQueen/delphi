@@ -946,6 +946,13 @@ function buildStackPrompt(answers) {
 
 // FIX: Force headers onto new lines and ensure clean parsing
 function cleanModelText(text) {
+  // Strip any preamble before the first ## header
+  const firstHeader = text.indexOf("\n## ");
+  const startsWithHeader = text.trimStart().startsWith("## ");
+  if (!startsWithHeader && firstHeader !== -1) {
+    text = text.slice(firstHeader + 1);
+  }
+
   let cleaned = text
     // 1. Force a newline before any ## header if it's currently inline
     .replace(/([^\n])(##\s)/g, "$1\n$2")
