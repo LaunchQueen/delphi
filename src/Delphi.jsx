@@ -1062,21 +1062,39 @@ function renderContent(content, sectionTitle) {
 
     let cardBody;
     if (cardIsStack) {
-      // Stack Fit: simple prose layout — bold tool name, thin blue rule, prose paragraph
-      const proseLines = cardRawLines.map(l => l.trim()).filter(l => l);
-      const bottomLineIdx = proseLines.findIndex(l => /^bottom line:/i.test(l));
-      const prose = (bottomLineIdx > -1 ? proseLines.slice(0, bottomLineIdx) : proseLines).join(" ").trim();
-      const bottomLine = bottomLineIdx > -1 ? proseLines[bottomLineIdx].replace(/^bottom line:\s*/i, "").trim() : "";
+      const filteredLines = cardRawLines.map(l => l.trim()).filter(l => l)
+        .filter(l => !l.match(/^\|?\s*(Compatibility|Complexity)[\s:|]/i))
+        .filter(l => l !== "**")
+        .map(l => l.replace(/\*\*(.*?)\*\*/g, "$1"));
+      const bottomLineIdx = filteredLines.findIndex(l => /^bottom line:/i.test(l));
+      const bodyLines = bottomLineIdx > -1 ? filteredLines.slice(0, bottomLineIdx) : filteredLines;
+      const bottomLineFull = bottomLineIdx > -1 ? filteredLines[bottomLineIdx] : "";
+      const bottomLine = bottomLineFull.replace(/^bottom line:\s*/i, "").trim();
 
       elements.push(
-        <div key={`vendor-${key}`} style={{ marginBottom: 36 }}>
-          <div style={{ display: "flex", alignItems: "baseline", gap: 14, marginBottom: 8 }}>
-            <p style={{ fontSize: 20, fontWeight: 700, color: C.text, margin: 0, fontFamily: FFD }}>{cardToolName}</p>
-            {cardMeta && <p style={{ fontSize: 14, color: C.stack, margin: 0, fontFamily: FF, fontWeight: 600 }}>{cardMeta}</p>}
+        <div key={`vendor-${key}`} style={{
+          marginBottom: 28,
+          borderTop: "1px solid " + C.border,
+          borderRight: "1px solid " + C.border,
+          borderBottom: "1px solid " + C.border,
+          borderLeft: "4px solid " + C.stack,
+          borderRadius: 6,
+          overflow: "hidden"
+        }}>
+          <div style={{ padding: "14px 20px 10px", background: C.card, borderBottom: "1px solid " + C.border, display: "flex", alignItems: "baseline", gap: 12 }}>
+            <p style={{ fontSize: 19, fontWeight: 700, color: C.text, margin: 0, fontFamily: FFD }}>{cardToolName}</p>
+            {cardMeta && <p style={{ fontSize: 13, color: C.stack, margin: 0, fontFamily: FF, fontWeight: 600 }}>{cardMeta}</p>}
           </div>
-          <div style={{ height: 2, background: C.stack, borderRadius: 1, marginBottom: 16, opacity: 0.35 }} />
-          {prose && <p style={{ fontSize: 16, color: C.textMid, margin: "0 0 10px", lineHeight: 1.9, fontFamily: FF }}>{prose}</p>}
-          {bottomLine && <p style={{ fontSize: 16, color: C.textMid, margin: 0, lineHeight: 1.75, fontFamily: FF, fontStyle: "italic" }}>{bottomLine}</p>}
+          <div style={{ padding: "14px 20px" }}>
+            {bodyLines.map((bl, idx) => (
+              <p key={idx} style={{ fontSize: 16, color: C.textMid, margin: idx < bodyLines.length - 1 ? "0 0 10px" : 0, lineHeight: 1.85, fontFamily: FF }}>{bl}</p>
+            ))}
+          </div>
+          {bottomLine && (
+            <div style={{ padding: "10px 20px 14px", borderTop: "1px solid " + C.border }}>
+              <p style={{ fontSize: 15, color: C.textMid, margin: 0, lineHeight: 1.75, fontFamily: FF, fontStyle: "italic" }}>{bottomLine}</p>
+            </div>
+          )}
         </div>
       );
       cardToolName = null; cardMeta = null; cardRawLines = []; cardIsRecommended = false; cardIsStack = false; inVendorCard = false;
@@ -1216,7 +1234,18 @@ function renderContent(content, sectionTitle) {
     // ── VENDOR HEADER: "ToolName | X/5 | ..." ───────────────────────
     // Only fire for Shortlist/Compatibility Assessment sections, not Integration Readiness dimensions
     const isVendorCardSection = sectionTitle === "Your Shortlist, Assessed" || sectionTitle === "Stack Compatibility Assessment";
-    const rawHeaderLine = line.trim().startsWith("### ") ? line.trim().replace("### ", "") : line.trim().replace(/^\*\*/, "").replace(/\*\*$/, "");
+    let rawHeaderLine = line.trim();
+    // Strip leading **
+    if (rawHeaderLine.startsWith("**")) rawHeaderLine = rawHeaderLine.slice(2);
+    // Truncate at closing ** — capture trailing prose to push into card body
+    let trailingProse = "";
+    const closingIdx = rawHeaderLine.indexOf("**");
+    if (closingIdx !== -1) {
+      trailingProse = rawHeaderLine.slice(closingIdx + 2).trim();
+      rawHeaderLine = rawHeaderLine.slice(0, closingIdx);
+    }
+    // Also handle ### prefix
+    if (rawHeaderLine.startsWith("### ")) rawHeaderLine = rawHeaderLine.replace("### ", "");
     const firstPipe = rawHeaderLine.indexOf("|");
     const toolNamePart = firstPipe > 0 ? rawHeaderLine.slice(0, firstPipe).trim() : "";
     const isCardHeader = isVendorCardSection && !isQuestionsSection && !rawHeaderLine.startsWith("|")
@@ -1226,8 +1255,6 @@ function renderContent(content, sectionTitle) {
       if (inVendorCard) flushVendorCard(i);
       const parts = rawHeaderLine.split("|").map(p => p.trim()).filter(p => p);
       cardToolName = parts[0].replace(/\*\*/g, "").trim();
-      // For stack cards: show score · Compatibility word · Complexity word
-      // Strip label prefixes and join cleanly
       cardMeta = parts.slice(1).map(p =>
         p.replace(/Budget:\s*/i, "")
          .replace(/Readiness:\s*/i, "")
@@ -1240,6 +1267,8 @@ function renderContent(content, sectionTitle) {
       cardIsRecommended = vendorCardCount === 0;
       vendorCardCount++;
       inVendorCard = true;
+      // Push any prose that was on the same line as the header into the card body
+      if (trailingProse) cardRawLines.push(trailingProse);
       i++; continue;
     }
 
