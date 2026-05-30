@@ -1197,7 +1197,7 @@ function renderContent(content, sectionTitle) {
             <div key={i} style={{ display: "flex", gap: 16, flexWrap: "wrap", margin: "8px 0 20px", padding: "10px 14px", background: C.card, borderRadius: 6, border: "1px solid " + C.border }}>
               {data.map((row, j) => (
                 <div key={j} style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                  <span style={{ fontSize: 13, fontWeight: 700, color: C.accent, fontFamily: FF }}>{row[0]}</span>
+                  <span style={{ fontSize: 13, fontWeight: 700, color: sectionTitle === "Integration Readiness" ? C.stack : C.accent, fontFamily: FF }}>{row[0]}</span>
                   <span style={{ fontSize: 13, color: C.textMid, fontFamily: FF }}>— {row[1]}</span>
                   {j < data.length - 1 && <span style={{ color: C.border, marginLeft: 8 }}>·</span>}
                 </div>
@@ -1294,7 +1294,7 @@ function renderContent(content, sectionTitle) {
         if (j < lines.length) {
           const nextLine = lines[j].trim().replace(/^\*+/, "").replace(/\*+$/, "");
           if (nextLine.startsWith("What to listen for:")) {
-            guidance = nextLine.replace("What to listen for:", "").trim();
+            guidance = nextLine.replace("What to listen for:", "").trim().replace(/\*\*/g, "");
             j++;
           }
         }
@@ -1459,7 +1459,20 @@ function renderContent(content, sectionTitle) {
     }
 
     // ── DEFAULT PARAGRAPH ────────────────────────────────────────────
-    elements.push(<p key={i} style={{ fontSize: 16, fontWeight: 500, lineHeight: 1.9, color: C.textMid, marginBottom: 14, fontFamily: FF }}>{clean}</p>);
+    // Join continuation lines so sentences broken across lines render as one paragraph
+    let paraText = clean;
+    while (i + 1 < lines.length) {
+      const nextRaw = lines[i + 1];
+      if (!nextRaw || !nextRaw.trim()) break;
+      const nextTrim = nextRaw.trim();
+      if (nextTrim.startsWith("##") || nextTrim.startsWith("###") || nextTrim.startsWith("**")
+        || nextTrim.startsWith("- ") || nextTrim.startsWith("• ") || /^\d+\./.test(nextTrim)
+        || nextTrim.startsWith("|") || /^OVERALL /i.test(nextTrim)) break;
+      if (/[.!?]$/.test(paraText.trim())) break;
+      paraText = paraText.trimEnd() + " " + nextTrim.replace(/\*\*(.*?)\*\*/g, "$1");
+      i++;
+    }
+    elements.push(<p key={i} style={{ fontSize: 16, fontWeight: 500, lineHeight: 1.9, color: C.textMid, marginBottom: 14, fontFamily: FF }}>{paraText}</p>);
     i++;
   }
 
@@ -1818,7 +1831,7 @@ export default function Delphi({ paymentStatus, startCheckout, onHome }) {
             <div style={{ display: "flex", gap: 7 }}>
               {reportSections.map((_, i) => (
                 <div key={i} onClick={() => setActiveSection(i)}
-                  style={{ width: 7, height: 7, borderRadius: "50%", background: i === activeSection ? C.accent : C.border, cursor: "pointer", transition: "background 0.2s" }} />
+                  style={{ width: 7, height: 7, borderRadius: "50%", background: i === activeSection ? (reportType === "stack_fit" ? C.stack : C.accent) : C.border, cursor: "pointer", transition: "background 0.2s" }} />
               ))}
             </div>
             {activeSection < reportSections.length - 1 ? (
