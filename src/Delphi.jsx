@@ -1033,21 +1033,19 @@ function renderContent(content, sectionTitle, reportType) {
     const FIELD_LABELS = cardIsStack ? STACK_FIELDS : EVAL_FIELDS;
 
     cardRawLines.forEach(line => {
-      const t = line.trim();
-      const matched = FIELD_LABELS.find(l => t.startsWith(l));
+      const t = line.trim().replace(/\*\*(.*?)\*\*/g, "$1").replace(/\*\*/g, "");
+      const matched = FIELD_LABELS.find(l => t.toLowerCase().startsWith(l.toLowerCase().replace(":", "").trim()) );
       if (matched) {
         if (currentField) fieldData[currentField] = currentText.join(" ").trim().replace(/^\.\s*/, "");
         currentField = matched.replace(":", "");
-        // Content may be on same line as label OR on next line
-        const inline = t.slice(matched.length).trim();
+        const inline = t.slice(t.toLowerCase().indexOf(matched.toLowerCase().replace(":", "")) + matched.length).replace(/^:\s*/, "").trim();
         currentText = inline ? [inline] : [];
       } else if (currentField && t) {
-        // Also catch "Field name: content" mid-paragraph (model sometimes writes inline)
-        const inlineMatch = FIELD_LABELS.find(l => t.startsWith(l));
+        const inlineMatch = FIELD_LABELS.find(l => t.toLowerCase().startsWith(l.toLowerCase().replace(":", "").trim()));
         if (inlineMatch) {
           if (currentField) fieldData[currentField] = currentText.join(" ").trim().replace(/^\.\s*/, "");
           currentField = inlineMatch.replace(":", "");
-          currentText = [t.slice(inlineMatch.length).trim()];
+          currentText = [t.slice(inlineMatch.length).replace(/^:\s*/, "").trim()];
         } else {
           const cl = t.replace(/^\.\s+/, "").replace(/^[-•]\s+/, "");
           if (cl) currentText.push(cl);
