@@ -129,7 +129,10 @@ export default function FeedbackForm() {
           <YesNoField label="Would you pay $175 for this report on your next software evaluation?" name="pay175" value={answers.pay175} onChange={handleChange} />
           <YesNoField label="Would you pay $300/year for unlimited reports?" name="pay300" value={answers.pay300} onChange={handleChange} />
           <YesNoField label="Would you share this with a colleague evaluating software?" name="share" value={answers.share} onChange={handleChange} />
-          <YesNoField label="How does this compare to how you normally research software purchases?" name="compare" value={answers.compare} onChange={handleChange} />
+          <div style={{ marginBottom: 32 }}>
+            <p style={{ fontSize: 16, fontWeight: 600, color: C.text, marginBottom: 12, fontFamily: FF }}>How does this compare to how you normally research software purchases?</p>
+            <textarea value={answers.compare || ""} onChange={e => handleChange("compare", e.target.value)} placeholder="Tell us how you usually research software..." rows={4} style={{ width: "100%", border: "1.5px solid " + C.border, borderRadius: 4, padding: "14px 16px", fontSize: 15, fontFamily: FF, color: C.text, background: C.bg, resize: "vertical", outline: "none" }} />
+          </div>
         </div>
 
         <div style={{ background: C.white, border: "1px solid " + C.border, borderRadius: 10, padding: "40px 36px", marginBottom: 32 }}>
