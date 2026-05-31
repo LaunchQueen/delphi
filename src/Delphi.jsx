@@ -1070,9 +1070,12 @@ function renderContent(content, sectionTitle, reportType) {
       let jj = 0;
       while (jj < rawBodyLines.length) {
         let para = rawBodyLines[jj];
-        while (jj + 1 < rawBodyLines.length && !/[.!?]$/.test(para.trim())) {
+        while (jj + 1 < rawBodyLines.length) {
+          const next = rawBodyLines[jj + 1];
+          if (!next) { jj++; continue; }
+          if (/[.!?]$/.test(para.trim())) break;
           jj++;
-          para = para.trimEnd() + " " + rawBodyLines[jj];
+          para = para.trimEnd() + " " + next;
         }
         bodyLines.push(para);
         jj++;
