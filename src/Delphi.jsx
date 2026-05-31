@@ -1576,7 +1576,7 @@ const STACK_ICONS = {
 // ─── SHARED UI COMPONENTS ─────────────────────────────────────────────────────
 const Logo = ({ small, color }) => (
   <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: small ? 4 : 40 }}>
-    <div style={{ width: small ? 34 : 36, height: small ? 34 : 36, borderRadius: "50%", background: color || C.accent, color: C.white, display: "flex", alignItems: "center", justifyContent: "center", fontSize: small ? 15 : 16, fontWeight: 700, fontFamily: FFD }}>D</div>
+    <div style={{ width: small ? 34 : 36, height: small ? 34 : 36, borderRadius: "50%", background: color || C.accent, color: C.white, display: "flex", alignItems: "center", justifyContent: "center", fontSize: small ? 15 : 16, fontWeight: 700, fontFamily: FFD, lineHeight: 1 }}>D</div>
     {!small && (
       <div>
         <p style={{ fontSize: 18, fontWeight: 700, color: C.text, fontFamily: FFD }}>Delphi</p>
