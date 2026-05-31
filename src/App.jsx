@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import Delphi from "./Delphi.jsx";
+import FeedbackForm from "./FeedbackForm.jsx";
 
 const C = {
   bg: "#FAF7F2", border: "#E0D8CE", text: "#1C1C1A", textMid: "#3E3830",
@@ -65,6 +66,8 @@ export default function App() {
       alert("Payment setup failed. Please try again.");
     }
   };
+
+  if (window.location.pathname === "/feedback") return <FeedbackForm />;
 
   if (checkingPayment) {
     return (
