@@ -6,7 +6,6 @@ const C = {
   borderDark: "#C4BAB0", text: "#1C1C1A", textMid: "#3E3830", textLight: "#7A7060",
   accent: "#3D6B21", accentDark: "#2D5016", dark: "#141410", gold: "#B8935A",
   white: "#FFFFFF", red: "#C0392B", amber: "#D4830A",
-  stack: "#4A6FA5", stackDark: "#35507A",
 };
 const FF = "'EB Garamond', Georgia, serif";
 const FFD = "'Playfair Display', Georgia, serif";
@@ -775,109 +774,43 @@ READING THE BUYER'S ANSWERS:
 
 TONE: Matter-of-fact. Balanced.
 
-Use ONLY these exact section headers, in this order. Each must appear on its own line starting with ##:
+Use ONLY these exact section headers, in this order:
 ## What We Heard
 ## Stack Compatibility Assessment
 ## Integration Readiness
 ## What You Should Know
-## Questions to Ask in the Demo
+## Questions to Ask Before You Integrate
 ## Our Compatibility Verdict
 ## Sources
 
 SECTION REQUIREMENTS:
 
-**What We Heard** — Read between the lines. Write as a senior technical adviser who has seen this stack before. Specific and direct — no throat-clearing. Do not open with "Based on what you shared." Do not restate their answers. Arrive at something they have not yet articulated.
+**What We Heard** — Read between the lines. Do not restate answers. Do not open with "Based on what you shared."
 
 Immediately after the summary paragraph:
 | Tool | Score | Stack Compatibility | Integration Complexity | Our Take |
 
----
+**Stack Compatibility Assessment** — Order most to least compatible. For each tool: Tool name | Score | Stack Compatibility | Integration Complexity.
 
-**Stack Compatibility Assessment**
+**Integration Readiness** — Five dimensions: Integration Ownership Clarity, Current Stack Health, Data Model Maturity, Team Capacity for New Integrations, Historical Integration Track Record.
 
-Order tools from most to least compatible. For each tool use EXACTLY this structure:
-
-ToolName | X/5 | Compatibility: [one word] | Complexity: [one word]
-
-[One paragraph of 4-6 sentences: what integrates natively with their specific stack, what requires custom work, how data flows, and the implementation timeline. Prose only — no field labels, no bullet points, no sub-headers.]
-
-Bottom line:
-[One sentence on stack fit for this buyer]
-
-EXAMPLE:
-6sense | 4/5 | Compatibility: Strong | Complexity: Moderate
-
-6sense connects natively to Salesforce via AppExchange and to Marketo via LaunchPoint, meeting your marketplace-only requirement. The Salesforce integration syncs account and object data nightly while intent signals flow back in real time. Field mapping for custom objects requires ops configuration before go-live, and the External Client App must be installed in your Salesforce org. Expect 8 to 12 weeks depending on custom object complexity and Marketo LaunchPoint service setup.
-
-Bottom line:
-6sense is the strongest fit for a Salesforce-primary stack with native connector requirements.
-
----
-
-**Integration Readiness**
-
-Write 2-3 sentences introducing what this section measures. End with "implement successfully."
-
-Then on its own line:
-OVERALL COMPATIBILITY: X/5
-
-Then the dimension summary table:
-| Dimension | Score | Status |
-
-Then the legend table:
-| Score | What It Means |
-| 1-2 | Address before go-live |
-| 3 | Manageable with preparation |
-| 4-5 | Strong foundation |
-
-Then for each of the five dimensions, write the header on its own line in EXACTLY this format:
+For each dimension write the header in EXACTLY this format:
 Dimension Name | X/5
 
-Followed by analysis in plain prose.
+Then write analysis in plain prose.
 
-The five dimensions:
-1. Integration Ownership Clarity
-2. Current Stack Health
-3. Data Model Maturity
-4. Team Capacity for New Integrations
-5. Historical Integration Track Record
+**What You Should Know** — Vendor-specific integration gotchas only.
 
----
-
-**What You Should Know** — Vendor-specific integration gotchas only. Things the vendor will not volunteer. No general advice. No tools not on the shortlist.
-
-For each tool use this exact format:
-
-**[Tool Name] — [short theme]:**
-[2-3 sentences specific to this buyer's stack]
-
-Each gotcha must be distinct. Do not repeat information.
-
----
-
-**Questions to Ask in the Demo** —
+**Questions to Ask Before You Integrate** —
 Ask All Vendors:
 1. [Question]
 What to listen for: [one sentence]
 
-Ask [Vendor] specifically:
-1. [Question]
-What to listen for: [one sentence]
-
-Numbers restart at 1 for each vendor group.
-
----
-
 **Our Compatibility Verdict** —
 We recommend [Tool] for integration.
-[Two to four sentences on why.]
+[Two to four sentences.]
 
-For each tool NOT recommended:
-[Tool] is [genuine strength] but not the best stack fit because [specific reason].
-
----
-
-**Sources** — Real URLs only. Plain label on one line, plain URL on next line.`;
+**Sources** — Real URLs only. Plain label, plain URL, one per line.`;
 
 // ─── PROMPT BUILDERS ──────────────────────────────────────────────────────────
 function buildEvalPrompt(answers) {
@@ -944,67 +877,76 @@ function buildStackPrompt(answers) {
 
 // ─── REPORT PARSING & RENDERING ───────────────────────────────────────────────
 
-// FIX: Force headers onto new lines and ensure clean parsing
+// FIX 1: Clean citation markers WITH preceding whitespace, then fix floating punctuation
 function cleanModelText(text) {
   let cleaned = text
-    // 1. Force a newline before any ## header if it's currently inline
-    .replace(/([^\n])(##\s)/g, "$1\n$2")
-    // 2. Force | Tool | table header onto its own line
-    .replace(/([^\n])(\| Tool \|)/g, "$1\n$2")
-    // 3. Force OVERALL COMPATIBILITY/READINESS onto its own line
-    .replace(/([^\n])(OVERALL (?:READINESS|COMPATIBILITY):)/g, "$1\n$2")
-    // 4. Strip --- separator lines
-    .replace(/---+/g, "")
-    // 5. Strip existing citation markers
+    // Strip citations with any preceding space: " [1]", " [1,2]", " [Source: X]"
     .replace(/\s*\[\d+(?:,\s*\d+)*\]/g, "")
     .replace(/\s*\[Source[^\]]*\]/gi, "");
 
-  // Fix floating punctuation
+  // Fix floating punctuation left after citation removal: " ," -> "," and " ." -> "."
   cleaned = cleaned
     .replace(/\s+([.,;:!?])/g, "$1")
-    .replace(/([.,;:!?])[^\S\n]{2,}/g, "$1 ");
+    .replace(/([.,;:!?])\s{2,}/g, "$1 ");
 
-  return cleaned;
+  // Join continuation lines
+  const lines = cleaned.split("\n");
+  const joined = [];
+  let i = 0;
+  while (i < lines.length) {
+    const line = lines[i];
+    const trimmed = line.trim();
+
+    let j = i + 1;
+    while (j < lines.length && !lines[j].trim()) j++;
+    const next = j < lines.length ? lines[j].trim() : null;
+
+    const currentEndsIncomplete = trimmed && !trimmed.match(/[.!?:]$/) && !trimmed.startsWith("#") && !trimmed.startsWith("|") && !trimmed.match(/^\d+\/5/);
+    const nextIsContinuation = next && /^[a-z,;.]/.test(next) && !next.startsWith("##") && !next.startsWith("###") && !next.startsWith("|");
+
+    if (currentEndsIncomplete && nextIsContinuation) {
+      joined.push(trimmed + " " + next);
+      i = j + 1;
+    } else {
+      joined.push(line);
+      i++;
+    }
+  }
+
+  return joined
+    .filter(line => {
+      const t = line.trim();
+      return !t.match(/^[.,;]\s*$/) && t !== "and" && t !== "or" && t !== "but" && t !== "with";
+    })
+    .join("\n");
 }
 
 const VALID_EVAL_SECTIONS = new Set(["What We Heard", "Your Shortlist, Assessed", "Readiness Score", "What You Should Know", "Questions to Ask in the Demo", "Our Recommendation", "Sources"]);
-const VALID_STACK_SECTIONS = new Set(["What We Heard", "Stack Compatibility Assessment", "Integration Readiness", "What You Should Know", "Questions to Ask in the Demo", "Our Compatibility Verdict", "Sources"]);
+const VALID_STACK_SECTIONS = new Set(["What We Heard", "Stack Compatibility Assessment", "Integration Readiness", "What You Should Know", "Questions to Ask Before You Integrate", "Our Compatibility Verdict", "Sources"]);
 
 function parseReport(text, type = "evaluation") {
   const validSections = type === "stack_fit" ? VALID_STACK_SECTIONS : VALID_EVAL_SECTIONS;
   const cleaned = cleanModelText(text);
   const sections = [];
   let current = null;
-
-  const lines = cleaned.split("\n");
-
-  for (const line of lines) {
-    const trimmedLine = line.trim();
-
-    if (trimmedLine.startsWith("## ")) {
-      const title = trimmedLine.replace("## ", "").trim();
-
-      if (current && current.content.length > 0) {
-        sections.push(current);
-      }
-
+  for (const line of cleaned.split("\n")) {
+    if (line.startsWith("## ")) {
+      const title = line.replace("## ", "").trim();
+      if (current && current.content.some(l => l.trim())) sections.push(current);
       if (validSections.has(title)) {
         current = { title, content: [] };
       } else {
-        console.warn("Discarded section:", JSON.stringify(title));
         current = null;
       }
-    } else if (current && trimmedLine) {
-      current.content.push(trimmedLine);
+    } else if (current) {
+      current.content.push(line);
     }
   }
-
-  if (current && current.content.length > 0) sections.push(current);
-  console.log("SECTIONS PARSED:", sections.map(s => s.title));
+  if (current && current.content.some(l => l.trim())) sections.push(current);
   return sections;
 }
 
-function renderContent(content, sectionTitle, reportType) {
+function renderContent(content, sectionTitle) {
   const lines = content.join("\n").split("\n");
   const elements = [];
   let i = 0;
@@ -1014,7 +956,6 @@ function renderContent(content, sectionTitle, reportType) {
   let cardToolName = null;
   let cardMeta = null;
   let cardIsRecommended = false;
-  let cardIsStack = false;
   let questionCounter = 0;
   let inQuestionGroup = false;
   let questionGroupItems = [];
@@ -1028,150 +969,78 @@ function renderContent(content, sectionTitle, reportType) {
     let currentField = null;
     let currentText = [];
 
-    const EVAL_FIELDS = ["What it does well:", "What it does not do well:", "Implementation timeline:", "Pricing:", "Integration requirements:", "Bottom line:"];
-    const STACK_FIELDS = ["Native integrations:", "Custom work required:", "Data flow:", "Implementation timeline:", "Integration requirements:", "Bottom line:"];
-    const FIELD_LABELS = cardIsStack ? STACK_FIELDS : EVAL_FIELDS;
-
     cardRawLines.forEach(line => {
-      const t = line.trim().replace(/\*\*(.*?)\*\*/g, "$1").replace(/\*\*/g, "");
-      const matched = FIELD_LABELS.find(l => t.toLowerCase().startsWith(l.toLowerCase().replace(":", "").trim()) );
+      const FIELD_LABELS = ["What it does well:", "What it does not do well:", "Implementation timeline:", "Pricing:", "Integration requirements:", "Bottom line:"];
+      const matched = FIELD_LABELS.find(l => line.trim().startsWith(l));
       if (matched) {
         if (currentField) fieldData[currentField] = currentText.join(" ").trim().replace(/^\.\s*/, "");
         currentField = matched.replace(":", "");
-        const inline = t.slice(t.toLowerCase().indexOf(matched.toLowerCase().replace(":", "")) + matched.length).replace(/^:\s*/, "").trim();
-        currentText = inline ? [inline] : [];
-      } else if (currentField && t) {
-        const inlineMatch = FIELD_LABELS.find(l => t.toLowerCase().startsWith(l.toLowerCase().replace(":", "").trim()));
-        if (inlineMatch) {
-          if (currentField) fieldData[currentField] = currentText.join(" ").trim().replace(/^\.\s*/, "");
-          currentField = inlineMatch.replace(":", "");
-          currentText = [t.slice(inlineMatch.length).replace(/^:\s*/, "").trim()];
-        } else {
-          const cl = t.replace(/^\.\s+/, "").replace(/^[-•]\s+/, "");
-          if (cl) currentText.push(cl);
-        }
+        currentText = [line.trim().slice(matched.length).trim()];
+      } else if (currentField && line.trim()) {
+        const cl = line.trim().replace(/^\.\s+/, "").replace(/^[-•]\s+/, "");
+        if (cl) currentText.push(cl);
       }
     });
     if (currentField) fieldData[currentField] = currentText.join(" ").trim().replace(/^\.\s*/, "");
 
-    const headerColor = cardIsStack ? C.stack : C.accent;
-    const labelColor = cardIsStack ? C.stack : C.accent;
-    const badgeText = cardIsStack ? "Stack Fit" : "Recommended";
+    const gridFields = [
+      ["What it does well", "What it does not do well"],
+      ["Implementation timeline", "Pricing"],
+    ];
 
-    let cardBody;
-    if (cardIsStack) {
-      const filteredLines = cardRawLines.map(l => l.trim()).filter(l => l)
-        .filter(l => !l.match(/^\|?\s*(Compatibility|Complexity)[\s:|]/i))
-        .filter(l => l !== "**")
-        .map(l => l.replace(/\*\*(.*?)\*\*/g, "$1"));
-      const bottomLineIdx = filteredLines.findIndex(l => /^bottom line:/i.test(l));
-      const rawBodyLines = bottomLineIdx > -1 ? filteredLines.slice(0, bottomLineIdx) : filteredLines;
-      const bodyLines = [];
-      let jj = 0;
-      while (jj < rawBodyLines.length) {
-        let para = rawBodyLines[jj];
-        while (jj + 1 < rawBodyLines.length) {
-          const next = rawBodyLines[jj + 1];
-          if (!next) { jj++; continue; }
-          if (/[.!?]$/.test(para.trim())) break;
-          jj++;
-          para = para.trimEnd() + " " + next;
-        }
-        bodyLines.push(para);
-        jj++;
-      }
-      const bottomLine = bottomLineIdx > -1
-        ? filteredLines[bottomLineIdx].replace(/^bottom line:\s*/i, "").trim()
-        : "";
+    // FIX 5: Wider column gap (40px) and padding on left column
+    const gridContent = gridFields.map((pair, pi) => (
+      <div key={`grid-${pi}`} style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0 40px", borderBottom: "1px solid " + C.border, padding: "16px 20px" }}>
+        {pair.map((field, fi) => (
+          <div key={field} style={{ paddingRight: fi === 0 ? 8 : 0 }}>
+            <p style={{ fontSize: 11, fontWeight: 700, letterSpacing: 1.5, textTransform: "uppercase", color: C.accent, margin: "0 0 6px", fontFamily: FF }}>{field}</p>
+            <p style={{ fontSize: 15, color: C.textMid, margin: 0, lineHeight: 1.75, fontFamily: FF }}>{fieldData[field] || "—"}</p>
+          </div>
+        ))}
+      </div>
+    ));
 
-      elements.push(
-        <div key={`vendor-${key}`} style={{
-          marginBottom: 28,
-          borderTop: "1px solid " + C.border,
-          borderRight: "1px solid " + C.border,
-          borderBottom: "1px solid " + C.border,
-          borderLeft: "4px solid " + C.stack,
-          borderRadius: 6,
-          overflow: "hidden"
-        }}>
-          <div style={{ padding: "14px 20px 10px", background: C.card, borderBottom: "1px solid " + C.border, display: "flex", alignItems: "baseline", gap: 12 }}>
-            <p style={{ fontSize: 19, fontWeight: 700, color: C.text, margin: 0, fontFamily: FFD }}>{cardToolName}</p>
-            {cardMeta && <p style={{ fontSize: 13, color: C.stack, margin: 0, fontFamily: FF, fontWeight: 600 }}>{cardMeta}</p>}
-          </div>
-          <div style={{ padding: "14px 20px" }}>
-            {bodyLines.map((bl, idx) => (
-              <p key={idx} style={{ fontSize: 16, color: C.textMid, margin: idx < bodyLines.length - 1 ? "0 0 10px" : 0, lineHeight: 1.85, fontFamily: FF }}>{bl}</p>
-            ))}
-          </div>
-          {bottomLine && (
-            <div style={{ padding: "10px 20px 14px", borderTop: "1px solid " + C.border }}>
-              <p style={{ fontSize: 15, color: C.textMid, margin: 0, lineHeight: 1.75, fontFamily: FF, fontStyle: "italic" }}>{bottomLine}</p>
-            </div>
-          )}
-        </div>
-      );
-      cardToolName = null; cardMeta = null; cardRawLines = []; cardIsRecommended = false; cardIsStack = false; inVendorCard = false;
-      return;
-    } else {
-      // Eval layout: original 2x2 grid
-      const gridFields = [
-        ["What it does well", "What it does not do well"],
-        ["Implementation timeline", "Pricing"],
-      ];
-      cardBody = (
-        <div style={{ border: "1px solid " + C.border, borderTop: "none", borderRadius: "0 0 6px 6px" }}>
-          {gridFields.map((pair, pi) => (
-            <div key={`grid-${pi}`} style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0 40px", borderBottom: "1px solid " + C.border, padding: "16px 20px" }}>
-              {pair.map((field, fi) => (
-                <div key={field} style={{ paddingRight: fi === 0 ? 8 : 0 }}>
-                  <p style={{ fontSize: 11, fontWeight: 700, letterSpacing: 1.5, textTransform: "uppercase", color: labelColor, margin: "0 0 6px", fontFamily: FF }}>{field}</p>
-                  <p style={{ fontSize: 15, color: C.textMid, margin: 0, lineHeight: 1.75, fontFamily: FF }}>{fieldData[field] || "—"}</p>
-                </div>
-              ))}
-            </div>
-          ))}
-          {fieldData["Integration requirements"] && (
-            <div style={{ padding: "16px 20px", borderBottom: "1px solid " + C.border }}>
-              <p style={{ fontSize: 11, fontWeight: 700, letterSpacing: 1.5, textTransform: "uppercase", color: labelColor, margin: "0 0 6px", fontFamily: FF }}>Integration requirements</p>
-              <p style={{ fontSize: 15, color: C.textMid, margin: 0, lineHeight: 1.75, fontFamily: FF }}>{fieldData["Integration requirements"]}</p>
-            </div>
-          )}
-          {fieldData["Bottom line"] && (
-            <div style={{ padding: "16px 20px" }}>
-              <p style={{ fontSize: 11, fontWeight: 700, letterSpacing: 1.5, textTransform: "uppercase", color: labelColor, margin: "0 0 6px", fontFamily: FF }}>Bottom line</p>
-              <p style={{ fontSize: 15, color: C.textMid, margin: 0, lineHeight: 1.75, fontFamily: FF, fontStyle: "italic" }}>{fieldData["Bottom line"]}</p>
-            </div>
-          )}
-        </div>
-      );
-    }
+    const integrationContent = fieldData["Integration requirements"] ? (
+      <div style={{ padding: "16px 20px", borderBottom: "1px solid " + C.border }}>
+        <p style={{ fontSize: 11, fontWeight: 700, letterSpacing: 1.5, textTransform: "uppercase", color: C.accent, margin: "0 0 6px", fontFamily: FF }}>Integration requirements</p>
+        <p style={{ fontSize: 15, color: C.textMid, margin: 0, lineHeight: 1.75, fontFamily: FF }}>{fieldData["Integration requirements"]}</p>
+      </div>
+    ) : null;
+
+    const bottomLine = fieldData["Bottom line"] ? (
+      <div style={{ padding: "16px 20px" }}>
+        <p style={{ fontSize: 11, fontWeight: 700, letterSpacing: 1.5, textTransform: "uppercase", color: C.accent, margin: "0 0 6px", fontFamily: FF }}>Bottom line</p>
+        <p style={{ fontSize: 15, color: C.textMid, margin: 0, lineHeight: 1.75, fontFamily: FF, fontStyle: "italic" }}>{fieldData["Bottom line"]}</p>
+      </div>
+    ) : null;
 
     elements.push(
       <div key={`vendor-${key}`} style={{ marginBottom: 28 }}>
-        <div style={{ background: headerColor, borderRadius: "6px 6px 0 0", padding: "14px 20px", display: "flex", alignItems: "flex-start", justifyContent: "space-between" }}>
+        <div style={{ background: C.accent, borderRadius: "6px 6px 0 0", padding: "14px 20px", display: "flex", alignItems: "flex-start", justifyContent: "space-between" }}>
           <div>
             <p style={{ fontSize: 18, fontWeight: 700, color: C.white, fontFamily: FFD, margin: "0 0 4px" }}>{cardToolName}</p>
             {cardMeta && <p style={{ fontSize: 13, color: "rgba(255,255,255,0.75)", margin: 0, fontFamily: FF }}>{cardMeta}</p>}
           </div>
-          {(cardIsRecommended || cardIsStack) && (
-            <span style={{ background: "rgba(255,255,255,0.2)", borderRadius: 4, padding: "3px 10px", fontSize: 11, color: C.white, letterSpacing: 1.5, textTransform: "uppercase", fontWeight: 700, flexShrink: 0, marginLeft: 12 }}>
-              {badgeText}
-            </span>
+          {cardIsRecommended && (
+            <span style={{ background: "rgba(255,255,255,0.2)", borderRadius: 4, padding: "3px 10px", fontSize: 11, color: C.white, letterSpacing: 1.5, textTransform: "uppercase", fontWeight: 700, flexShrink: 0, marginLeft: 12 }}>Recommended</span>
           )}
         </div>
-        {cardBody}
+        <div style={{ border: "1px solid " + C.border, borderTop: "none", borderRadius: "0 0 6px 6px" }}>
+          {gridContent}
+          {integrationContent}
+          {bottomLine}
+        </div>
       </div>
     );
-    cardToolName = null; cardMeta = null; cardRawLines = []; cardIsRecommended = false; cardIsStack = false; inVendorCard = false;
+    cardToolName = null; cardMeta = null; cardRawLines = []; cardIsRecommended = false; inVendorCard = false;
   };
 
   const flushQuestionGroup = (key) => {
     if (!questionGroupHeader) return;
     questionCounter = 0;
-    const qHeaderColor = reportType === "stack_fit" ? C.stack : C.accent;
     elements.push(
       <div key={`qgroup-${key}`} style={{ marginBottom: 24 }}>
-        <div style={{ background: qHeaderColor, borderRadius: "6px 6px 0 0", padding: "10px 18px" }}>
+        <div style={{ background: C.accent, borderRadius: "6px 6px 0 0", padding: "10px 18px" }}>
           <span style={{ fontSize: 12, fontWeight: 700, letterSpacing: 1.5, textTransform: "uppercase", color: C.white }}>{questionGroupHeader}</span>
         </div>
         <div style={{ border: "0.5px solid " + C.border, borderTop: "none", borderRadius: "0 0 6px 6px", overflow: "hidden" }}>
@@ -1186,53 +1055,32 @@ function renderContent(content, sectionTitle, reportType) {
 
   while (i < lines.length) {
     const line = lines[i];
-    if (!line || !line.trim() || line.trim() === "**") { i++; continue; }
+    if (!line.trim()) { i++; continue; }
     const clean = line.replace(/\*\*(.*?)\*\*/g, "$1");
 
     // ── TABLE ────────────────────────────────────────────────────────
     if (line.trim().startsWith("|")) {
-      if (inVendorCard) { cardRawLines.push(line); i++; continue; }
+      if (inVendorCard) flushVendorCard(i);
       if (inQuestionGroup) flushQuestionGroup(i);
       const rows = [];
       let j = i;
       while (j < lines.length && lines[j].trim().startsWith("|")) {
-        const trimmed = lines[j].trim();
-        if (!trimmed.match(/^\s*\|[\s-:]+\|/) && !trimmed.match(/^\|+$/)) rows.push(lines[j]);
+        if (!lines[j].match(/^\s*\|[\s-:]+\|/)) rows.push(lines[j]);
         j++;
       }
-      if (rows.length === 0) { i = j; continue; }
-      if (rows.length === 1) { i = j; continue; }
       if (rows.length >= 2) {
-        // Split off legend rows (2-col rows where first cell is "Score") from main table rows
-        const mainRows = [];
-        const legendRows = [];
-        let inLegend = false;
-        for (const r of rows) {
-          const cells = r.split("|").map(c => c.trim()).filter(Boolean);
-          if (!inLegend && cells.length === 2 && cells[0].toLowerCase() === "score") {
-            inLegend = true;
-          }
-          if (inLegend) legendRows.push(r);
-          else mainRows.push(r);
-        }
-        const tableRows = mainRows.length >= 2 ? mainRows : rows;
-        const legendData = legendRows.length >= 2
-          ? legendRows.slice(1).map(r => r.split("|").map(c => c.trim()).filter(Boolean))
-          : null;
-
-        const headers = tableRows[0].split("|").map(h => h.trim()).filter(Boolean);
-        const data = tableRows.slice(1).map(r => r.split("|").map(c => c.trim()).filter(Boolean));
+        const headers = rows[0].split("|").map(h => h.trim()).filter(Boolean);
+        const data = rows.slice(1).map(r => r.split("|").map(c => c.trim()).filter(Boolean));
 
         const isLegendTable = headers.length === 2 && headers[0].toLowerCase().includes("score") && headers[1].toLowerCase().includes("mean");
         if (isLegendTable) {
-          const legendItems = data;
           elements.push(
             <div key={i} style={{ display: "flex", gap: 16, flexWrap: "wrap", margin: "8px 0 20px", padding: "10px 14px", background: C.card, borderRadius: 6, border: "1px solid " + C.border }}>
-              {legendItems.map((row, j) => (
+              {data.map((row, j) => (
                 <div key={j} style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                  <span style={{ fontSize: 13, fontWeight: 700, color: sectionTitle === "Integration Readiness" ? C.stack : C.accent, fontFamily: FF }}>{row[0]}</span>
+                  <span style={{ fontSize: 13, fontWeight: 700, color: C.accent, fontFamily: FF }}>{row[0]}</span>
                   <span style={{ fontSize: 13, color: C.textMid, fontFamily: FF }}>— {row[1]}</span>
-                  {j < legendItems.length - 1 && <span style={{ color: C.border, marginLeft: 8 }}>·</span>}
+                  {j < data.length - 1 && <span style={{ color: C.border, marginLeft: 8 }}>·</span>}
                 </div>
               ))}
             </div>
@@ -1240,14 +1088,11 @@ function renderContent(content, sectionTitle, reportType) {
           i = j; continue;
         }
 
-        const isStackSection = reportType === "stack_fit" && ["What We Heard", "Stack Compatibility Assessment","Integration Readiness","What You Should Know","Questions to Ask in the Demo","Our Compatibility Verdict","Sources"].includes(sectionTitle);
-        const tableHeaderColor = isStackSection ? C.stack : C.accent;
-
         elements.push(
           <div key={i} style={{ overflowX: "auto", margin: "12px 0" }}>
             <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 14, fontFamily: FF }}>
               <thead>
-                <tr style={{ background: tableHeaderColor }}>
+                <tr style={{ background: C.accent }}>
                   {headers.map((h, j) => <th key={j} style={{ padding: "10px 14px", textAlign: "left", color: C.white, fontWeight: 700, fontSize: 13 }}>{h}</th>)}
                 </tr>
               </thead>
@@ -1261,64 +1106,20 @@ function renderContent(content, sectionTitle, reportType) {
             </table>
           </div>
         );
-
-        // Render legend as footnote if it was merged into same table block
-        if (legendData) {
-          elements.push(
-            <div key={i + "-legend"} style={{ display: "flex", gap: 16, flexWrap: "wrap", margin: "8px 0 20px", padding: "10px 14px", background: C.card, borderRadius: 6, border: "1px solid " + C.border }}>
-              {legendData.map((row, j) => (
-                <div key={j} style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                  <span style={{ fontSize: 13, fontWeight: 700, color: sectionTitle === "Integration Readiness" ? C.stack : C.accent, fontFamily: FF }}>{row[0]}</span>
-                  <span style={{ fontSize: 13, color: C.textMid, fontFamily: FF }}>— {row[1]}</span>
-                  {j < legendData.length - 1 && <span style={{ color: C.border, marginLeft: 8 }}>·</span>}
-                </div>
-              ))}
-            </div>
-          );
-        }
-
         i = j; continue;
       }
     }
 
     // ── VENDOR HEADER: "ToolName | X/5 | ..." ───────────────────────
-    // Only fire for Shortlist/Compatibility Assessment sections, not Integration Readiness dimensions
-    const isVendorCardSection = sectionTitle === "Your Shortlist, Assessed" || sectionTitle === "Stack Compatibility Assessment";
-    let rawHeaderLine = line.trim();
-    if (rawHeaderLine.startsWith("**")) rawHeaderLine = rawHeaderLine.slice(2);
-    let trailingProse = "";
-    const closingIdx = rawHeaderLine.indexOf("**");
-    if (closingIdx !== -1) {
-      trailingProse = rawHeaderLine.slice(closingIdx + 2).trim();
-      rawHeaderLine = rawHeaderLine.slice(0, closingIdx);
-    }
-    if (rawHeaderLine.match(/^#+\s/)) rawHeaderLine = rawHeaderLine.replace(/^#+\s+/, "");
-    const firstPipe = rawHeaderLine.indexOf("|");
-    const toolNamePart = firstPipe > 0 ? rawHeaderLine.slice(0, firstPipe).trim() : "";
-    const isCardHeader = isVendorCardSection && !isQuestionsSection && !rawHeaderLine.startsWith("|")
-      && rawHeaderLine.match(/\|\s*\d+\/5/i)
-      && toolNamePart.length > 0 && toolNamePart.length < 40 && !toolNamePart.includes(".");
-    const isCardHeaderNoScore = isVendorCardSection && !isQuestionsSection && !rawHeaderLine.startsWith("|")
-      && !rawHeaderLine.match(/\|\s*\d+\/5/i) && line.trim().match(/^#{1,3}\s+\S/)
-      && rawHeaderLine.length > 0 && rawHeaderLine.length < 40 && !rawHeaderLine.includes(".")
-      && !rawHeaderLine.includes("|");
-    if (isCardHeader || isCardHeaderNoScore) {
+    const rawHeaderLine = line.trim().startsWith("### ") ? line.trim().replace("### ", "") : line.trim();
+    if (!isQuestionsSection && !rawHeaderLine.startsWith("|") && rawHeaderLine.match(/\|\s*\d+\/5/i)) {
       if (inVendorCard) flushVendorCard(i);
       const parts = rawHeaderLine.split("|").map(p => p.trim()).filter(p => p);
-      cardToolName = parts[0].replace(/\*\*/g, "").trim();
-      cardMeta = parts.slice(1).map(p =>
-        p.replace(/Budget:\s*/i, "")
-         .replace(/Readiness:\s*/i, "")
-         .replace(/Compatibility:\s*/i, "")
-         .replace(/Complexity:\s*/i, "")
-         .replace(/\*\*/g, "")
-         .trim()
-      ).filter(Boolean).join(" · ");
-      cardIsStack = sectionTitle === "Stack Compatibility Assessment";
+      cardToolName = parts[0];
+      cardMeta = parts.slice(1).map(p => p.replace(/Budget:\s*/i, "").replace(/Readiness:\s*/i, "")).join(" · ");
       cardIsRecommended = vendorCardCount === 0;
       vendorCardCount++;
       inVendorCard = true;
-      if (trailingProse) cardRawLines.push(trailingProse);
       i++; continue;
     }
 
@@ -1347,14 +1148,14 @@ function renderContent(content, sectionTitle, reportType) {
         if (j < lines.length) {
           const nextLine = lines[j].trim().replace(/^\*+/, "").replace(/\*+$/, "");
           if (nextLine.startsWith("What to listen for:")) {
-            guidance = nextLine.replace("What to listen for:", "").trim().replace(/\*\*/g, "");
+            guidance = nextLine.replace("What to listen for:", "").trim();
             j++;
           }
         }
         questionGroupItems.push(
           <div key={`q-${i}`} style={{ padding: "14px 20px", borderBottom: "0.5px solid " + C.border }}>
             <div style={{ display: "flex", gap: 14, alignItems: "flex-start" }}>
-              <span style={{ fontSize: 15, fontWeight: 700, color: reportType === "stack_fit" ? C.stack : C.accent, flexShrink: 0, minWidth: 22, lineHeight: 1.75 }}>{questionCounter}.</span>
+              <span style={{ fontSize: 15, fontWeight: 700, color: C.accent, flexShrink: 0, minWidth: 22, lineHeight: 1.75 }}>{questionCounter}.</span>
               <div style={{ flex: 1 }}>
                 <p style={{ fontSize: 15, color: C.text, margin: "0 0 6px", lineHeight: 1.75, fontFamily: FF }}>{questionText}</p>
                 {guidance && <p style={{ fontSize: 15, color: C.textLight, margin: 0, lineHeight: 1.6, fontStyle: "italic", fontFamily: FF }}>{guidance}</p>}
@@ -1405,8 +1206,7 @@ function renderContent(content, sectionTitle, reportType) {
       const match = line.match(/(\d(?:\.\d)?)\s*\/\s*5/);
       const score = match ? parseFloat(match[1]) : null;
       if (score !== null) {
-        const isCompat = /COMPATIBILITY/i.test(line);
-        const color = score <= 2 ? C.red : score <= 3 ? C.amber : (isCompat ? C.stack : C.accent);
+        const color = score <= 2 ? C.red : score <= 3 ? C.amber : C.accent;
         const label = score <= 2 ? "Needs attention before purchasing" : score <= 3 ? "Proceed with preparation" : "Well positioned";
         elements.push(
           <div key={i} style={{ background: color, borderRadius: 8, padding: "20px 24px", margin: "16px 0 24px", display: "flex", alignItems: "center", gap: 24 }}>
@@ -1424,21 +1224,19 @@ function renderContent(content, sectionTitle, reportType) {
       }
     }
 
-    // ── FIX 3: READINESS / INTEGRATION READINESS DIMENSION HEADERS ───
-    // Handles: "Data Readiness | 4/5", "Data Readiness: 4/5", "**Ops Capacity | 5/5**"
-    // Fires for Readiness Score AND Integration Readiness sections
-    const isDimensionSection = sectionTitle === "Readiness Score" || sectionTitle === "Integration Readiness";
-    if (isDimensionSection && !isQuestionsSection && !inVendorCard) {
+    // ── FIX 3: READINESS DIMENSION HEADERS ───────────────────────────
+    // Handles: "Data Readiness | 4/5", "Data Readiness: 4/5", "**Ops Capacity | 5/5**", "**Ops Capacity: 5/5**"
+    if (!isQuestionsSection && !inVendorCard) {
       const stripped = line.trim().replace(/^\*+/, "").replace(/\*+$/, "");
+      // Match "Word(s) | X/5" or "Word(s): X/5" — but not table rows starting with |
       const dimMatch = stripped.match(/^([A-Za-z][A-Za-z\s]{2,}?)\s*[|:]\s*(\d+\/5)$/);
       if (dimMatch && !stripped.startsWith("|")) {
         const dimName = dimMatch[1].trim();
         const dimScore = dimMatch[2].trim();
-        const dimColor = sectionTitle === "Integration Readiness" ? C.stack : C.accent;
         elements.push(
           <div key={i} style={{ borderBottom: "1px solid " + C.border, paddingBottom: 6, marginTop: 28, marginBottom: 8, display: "flex", alignItems: "baseline", gap: 12 }}>
             <p style={{ fontSize: 16, fontWeight: 700, color: C.text, margin: 0, fontFamily: FFD }}>{dimName}</p>
-            <p style={{ fontSize: 14, fontWeight: 600, color: dimColor, margin: 0, fontFamily: FF }}>{dimScore}</p>
+            <p style={{ fontSize: 14, fontWeight: 600, color: C.accent, margin: 0, fontFamily: FF }}>{dimScore}</p>
           </div>
         );
         i++; continue;
@@ -1456,8 +1254,6 @@ function renderContent(content, sectionTitle, reportType) {
     if (line.match(/^\*\*(.+:)\*\*$/) || (line.match(/^\*\*(.+)\*\*$/) && !line.includes("|"))) {
       const isSubItem = line.match(/^\*\*(.+:)\*\*$/);
       const label = clean.replace(/:$/, "");
-      const isStackWYSK = ["Stack Compatibility Assessment","Integration Readiness","What You Should Know","Questions to Ask in the Demo","Our Compatibility Verdict"].includes(sectionTitle);
-      const labelCol = isStackWYSK ? C.stack : C.accent;
       if (isSubItem) {
         let j = i + 1;
         const bodyLines = [];
@@ -1467,9 +1263,9 @@ function renderContent(content, sectionTitle, reportType) {
         }
         const body = bodyLines.filter(Boolean).join(" ");
         elements.push(
-          <div key={i} style={{ border: "1px solid " + C.border, borderRadius: 6, padding: "16px 20px", marginBottom: 16 }}>
-            <p style={{ fontSize: 15, fontWeight: 700, color: labelCol, margin: "0 0 10px", fontFamily: FF }}>{label}</p>
-            {body && <p style={{ fontSize: 15, color: C.textMid, margin: 0, lineHeight: 1.8, fontFamily: FF }}>{body}</p>}
+          <div key={i} style={{ border: "1px solid " + C.border, borderRadius: 6, padding: "14px 18px", marginBottom: 14 }}>
+            <p style={{ fontSize: 13, fontWeight: 700, color: C.accent, margin: "0 0 8px", fontFamily: FF, letterSpacing: 0.5 }}>{label}</p>
+            {body && <p style={{ fontSize: 15, color: C.textMid, margin: 0, lineHeight: 1.75, fontFamily: FF }}>{body}</p>}
           </div>
         );
         i = j;
@@ -1478,13 +1274,6 @@ function renderContent(content, sectionTitle, reportType) {
         i++;
       }
       continue;
-    }
-
-    // Strip stray leading ** that didn't match a proper bold block (leaked asterisks)
-    if (line.trim().startsWith("**") && !line.trim().endsWith("**")) {
-      const stripped = line.replace(/^\*\*/, "").trim();
-      elements.push(<p key={i} style={{ fontSize: 16, fontWeight: 500, lineHeight: 1.9, color: C.textMid, marginBottom: 14, fontFamily: FF }}>{stripped.replace(/\*\*/g, "")}</p>);
-      i++; continue;
     }
 
     // ── BULLETS ──────────────────────────────────────────────────────
@@ -1512,48 +1301,7 @@ function renderContent(content, sectionTitle, reportType) {
     }
 
     // ── DEFAULT PARAGRAPH ────────────────────────────────────────────
-    // For Sources: handle "Label https://url" on one line, or plain label before a URL line
-    if (sectionTitle === "Sources") {
-      if (/not available from search results/i.test(line.trim())) { i++; continue; }
-      const inlineUrlMatch = line.trim().match(/^(.+?)\s+(https?:\/\/\S+)$/);
-      if (inlineUrlMatch) {
-        elements.push(
-          <div key={i} style={{ marginBottom: 14 }}>
-            <p style={{ fontSize: 14, fontWeight: 600, color: C.textMid, margin: "0 0 3px", fontFamily: FF }}>{inlineUrlMatch[1]}</p>
-            <a href={inlineUrlMatch[2]} target="_blank" rel="noopener noreferrer" style={{ color: C.stack, fontSize: 14, fontFamily: FF, wordBreak: "break-all", textDecoration: "underline" }}>{inlineUrlMatch[2]}</a>
-          </div>
-        );
-        i++; continue;
-      }
-      // Plain label with no URL — check if next line is a URL
-      const nextLine = lines[i + 1] ? lines[i + 1].trim() : "";
-      if (nextLine.match(/^https?:\/\//)) {
-        elements.push(
-          <div key={i} style={{ marginBottom: 14 }}>
-            <p style={{ fontSize: 14, fontWeight: 600, color: C.textMid, margin: "0 0 3px", fontFamily: FF }}>{clean}</p>
-            <a href={nextLine} target="_blank" rel="noopener noreferrer" style={{ color: C.stack, fontSize: 14, fontFamily: FF, wordBreak: "break-all", textDecoration: "underline" }}>{nextLine}</a>
-          </div>
-        );
-        i += 2; continue;
-      }
-      elements.push(<p key={i} style={{ fontSize: 14, fontWeight: 600, color: C.textMid, margin: "0 0 16px", fontFamily: FF }}>{clean}</p>);
-      i++; continue;
-    }
-
-    // Join continuation lines so sentences broken across lines render as one paragraph
-    let paraText = clean;
-    while (i + 1 < lines.length) {
-      const nextRaw = lines[i + 1];
-      if (!nextRaw || !nextRaw.trim()) break;
-      const nextTrim = nextRaw.trim();
-      if (nextTrim.startsWith("##") || nextTrim.startsWith("###") || nextTrim.startsWith("**")
-        || nextTrim.startsWith("- ") || nextTrim.startsWith("• ") || /^\d+\./.test(nextTrim)
-        || nextTrim.startsWith("|") || /^OVERALL /i.test(nextTrim)) break;
-      if (/[.!?]$/.test(paraText.trim())) break;
-      paraText = paraText.trimEnd() + " " + nextTrim.replace(/\*\*(.*?)\*\*/g, "$1");
-      i++;
-    }
-    elements.push(<p key={i} style={{ fontSize: 16, fontWeight: 500, lineHeight: 1.9, color: C.textMid, marginBottom: 14, fontFamily: FF }}>{paraText}</p>);
+    elements.push(<p key={i} style={{ fontSize: 16, fontWeight: 500, lineHeight: 1.9, color: C.textMid, marginBottom: 14, fontFamily: FF }}>{clean}</p>);
     i++;
   }
 
@@ -1570,13 +1318,13 @@ const EVAL_ICONS = {
 };
 const STACK_ICONS = {
   "What We Heard": "◎", "Stack Compatibility Assessment": "◈", "Integration Readiness": "◐",
-  "What You Should Know": "◆", "Questions to Ask in the Demo": "◇", "Our Compatibility Verdict": "●", "Sources": "○"
+  "What You Should Know": "◆", "Questions to Ask Before You Integrate": "◇", "Our Compatibility Verdict": "●", "Sources": "○"
 };
 
 // ─── SHARED UI COMPONENTS ─────────────────────────────────────────────────────
-const Logo = ({ small, color }) => (
+const Logo = ({ small }) => (
   <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: small ? 4 : 40 }}>
-    <div style={{ width: small ? 34 : 36, height: small ? 34 : 36, borderRadius: "50%", background: color || C.accent, color: C.white, display: "flex", alignItems: "center", justifyContent: "center", fontSize: small ? 15 : 16, fontWeight: 700, fontFamily: FFD, lineHeight: 1 }}>D</div>
+    <div style={{ width: small ? 34 : 36, height: small ? 34 : 36, borderRadius: "50%", background: C.accent, color: C.white, display: "flex", alignItems: "center", justifyContent: "center", fontSize: small ? 15 : 16, fontWeight: 700, fontFamily: FFD }}>D</div>
     {!small && (
       <div>
         <p style={{ fontSize: 18, fontWeight: 700, color: C.text, fontFamily: FFD }}>Delphi</p>
@@ -1600,9 +1348,9 @@ const Btn = ({ children, onClick, disabled, variant = "primary", full }) => (
 );
 
 // ─── MAIN COMPONENT ───────────────────────────────────────────────────────────
-export default function Delphi({ paymentStatus, startCheckout, onHome, initialReportType }) {
-  const [reportType, setReportType] = useState(initialReportType || null);
-  const [step, setStep] = useState(initialReportType ? "category_select" : "select");
+export default function Delphi({ paymentStatus, startCheckout, onHome }) {
+  const [reportType, setReportType] = useState(null);
+  const [step, setStep] = useState("select");
   const [selectedCategories, setSelectedCategories] = useState([]);
   const [selectedTools, setSelectedTools] = useState([]);
   const [otherToolInputs, setOtherToolInputs] = useState({});
@@ -1708,22 +1456,8 @@ export default function Delphi({ paymentStatus, startCheckout, onHome, initialRe
       const data = await res.json();
       if (!data.text) throw new Error("empty");
       const sections = parseReport(data.text, reportType);
-      console.log("SECTIONS PARSED:", sections.map(s => s.title));
-      const parsedSections = sections.length ? sections : [{ title: "What We Heard", content: ["Unable to parse report. Please try again."] }];
-      setReportSections(parsedSections);
+      setReportSections(sections.length ? sections : [{ title: "What We Heard", content: ["Unable to parse report. Please try again."] }]);
       setStep("report");
-      // Send email copy if we have a customer email
-      if (paymentStatus?.email) {
-        fetch("/api/send-report", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            email: paymentStatus.email,
-            sections: parsedSections,
-            reportType,
-          }),
-        }).catch(err => console.error("Email send failed:", err));
-      }
     } catch {
       setReportSections([{ title: "What We Heard", content: ["Unable to generate your report. Please try again."] }]);
       setStep("report");
@@ -1891,7 +1625,7 @@ export default function Delphi({ paymentStatus, startCheckout, onHome, initialRe
       <div style={{ minHeight: "100vh", background: C.bg, display: "flex", fontFamily: FF }}>
         <style>{GS}</style>
         <div style={{ width: 240, minWidth: 240, background: C.sidebar, borderRight: "1px solid " + C.border, padding: "32px 20px", display: "flex", flexDirection: "column", position: "sticky", top: 0, height: "100vh", overflowY: "auto" }}>
-          <Logo small color={reportType === "stack_fit" ? C.stack : C.accent} />
+          <Logo small />
           <p style={{ fontSize: 11, fontWeight: 700, color: C.textLight, letterSpacing: 1.5, textTransform: "uppercase", marginBottom: 24, marginLeft: 44 }}>
             {reportType === "stack_fit" ? "Stack Fit Report" : "Evaluation Report"}
           </p>
@@ -1899,11 +1633,10 @@ export default function Delphi({ paymentStatus, startCheckout, onHome, initialRe
           <nav style={{ display: "flex", flexDirection: "column", gap: 4, flex: 1 }}>
             {reportSections.map((sec, i) => {
               const isActive = activeSection === i;
-              const navColor = reportType === "stack_fit" ? C.stack : C.accent;
               return (
                 <button key={i} onClick={() => setActiveSection(i)}
-                  style={{ background: isActive ? navColor : "transparent", border: "none", borderRadius: 4, padding: "10px 12px", textAlign: "left", cursor: "pointer", display: "flex", alignItems: "flex-start", gap: 10 }}>
-                  <span style={{ fontSize: 11, color: isActive ? C.white : navColor, marginTop: 2, flexShrink: 0 }}>{sectionIcons[sec.title] || "○"}</span>
+                  style={{ background: isActive ? C.accent : "transparent", border: "none", borderRadius: 4, padding: "10px 12px", textAlign: "left", cursor: "pointer", display: "flex", alignItems: "flex-start", gap: 10 }}>
+                  <span style={{ fontSize: 11, color: isActive ? C.white : C.accent, marginTop: 2, flexShrink: 0 }}>{sectionIcons[sec.title] || "○"}</span>
                   <span style={{ fontSize: 13, fontWeight: 600, lineHeight: 1.4, color: isActive ? C.white : C.textMid }}>{sec.title}</span>
                 </button>
               );
@@ -1918,14 +1651,14 @@ export default function Delphi({ paymentStatus, startCheckout, onHome, initialRe
             <h2 style={{ fontSize: 26, fontWeight: 700, color: C.text, fontFamily: FFD }}>{section?.title}</h2>
             <span style={{ fontSize: 13, fontWeight: 500, color: C.textLight, marginTop: 6 }}>{activeSection + 1} / {reportSections.length}</span>
           </div>
-          <div style={{ marginBottom: 32 }}>{section && renderContent(section.content, section.title, reportType)}</div>
+          <div style={{ marginBottom: 32 }}>{section && renderContent(section.content, section.title)}</div>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", paddingTop: 20, borderTop: "1px solid " + C.border }}>
             <button onClick={() => activeSection > 0 && setActiveSection(activeSection - 1)}
               style={{ background: "none", border: "none", color: C.textMid, fontSize: 15, fontWeight: 500, opacity: activeSection === 0 ? 0.3 : 1, cursor: activeSection === 0 ? "default" : "pointer", fontFamily: FF }}>← Previous</button>
             <div style={{ display: "flex", gap: 7 }}>
               {reportSections.map((_, i) => (
                 <div key={i} onClick={() => setActiveSection(i)}
-                  style={{ width: 7, height: 7, borderRadius: "50%", background: i === activeSection ? (reportType === "stack_fit" ? C.stack : C.accent) : C.border, cursor: "pointer", transition: "background 0.2s" }} />
+                  style={{ width: 7, height: 7, borderRadius: "50%", background: i === activeSection ? C.accent : C.border, cursor: "pointer", transition: "background 0.2s" }} />
               ))}
             </div>
             {activeSection < reportSections.length - 1 ? (
@@ -1952,15 +1685,7 @@ export default function Delphi({ paymentStatus, startCheckout, onHome, initialRe
             <div style={{ width: 30, height: 30, borderRadius: "50%", background: C.accent, color: C.white, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13, fontWeight: 700, fontFamily: FFD }}>D</div>
             <span style={{ fontSize: 13, fontWeight: 700, letterSpacing: 1.5, textTransform: "uppercase", color: C.accent }}>{reportType === "stack_fit" ? "The Stack Fit" : "The Evaluation"}</span>
           </div>
-          <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
-            {currentQ > 0 && (
-              <button onClick={() => setCurrentQ(currentQ - 1)}
-                style={{ background: "none", border: "none", color: C.textLight, fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: FF, letterSpacing: 0.5 }}>
-                ← Back
-              </button>
-            )}
-            <span style={{ fontSize: 13, fontWeight: 500, color: C.textLight }}>{currentQ + 1} / {questionQueue.length}</span>
-          </div>
+          <span style={{ fontSize: 13, fontWeight: 500, color: C.textLight }}>{currentQ + 1} / {questionQueue.length}</span>
         </div>
 
         <div style={{ width: "100%", height: 3, background: C.border, borderRadius: 2, marginBottom: 36 }}>
