@@ -1530,6 +1530,7 @@ function buildEmailHtml(sections, reportType) {
 }
 
 
+const EVAL_ICONS = {
   "What We Heard": "◎", "Your Shortlist, Assessed": "◈", "Readiness Score": "◐",
   "What You Should Know": "◆", "Questions to Ask in the Demo": "◇", "Our Recommendation": "●", "Sources": "○"
 };
