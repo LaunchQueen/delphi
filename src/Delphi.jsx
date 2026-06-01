@@ -1339,7 +1339,197 @@ function renderContent(content, sectionTitle, reportType) {
   return elements;
 }
 
-const EVAL_ICONS = {
+// ─── EMAIL HTML BUILDER ───────────────────────────────────────────────────────
+function buildEmailHtml(sections, reportType) {
+  const accent = reportType === "stack_fit" ? "#4A6FA5" : "#3D6B21";
+  const reportLabel = reportType === "stack_fit" ? "Stack Fit Report" : "Evaluation Report";
+  const clean = s => (s || "").replace(/\*\*/g, "").replace(/---+/g, "").trim();
+  const para = t => `<p style="font-size:15px;color:#3E3830;line-height:1.8;margin:0 0 12px;font-family:Georgia,serif;">${clean(t)}</p>`;
+
+  const sectionHtml = sections.map(section => {
+    const { title, parsed } = section;
+    if (!parsed) return "";
+    let content = "";
+
+    if (title === "What We Heard") {
+      const summary = (parsed.summary || "").split("\n").filter(l => !l.trim().startsWith("|")).join("\n").split("\n\n").filter(p => p.trim()).map(p => para(p)).join("");
+      const tableRows = (parsed.table || []).map((row, j) =>
+        `<tr style="background:${j % 2 === 0 ? "#fff" : "#F2EDE6"};">
+          <td style="padding:9px 12px;font-weight:600;color:#3E3830;font-size:13px;">${clean(row.tool)}</td>
+          <td style="padding:9px 12px;font-weight:700;color:${accent};font-size:13px;">${row.score}/5</td>
+          <td style="padding:9px 12px;color:#3E3830;font-size:13px;">${clean(row.budget_fit || row.stack_compatibility || "")}</td>
+          <td style="padding:9px 12px;color:#3E3830;font-size:13px;">${clean(row.readiness_match || row.integration_complexity || "")}</td>
+          <td style="padding:9px 12px;color:#3E3830;font-size:13px;font-style:italic;">${clean(row.our_take)}</td>
+        </tr>`).join("");
+      const tableHeaders = reportType === "stack_fit"
+        ? ["Tool","Score","Stack Compatibility","Integration Complexity","Our Take"]
+        : ["Tool","Score","Budget Fit","Readiness Match","Our Take"];
+      const table = tableRows ? `<table style="width:100%;border-collapse:collapse;margin:16px 0;"><tr style="background:${accent};">${tableHeaders.map(h => `<th style="padding:9px 12px;text-align:left;color:#fff;font-size:12px;">${h}</th>`).join("")}</tr>${tableRows}</table>` : "";
+      content = summary + table;
+    }
+
+    else if (title === "Your Shortlist, Assessed") {
+      content = (parsed || []).map(tool => `
+        <div style="margin-bottom:20px;border:1px solid #E0D8CE;border-radius:6px;overflow:hidden;">
+          <div style="background:${accent};padding:12px 18px;">
+            <p style="font-size:16px;font-weight:700;color:#fff;margin:0 0 3px;font-family:Georgia,serif;">${clean(tool.name)}</p>
+            <p style="font-size:12px;color:rgba(255,255,255,0.8);margin:0;">${tool.score}/5 · Budget: ${clean(tool.budget)} · Readiness: ${clean(tool.readiness)}</p>
+          </div>
+          <table style="width:100%;border-collapse:collapse;">
+            <tr>
+              <td style="padding:12px 16px;width:50%;vertical-align:top;border-bottom:1px solid #E0D8CE;">
+                <p style="font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:${accent};margin:0 0 5px;">Does Well</p>
+                <p style="font-size:13px;color:#3E3830;margin:0;line-height:1.6;">${clean(tool.does_well)}</p>
+              </td>
+              <td style="padding:12px 16px;width:50%;vertical-align:top;border-bottom:1px solid #E0D8CE;border-left:1px solid #E0D8CE;">
+                <p style="font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:${accent};margin:0 0 5px;">Does Not Do Well</p>
+                <p style="font-size:13px;color:#3E3830;margin:0;line-height:1.6;">${clean(tool.does_not_do_well)}</p>
+              </td>
+            </tr>
+            <tr>
+              <td style="padding:12px 16px;vertical-align:top;border-bottom:1px solid #E0D8CE;">
+                <p style="font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:${accent};margin:0 0 5px;">Implementation Timeline</p>
+                <p style="font-size:13px;color:#3E3830;margin:0;">${clean(tool.implementation_timeline)}</p>
+              </td>
+              <td style="padding:12px 16px;vertical-align:top;border-bottom:1px solid #E0D8CE;border-left:1px solid #E0D8CE;">
+                <p style="font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:${accent};margin:0 0 5px;">Pricing</p>
+                <p style="font-size:13px;color:#3E3830;margin:0;">${clean(tool.pricing)}</p>
+              </td>
+            </tr>
+            ${tool.integration_requirements ? `<tr><td colspan="2" style="padding:12px 16px;border-bottom:1px solid #E0D8CE;"><p style="font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:${accent};margin:0 0 5px;">Integration Requirements</p><p style="font-size:13px;color:#3E3830;margin:0;line-height:1.6;">${clean(tool.integration_requirements)}</p></td></tr>` : ""}
+            ${tool.bottom_line ? `<tr><td colspan="2" style="padding:12px 16px;"><p style="font-size:13px;color:#3E3830;margin:0;font-style:italic;">${clean(tool.bottom_line)}</p></td></tr>` : ""}
+          </table>
+        </div>`).join("");
+    }
+
+    else if (title === "Stack Compatibility Assessment") {
+      content = (parsed || []).map(tool => `
+        <div style="margin-bottom:18px;border-left:4px solid ${accent};border-top:1px solid #E0D8CE;border-right:1px solid #E0D8CE;border-bottom:1px solid #E0D8CE;border-radius:6px;overflow:hidden;">
+          <div style="padding:12px 18px;background:#F2EDE6;border-bottom:1px solid #E0D8CE;">
+            <span style="font-size:17px;font-weight:700;color:#1C1C1A;font-family:Georgia,serif;">${clean(tool.name)}</span>
+            <span style="font-size:12px;color:${accent};font-weight:600;margin-left:10px;">${tool.score}/5 · ${clean(tool.compatibility)} · ${clean(tool.complexity)}</span>
+          </div>
+          <div style="padding:12px 18px;">
+            <p style="font-size:14px;color:#3E3830;margin:0 0 10px;line-height:1.8;">${clean(tool.body)}</p>
+            ${tool.bottom_line ? `<p style="font-size:13px;color:#3E3830;margin:0;font-style:italic;">${clean(tool.bottom_line)}</p>` : ""}
+          </div>
+        </div>`).join("");
+    }
+
+    else if (title === "Readiness Score" || title === "Integration Readiness") {
+      const score = parseFloat(String(parsed.overall_score).replace(/\/.*/, "")) || 0;
+      const scoreColor = score <= 2 ? "#C0392B" : score <= 3 ? "#D4830A" : accent;
+      const scoreLabel = score <= 2 ? "Needs attention before purchasing" : score <= 3 ? "Proceed with preparation" : "Well positioned";
+      const dimRows = (parsed.dimensions || []).map((dim, j) => {
+        const ds = parseFloat(String(dim.score).replace(/\/.*/, "")) || 0;
+        const status = ds <= 2 ? "Address before go-live" : ds <= 3 ? "Manageable with preparation" : "Strong foundation";
+        return `<tr style="background:${j % 2 === 0 ? "#fff" : "#F2EDE6"};"><td style="padding:9px 12px;font-weight:600;color:#3E3830;font-size:13px;">${clean(dim.name)}</td><td style="padding:9px 12px;font-weight:700;color:${accent};font-size:13px;">${ds}/5</td><td style="padding:9px 12px;color:#3E3830;font-size:13px;">${status}</td></tr>`;
+      }).join("");
+      const dimDetail = (parsed.dimensions || []).map(dim => {
+        const ds = parseFloat(String(dim.score).replace(/\/.*/, "")) || 0;
+        return `<p style="font-size:15px;font-weight:700;color:#1C1C1A;margin:20px 0 5px;font-family:Georgia,serif;border-bottom:1px solid #E0D8CE;padding-bottom:5px;">${clean(dim.name)} <span style="font-size:13px;font-weight:600;color:${accent};">${ds}/5</span></p>${para(dim.analysis)}`;
+      }).join("");
+      content = `
+        ${parsed.summary ? para(parsed.summary) : ""}
+        <table style="width:100%;border-collapse:collapse;margin:16px 0 20px;">
+          <tr>
+            <td style="background:${scoreColor};border-radius:8px;padding:18px 20px;width:80px;text-align:center;vertical-align:middle;">
+              <div style="font-size:48px;font-weight:700;color:#fff;font-family:Georgia,serif;line-height:1;">${score}</div>
+              <div style="font-size:10px;color:rgba(255,255,255,0.8);font-weight:600;letter-spacing:1px;margin-top:3px;">OUT OF 5</div>
+            </td>
+            <td style="background:${scoreColor};padding:18px 20px;vertical-align:middle;border-left:1px solid rgba(255,255,255,0.3);">
+              <div style="font-size:18px;font-weight:700;color:#fff;margin-bottom:5px;font-family:Georgia,serif;">${scoreLabel}</div>
+              <div style="font-size:13px;color:rgba(255,255,255,0.85);line-height:1.5;">The dimensional breakdown below shows where you have alignment and where you have gaps.</div>
+            </td>
+          </tr>
+        </table>
+        <table style="width:100%;border-collapse:collapse;margin:0 0 8px;"><tr style="background:${accent};"><th style="padding:9px 12px;text-align:left;color:#fff;font-size:12px;">Dimension</th><th style="padding:9px 12px;text-align:left;color:#fff;font-size:12px;">Score</th><th style="padding:9px 12px;text-align:left;color:#fff;font-size:12px;">Status</th></tr>${dimRows}</table>
+        ${dimDetail}`;
+    }
+
+    else if (title === "What You Should Know") {
+      content = (parsed || []).filter(item => item && (item.theme || item.body)).map(item => `
+        <div style="border:1px solid #E0D8CE;border-radius:6px;padding:14px 18px;margin-bottom:12px;">
+          ${item.theme ? `<p style="font-size:14px;font-weight:700;color:${accent};margin:0 0 7px;font-family:Georgia,serif;">${clean(item.theme)}</p>` : ""}
+          ${item.body ? `<p style="font-size:13px;color:#3E3830;margin:0;line-height:1.7;">${clean(item.body)}</p>` : ""}
+        </div>`).join("");
+    }
+
+    else if (title === "Questions to Ask in the Demo") {
+      content = (parsed || []).map(group => `
+        <div style="margin-bottom:18px;">
+          <div style="background:${accent};border-radius:6px 6px 0 0;padding:9px 16px;">
+            <span style="font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#fff;">${group.group}</span>
+          </div>
+          <div style="border:1px solid #E0D8CE;border-top:none;border-radius:0 0 6px 6px;">
+            ${(group.items || []).map((item, qi) => `
+              <div style="padding:12px 18px;${qi < group.items.length - 1 ? "border-bottom:1px solid #E0D8CE;" : ""}">
+                <p style="font-size:14px;color:#1C1C1A;margin:0 0 5px;line-height:1.6;">${qi + 1}. ${clean(item.question)}</p>
+                ${item.listen_for ? `<p style="font-size:13px;color:#7A7060;margin:0;font-style:italic;">${clean(item.listen_for)}</p>` : ""}
+              </div>`).join("")}
+          </div>
+        </div>`).join("");
+    }
+
+    else if (title === "Our Recommendation" || title === "Our Compatibility Verdict") {
+      const toolName = clean(parsed.recommended_tool);
+      const firstLine = title === "Our Compatibility Verdict" ? `We recommend ${toolName} for integration.` : `We recommend ${toolName}.`;
+      content = `
+        <p style="font-size:18px;font-weight:700;color:#1C1C1A;margin:0 0 12px;font-family:Georgia,serif;">${firstLine}</p>
+        ${parsed.rationale ? para(parsed.rationale) : ""}
+        ${(parsed.others || []).map(o => `<p style="font-size:14px;color:#3E3830;margin:0 0 8px;line-height:1.7;"><strong>${clean(o.tool)}:</strong> ${clean(o.note)}</p>`).join("")}`;
+    }
+
+    else if (title === "Sources") {
+      const g2 = (parsed || []).filter(s => s.g2_url);
+      const docs = (parsed || []).filter(s => s.docs_url);
+      let src = "";
+      if (g2.length) {
+        src += `<p style="font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:${accent};margin:16px 0 8px;">G2 Reviews</p>`;
+        src += g2.map(s => `<p style="margin:0 0 8px;"><span style="font-size:13px;font-weight:600;color:#3E3830;">${clean(s.g2_label || s.tool)}</span><br><a href="${s.g2_url}" style="color:${accent};font-size:13px;">${s.g2_url}</a></p>`).join("");
+      }
+      if (docs.length) {
+        src += `<p style="font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:${accent};margin:16px 0 8px;">Vendor Documentation</p>`;
+        src += docs.map(s => `<p style="margin:0 0 8px;"><span style="font-size:13px;font-weight:600;color:#3E3830;">${clean(s.docs_label || s.tool)}</span><br><a href="${s.docs_url}" style="color:${accent};font-size:13px;">${s.docs_url}</a></p>`).join("");
+      }
+      content = src;
+    }
+
+    if (!content) return "";
+    return `<div style="margin-bottom:36px;padding-bottom:28px;border-bottom:1px solid #E0D8CE;">
+      <h2 style="font-size:20px;font-weight:700;color:#1C1C1A;font-family:Georgia,serif;margin:0 0 16px;padding-bottom:10px;border-bottom:2px solid #C4BAB0;">${title}</h2>
+      ${content}
+    </div>`;
+  }).join("");
+
+  return `<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+<body style="margin:0;padding:0;background:#FAF7F2;">
+  <div style="max-width:680px;margin:0 auto;padding:40px 24px;font-family:Georgia,serif;">
+    <table cellpadding="0" cellspacing="0" border="0" style="margin-bottom:6px;">
+      <tr>
+        <td style="width:36px;height:36px;background:${accent};border-radius:50%;text-align:center;vertical-align:middle;">
+          <span style="font-size:15px;font-weight:700;color:#fff;font-family:Georgia,serif;">D</span>
+        </td>
+        <td style="padding-left:10px;vertical-align:middle;">
+          <span style="font-size:20px;font-weight:700;color:#1C1C1A;font-family:Georgia,serif;">Delphi</span>
+        </td>
+      </tr>
+    </table>
+    <p style="font-size:10px;color:#7A7060;letter-spacing:2px;text-transform:uppercase;margin:0 0 28px;">${reportLabel}</p>
+    <hr style="border:none;border-top:1px solid #E0D8CE;margin-bottom:32px;">
+    ${sectionHtml}
+    <div style="padding-top:20px;border-top:1px solid #E0D8CE;">
+      <p style="font-size:12px;color:#7A7060;line-height:1.7;margin:0 0 6px;">Delphi is funded by subscribers, not vendors. No platform pays for placement, recommendation, or access. Ever.</p>
+      <p style="font-size:11px;color:#7A7060;line-height:1.7;margin:0;">Delphi reports are generated using AI and publicly available information. They are for informational purposes only and do not constitute professional, legal, or financial advice. Vendor pricing, product capabilities, and market positioning change frequently — verify all claims directly with vendors before making any purchasing decision.</p>
+    </div>
+  </div>
+</body>
+</html>`;
+}
+
+
   "What We Heard": "◎", "Your Shortlist, Assessed": "◈", "Readiness Score": "◐",
   "What You Should Know": "◆", "Questions to Ask in the Demo": "◇", "Our Recommendation": "●", "Sources": "○"
 };
@@ -1482,10 +1672,11 @@ export default function Delphi({ paymentStatus, startCheckout, onHome, initialRe
       setStep("report");
 
       if (paymentStatus?.email) {
+        const emailHtml = buildEmailHtml(parsedSections, reportType);
         fetch("/api/send-report", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email: paymentStatus.email, sections: parsedSections, reportType }),
+          body: JSON.stringify({ email: paymentStatus.email, html: emailHtml, reportType }),
         }).catch(err => console.error("Email send failed:", err));
       }
     } catch {
