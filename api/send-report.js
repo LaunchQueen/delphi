@@ -11,23 +11,7 @@ function sectionsToHtml(sections, reportType) {
   const reportLabel = reportType === "stack_fit" ? "Stack Fit Report" : "Evaluation Report";
 
   const sectionHtml = sections.map(section => {
-    const joinedLines = [];
-    let j = 0;
-    while (j < section.content.length) {
-      let para = section.content[j];
-      while (j + 1 < section.content.length) {
-        const next = section.content[j + 1];
-        if (!next || !next.trim()) { j++; continue; }
-        if (/[.!?]$/.test(para.trim())) break;
-        if (next.trim().startsWith("##") || next.trim().startsWith("**") || /^\d+\./.test(next.trim()) || next.trim().startsWith("|")) break;
-        j++;
-        para = para.trimEnd() + " " + next.trim();
-      }
-      joinedLines.push(para);
-      j++;
-    }
-
-    const contentHtml = joinedLines.map(line => {
+    const contentHtml = section.content.map(line => {
       const clean = line.replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>");
       if (line.trim().startsWith("|")) return "";
       if (/^#{1,3}\s/.test(line)) return `<h3 style="font-size:16px;font-weight:700;color:#1C1C1A;margin:20px 0 8px;font-family:Georgia,serif;">${line.replace(/^#+\s/, "")}</h3>`;
@@ -46,13 +30,20 @@ function sectionsToHtml(sections, reportType) {
 <head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
 <body style="margin:0;padding:0;background:#FAF7F2;font-family:Georgia,serif;">
   <div style="max-width:680px;margin:0 auto;padding:48px 24px;">
+
+    <!-- Header -->
     <div style="display:flex;align-items:center;gap:12px;margin-bottom:8px;">
-      <div style="width:36px;height:36px;border-radius:50%;background:${accentColor};color:#fff;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700;line-height:1;">D</div>
+      <div style="width:36px;height:36px;border-radius:50%;background:${accentColor};color:#fff;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700;text-align:center;line-height:36px;">D</div>
       <span style="font-size:22px;font-weight:700;color:#1C1C1A;">Delphi</span>
     </div>
     <p style="font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#7A7060;margin:0 0 40px 48px;">${reportLabel}</p>
+
     <hr style="border:none;border-top:1px solid #E0D8CE;margin-bottom:40px;">
+
+    <!-- Report sections -->
     ${sectionHtml}
+
+    <!-- Footer -->
     <div style="margin-top:48px;padding-top:24px;border-top:1px solid #E0D8CE;">
       <p style="font-size:13px;color:#7A7060;line-height:1.7;margin:0 0 8px;">Delphi is funded by subscribers, not vendors. No platform pays for placement, recommendation, or access. Ever.</p>
       <p style="font-size:12px;color:#7A7060;line-height:1.7;margin:0;">Delphi reports are generated using AI and publicly available information. They are for informational purposes only and do not constitute professional, legal, or financial advice. Vendor pricing, product capabilities, and market positioning change frequently — verify all claims directly with vendors before making any purchasing decision.</p>
