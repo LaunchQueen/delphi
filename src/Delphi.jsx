@@ -162,82 +162,100 @@ Return ONLY this JSON structure, all fields populated:
 
 const STACK_PROMPT = `You are Delphi, an independent software implementation analyst for B2B SaaS buyers. You have no financial relationship with any vendor.
 
-CRITICAL: The very first line of your output must be ## What We Heard. Nothing before ## What We Heard.
+CRITICAL: You must respond with ONLY a valid JSON object. No text before it, no text after it, no markdown code fences, no explanation. The response must begin with { and end with }.
 
 IRONCLAD RULES:
 - NEVER mention any tool not on the buyer's shortlist.
-- NEVER fabricate URLs. Only include URLs retrieved via web search in this session.
+- NEVER fabricate URLs. Only include URLs retrieved via web search in this session. If you cannot find a real URL, use "".
 - NEVER use days for timelines. Use weeks only.
-- NEVER include pricing from memory. Verify via web search or say "pricing requires a direct quote."
+- NEVER include pricing from memory. Verify via web search or say "Pricing requires a direct quote from the vendor."
 
 READING THE BUYER'S ANSWERS:
 - Text field answers take priority over choice answers.
 - Take stated timelines seriously.
 - Never flag problems the buyer said are solved or nearly solved.
+- If a buyer describes a sequenced plan, recognize that as organized planning, not a risk.
 
-TONE: Matter-of-fact. Balanced.
+TONE: Matter-of-fact. Balanced. Write as a senior technical adviser who has seen this stack before.
 
-Use ONLY these exact section headers, in this order:
-## What We Heard
-## Stack Compatibility Assessment
-## Integration Readiness
-## What You Should Know
-## Questions to Ask in the Demo
-## Our Compatibility Verdict
-## Sources
+SHORTLIST ORDERING: Order tools from most to least compatible throughout. First tool in compatibility array has "recommended": true, all others false.
 
-SECTION REQUIREMENTS:
+SOURCES: Use web search to find real URLs. Do not fabricate. Use "" for any URL you cannot verify.
 
-**What We Heard** — Read between the lines. Specific and direct. Do not open with "Based on what you shared." Arrive at something they have not yet articulated.
+Known documentation starting points:
+Salesforce: help.salesforce.com | HubSpot: knowledge.hubspot.com | Marketo: experienceleague.adobe.com/en/docs/marketo | Outreach: support.outreach.io | Salesloft: support.salesloft.com | Gong: help.gong.io | ZoomInfo: university.zoominfo.com | Apollo: knowledge.apollo.io | Demandbase: support.demandbase.com | 6sense: support.6sense.com | Terminus: support.terminus.com | Clearbit: clearbit.com/docs | Cognism: help.cognism.com | Lusha: help.lusha.com | Groove: help.groove.co | Clari: help.clari.com | Pipedrive: support.pipedrive.com | Microsoft Dynamics: learn.microsoft.com/dynamics365 | Pardot: help.salesforce.com/s/articleView?id=sf.pardot_overview.htm | Eloqua: docs.oracle.com/en/cloud/saas/marketing/eloqua-user | Rollworks: help.rollworks.com | Chorus: help.chorus.ai | Mediafly: help.mediafly.com
 
-Immediately after the summary paragraph:
-| Tool | Score | Stack Compatibility | Integration Complexity | Our Take |
+Return ONLY this JSON structure, all fields populated:
 
-**Stack Compatibility Assessment** — Order tools most to least compatible. For each:
-
-ToolName | X/5 | Compatibility: [one word] | Complexity: [one word]
-
-[One paragraph: native integrations, custom work, data flow, timeline. Prose only.]
-
-Bottom line:
-[One sentence]
-
-**Integration Readiness** — 2-3 sentence intro ending with "implement successfully."
-
-OVERALL COMPATIBILITY: X/5
-
-| Dimension | Score | Status |
-| Score | What It Means |
-| 1-2 | Address before go-live |
-| 3 | Manageable with preparation |
-| 4-5 | Strong foundation |
-
-Five dimensions, each header format: Dimension Name | X/5
-1. Integration Ownership Clarity
-2. Current Stack Health
-3. Data Model Maturity
-4. Team Capacity for New Integrations
-5. Historical Integration Track Record
-
-**What You Should Know** — Vendor-specific gotchas only. Format:
-**[Tool Name] — [short theme]:**
-[2-3 sentences]
-
-**Questions to Ask in the Demo** —
-Ask All Vendors:
-1. [Question]
-What to listen for: [one sentence]
-
-Ask [Vendor] specifically:
-1. [Question]
-What to listen for: [one sentence]
-
-**Our Compatibility Verdict** —
-We recommend [Tool] for integration.
-[2-4 sentences.]
-[Tool not recommended] is [genuine strength] but not the best stack fit because [specific reason].
-
-**Sources** — Real URLs only. Plain label on one line, plain URL on next line.`;
+{
+  "report_type": "stack_fit",
+  "sections": {
+    "what_we_heard": {
+      "summary": "2-3 paragraphs. Read between the lines. Arrive at something the buyer has not yet articulated. Write as a senior technical adviser. Do not open with Based on what you shared. Do not restate their answers.",
+      "table": [
+        { "tool": "Tool name", "score": 4, "stack_compatibility": "Strong", "integration_complexity": "Moderate", "our_take": "one sharp sentence specific to this buyer's stack" }
+      ]
+    },
+    "compatibility": [
+      {
+        "name": "Tool name",
+        "score": 4,
+        "compatibility": "Strong",
+        "complexity": "Moderate",
+        "body": "One paragraph of 4-6 sentences: what integrates natively with their specific stack, what requires custom work, how data flows, and the implementation timeline. Plain prose only.",
+        "bottom_line": "One sentence on stack fit for this buyer.",
+        "recommended": true
+      }
+    ],
+    "integration_readiness": {
+      "summary": "2-3 sentences introducing what this section measures. End with implement successfully.",
+      "overall_score": 4,
+      "dimensions": [
+        { "name": "Integration Ownership Clarity", "score": 4, "analysis": "2-3 sentences specific to this buyer." },
+        { "name": "Current Stack Health", "score": 4, "analysis": "2-3 sentences specific to this buyer." },
+        { "name": "Data Model Maturity", "score": 4, "analysis": "2-3 sentences specific to this buyer." },
+        { "name": "Team Capacity for New Integrations", "score": 3, "analysis": "2-3 sentences specific to this buyer." },
+        { "name": "Historical Integration Track Record", "score": 3, "analysis": "2-3 sentences specific to this buyer." }
+      ]
+    },
+    "what_you_should_know": [
+      {
+        "theme": "Tool Name — short theme label",
+        "body": "2-3 sentences of vendor-specific integration gotchas for this tool, specific to this buyer's stack. Things the vendor will not volunteer. Nothing generic."
+      }
+    ],
+    "questions": [
+      {
+        "group": "Ask All Vendors",
+        "items": [
+          { "question": "Full question text.", "listen_for": "One sentence on what a good vs bad answer sounds like." }
+        ]
+      },
+      {
+        "group": "Ask [Vendor Name] specifically",
+        "items": [
+          { "question": "Full question text.", "listen_for": "One sentence on what a good vs bad answer sounds like." }
+        ]
+      }
+    ],
+    "verdict": {
+      "recommended_tool": "Tool name",
+      "rationale": "2-4 sentences on why this tool is the best stack fit for this specific buyer.",
+      "others": [
+        { "tool": "Tool name", "note": "Genuine strength and specific reason not best stack fit for this buyer." }
+      ]
+    },
+    "sources": [
+      {
+        "tool": "Tool name",
+        "g2_label": "Tool Name G2 Reviews",
+        "g2_url": "https://www.g2.com/products/...",
+        "docs_label": "Tool Name Knowledge Base",
+        "docs_url": "https://..."
+      }
+    ]
+  }
+}`;
 
 function buildEvalPrompt(answers) {
   const lines = [
@@ -324,7 +342,34 @@ function parseEvalReport(text) {
   }
 }
 
-// Text parser for Stack Fit (unchanged)
+// JSON parser for Stack Fit reports
+function parseStackReport(text) {
+  try {
+    const cleaned = text
+      .replace(/^```json\s*/i, "")
+      .replace(/^```\s*/i, "")
+      .replace(/```\s*$/i, "")
+      .trim();
+    const data = JSON.parse(cleaned);
+    const s = data.sections;
+    const sections = [
+      { title: "What We Heard",                content: [], parsed: s.what_we_heard },
+      { title: "Stack Compatibility Assessment",content: [], parsed: s.compatibility },
+      { title: "Integration Readiness",         content: [], parsed: s.integration_readiness },
+      { title: "What You Should Know",          content: [], parsed: s.what_you_should_know },
+      { title: "Questions to Ask in the Demo",  content: [], parsed: s.questions },
+      { title: "Our Compatibility Verdict",     content: [], parsed: s.verdict },
+      { title: "Sources",                       content: [], parsed: s.sources },
+    ].filter(sec => sec.parsed !== undefined && sec.parsed !== null);
+    console.log("STACK JSON parsed. Sections:", sections.map(s => s.title));
+    return sections;
+  } catch (err) {
+    console.error("Stack JSON parse failed, falling back to text parser:", err.message);
+    return parseReport(text, "stack_fit");
+  }
+}
+
+
 function cleanModelText(text) {
   let cleaned = text
     .replace(/([^\n])(##\s)/g, "$1\n$2")
@@ -646,7 +691,215 @@ function renderSources(parsed) {
   return elements;
 }
 
-// ─── STACK FIT TEXT RENDERER (unchanged from original) ───────────────────────
+// ─── STACK FIT SECTION RENDERERS (JSON) ──────────────────────────────────────
+
+function renderStackSection(section) {
+  const { title, parsed } = section;
+  if (!parsed) return null;
+  switch (title) {
+    case "What We Heard":                 return renderStackWhatWeHeard(parsed);
+    case "Stack Compatibility Assessment":return renderStackCompatibility(parsed);
+    case "Integration Readiness":         return renderStackReadiness(parsed);
+    case "What You Should Know":          return renderStackWYSK(parsed);
+    case "Questions to Ask in the Demo":  return renderQuestions(parsed, "stack_fit");
+    case "Our Compatibility Verdict":     return renderStackVerdict(parsed);
+    case "Sources":                       return renderSources(parsed);
+    default:                              return null;
+  }
+}
+
+function renderStackWhatWeHeard(parsed) {
+  const elements = [];
+  if (parsed.summary) {
+    const cleanSummary = parsed.summary
+      .split("\n")
+      .filter(line => !line.trim().startsWith("|") && !line.trim().match(/^-{3,}$/))
+      .join("\n");
+    cleanSummary.split("\n\n").filter(s => s.trim()).forEach((para, i) => {
+      elements.push(<p key={"sww-p-" + i} style={{ fontSize: 16, fontWeight: 500, lineHeight: 1.9, color: C.textMid, marginBottom: 14, fontFamily: FF }}>{para.trim()}</p>);
+    });
+  }
+  if (parsed.table && parsed.table.length > 0) {
+    const headers = ["Tool", "Score", "Stack Compatibility", "Integration Complexity", "Our Take"];
+    elements.push(
+      <div key="sww-table" style={{ overflowX: "auto", margin: "12px 0" }}>
+        <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 14, fontFamily: FF }}>
+          <thead>
+            <tr style={{ background: C.stack }}>
+              {headers.map((h, j) => (
+                <th key={j} style={{ padding: "10px 14px", textAlign: "left", color: C.white, fontWeight: 700, fontSize: 13 }}>{h}</th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {parsed.table.map((row, j) => (
+              <tr key={j} style={{ background: j % 2 === 0 ? C.white : C.card, borderBottom: "1px solid " + C.border }}>
+                <td style={{ padding: "10px 14px", color: C.textMid, fontWeight: 600 }}>{(row.tool || "").replace(/\*\*/g, "")}</td>
+                <td style={{ padding: "10px 14px", color: C.stack, fontWeight: 700 }}>{row.score}/5</td>
+                <td style={{ padding: "10px 14px", color: C.textMid }}>{row.stack_compatibility}</td>
+                <td style={{ padding: "10px 14px", color: C.textMid }}>{row.integration_complexity}</td>
+                <td style={{ padding: "10px 14px", color: C.textMid, fontStyle: "italic" }}>{row.our_take}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    );
+  }
+  return elements;
+}
+
+function renderStackCompatibility(parsed) {
+  return parsed.map((tool, idx) => {
+    const cleanName = (tool.name || "").replace(/\*\*/g, "").trim();
+    const cleanMeta = [
+      tool.score ? tool.score + "/5" : null,
+      (tool.compatibility || "").replace(/\*\*/g, "").trim(),
+      (tool.complexity || "").replace(/\*\*/g, "").trim(),
+    ].filter(Boolean).join(" · ");
+    const cleanBody = (tool.body || "").replace(/\*\*/g, "").replace(/---+/g, "").trim();
+    const cleanBottomLine = (tool.bottom_line || "").replace(/\*\*/g, "").replace(/---+/g, "").trim();
+    // Split body into paragraphs for proper rendering
+    const bodyParas = cleanBody.split(/\n\n+/).filter(p => p.trim());
+    return (
+      <div key={"sc-" + idx} style={{ marginBottom: 28, borderTop: "1px solid " + C.border, borderRight: "1px solid " + C.border, borderBottom: "1px solid " + C.border, borderLeft: "4px solid " + C.stack, borderRadius: 6, overflow: "hidden" }}>
+        <div style={{ padding: "14px 20px 10px", background: C.card, borderBottom: "1px solid " + C.border, display: "flex", alignItems: "baseline", gap: 12 }}>
+          <p style={{ fontSize: 19, fontWeight: 700, color: C.text, margin: 0, fontFamily: FFD }}>{cleanName}</p>
+          {cleanMeta && <p style={{ fontSize: 13, color: C.stack, margin: 0, fontFamily: FF, fontWeight: 600 }}>{cleanMeta}</p>}
+        </div>
+        <div style={{ padding: "14px 20px" }}>
+          {bodyParas.map((para, pi) => (
+            <p key={pi} style={{ fontSize: 16, color: C.textMid, margin: pi < bodyParas.length - 1 ? "0 0 10px" : 0, lineHeight: 1.85, fontFamily: FF }}>{para}</p>
+          ))}
+        </div>
+        {cleanBottomLine && (
+          <div style={{ padding: "10px 20px 14px", borderTop: "1px solid " + C.border }}>
+            <p style={{ fontSize: 15, color: C.textMid, margin: 0, lineHeight: 1.75, fontFamily: FF, fontStyle: "italic" }}>{cleanBottomLine}</p>
+          </div>
+        )}
+      </div>
+    );
+  });
+}
+
+function renderStackReadiness(parsed) {
+  const elements = [];
+  const rawScore = parsed.overall_score;
+  const score = parseFloat(String(rawScore).replace(/\/.*/, "").trim()) || 0;
+  const color = score <= 2 ? C.red : score <= 3 ? C.amber : C.stack;
+  const label = score <= 2 ? "Needs attention before purchasing" : score <= 3 ? "Proceed with preparation" : "Well positioned";
+  if (parsed.summary) {
+    elements.push(<p key="sr-summary" style={{ fontSize: 16, fontWeight: 500, lineHeight: 1.9, color: C.textMid, marginBottom: 14, fontFamily: FF }}>{parsed.summary}</p>);
+  }
+  elements.push(
+    <div key="sr-card" style={{ background: color, borderRadius: 8, padding: "20px 24px", margin: "16px 0 24px", display: "flex", alignItems: "center", gap: 24 }}>
+      <div style={{ textAlign: "center", flexShrink: 0, minWidth: 80 }}>
+        <div style={{ fontSize: 64, fontWeight: 700, color: C.white, lineHeight: 1, fontFamily: FFD }}>{score}</div>
+        <div style={{ fontSize: 11, color: "rgba(255,255,255,0.8)", fontWeight: 600, letterSpacing: 1, marginTop: 4 }}>OUT OF 5</div>
+      </div>
+      <div style={{ borderLeft: "1px solid rgba(255,255,255,0.3)", paddingLeft: 24 }}>
+        <div style={{ fontSize: 20, fontWeight: 700, color: C.white, marginBottom: 6, fontFamily: FFD }}>{label}</div>
+        <div style={{ fontSize: 14, color: "rgba(255,255,255,0.85)", lineHeight: 1.5 }}>The dimensional breakdown below shows where you have alignment and where you have gaps.</div>
+      </div>
+    </div>
+  );
+  if (parsed.dimensions && Array.isArray(parsed.dimensions)) {
+    elements.push(
+      <div key="sr-table" style={{ overflowX: "auto", margin: "12px 0 8px" }}>
+        <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 14, fontFamily: FF }}>
+          <thead>
+            <tr style={{ background: C.stack }}>
+              {["Dimension", "Score", "Status"].map((h, j) => (
+                <th key={j} style={{ padding: "10px 14px", textAlign: "left", color: C.white, fontWeight: 700, fontSize: 13 }}>{h}</th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {parsed.dimensions.map((dim, j) => {
+              const dimScore = parseFloat(String(dim.score).replace(/\/.*/, "").trim()) || 0;
+              const status = dimScore <= 2 ? "Address before go-live" : dimScore <= 3 ? "Manageable with preparation" : "Strong foundation";
+              return (
+                <tr key={j} style={{ background: j % 2 === 0 ? C.white : C.card, borderBottom: "1px solid " + C.border }}>
+                  <td style={{ padding: "10px 14px", color: C.textMid, fontWeight: 600 }}>{(dim.name || "").replace(/\*\*/g, "")}</td>
+                  <td style={{ padding: "10px 14px", color: C.stack, fontWeight: 700 }}>{dimScore}/5</td>
+                  <td style={{ padding: "10px 14px", color: C.textMid }}>{status}</td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+    );
+    elements.push(
+      <div key="sr-legend" style={{ display: "flex", gap: 16, flexWrap: "wrap", margin: "8px 0 24px", padding: "10px 14px", background: C.card, borderRadius: 6, border: "1px solid " + C.border }}>
+        {[["1-2", "Address before go-live"], ["3", "Manageable with preparation"], ["4-5", "Strong foundation"]].map(([s, m], j) => (
+          <div key={j} style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <span style={{ fontSize: 13, fontWeight: 700, color: C.stack, fontFamily: FF }}>{s}</span>
+            <span style={{ fontSize: 13, color: C.textMid, fontFamily: FF }}>&mdash; {m}</span>
+            {j < 2 && <span style={{ color: C.border, marginLeft: 8 }}>·</span>}
+          </div>
+        ))}
+      </div>
+    );
+    parsed.dimensions.forEach((dim, j) => {
+      const dimScore = parseFloat(String(dim.score).replace(/\/.*/, "").trim()) || 0;
+      const cleanName = (dim.name || "").replace(/\*\*/g, "").trim();
+      const cleanAnalysis = (dim.analysis || "").replace(/\*\*/g, "").replace(/---+/g, "").trim();
+      if (!cleanName) return;
+      elements.push(
+        <div key={"sdim-" + j}>
+          <div style={{ borderBottom: "1px solid " + C.border, paddingBottom: 6, marginTop: 28, marginBottom: 8, display: "flex", alignItems: "baseline", gap: 12 }}>
+            <p style={{ fontSize: 16, fontWeight: 700, color: C.text, margin: 0, fontFamily: FFD }}>{cleanName}</p>
+            <p style={{ fontSize: 14, fontWeight: 600, color: C.stack, margin: 0, fontFamily: FF }}>{dimScore}/5</p>
+          </div>
+          {cleanAnalysis && <p style={{ fontSize: 16, fontWeight: 500, lineHeight: 1.9, color: C.textMid, marginBottom: 14, fontFamily: FF }}>{cleanAnalysis}</p>}
+        </div>
+      );
+    });
+  }
+  return elements;
+}
+
+function renderStackWYSK(parsed) {
+  return parsed
+    .filter(item => item && (item.theme || item.body))
+    .map((item, i) => {
+      const cleanTheme = (item.theme || "").replace(/\*\*/g, "").replace(/^[-—]\s*/, "").trim();
+      const cleanBody = (item.body || "").replace(/\*\*/g, "").replace(/---+/g, "").trim();
+      return (
+        <div key={"swysk-" + i} style={{ border: "1px solid " + C.border, borderRadius: 6, padding: "16px 20px", marginBottom: 16 }}>
+          {cleanTheme && <p style={{ fontSize: 15, fontWeight: 700, color: C.stack, margin: "0 0 10px", fontFamily: FF }}>{cleanTheme}</p>}
+          {cleanBody && <p style={{ fontSize: 15, color: C.textMid, margin: 0, lineHeight: 1.8, fontFamily: FF }}>{cleanBody}</p>}
+        </div>
+      );
+    });
+}
+
+function renderStackVerdict(parsed) {
+  const elements = [];
+  const cleanTool = (parsed.recommended_tool || "").replace(/\*\*/g, "").trim();
+  // Bold first line matching Evaluation report style
+  elements.push(<p key="sv-tool" style={{ fontSize: 20, fontWeight: 700, color: C.text, marginBottom: 12, fontFamily: FFD }}>We recommend {cleanTool} for integration.</p>);
+  if (parsed.rationale) {
+    const cleanRationale = parsed.rationale.replace(/---+/g, "").replace(/\*\*/g, "").trim();
+    elements.push(<p key="sv-rationale" style={{ fontSize: 16, fontWeight: 500, lineHeight: 1.9, color: C.textMid, marginBottom: 20, fontFamily: FF }}>{cleanRationale}</p>);
+  }
+  if (parsed.others && parsed.others.length > 0) {
+    parsed.others.forEach((other, i) => {
+      const cleanOtherTool = (other.tool || "").replace(/\*\*/g, "").trim();
+      const cleanNote = (other.note || "").replace(/\*\*/g, "").replace(/---+/g, "").trim();
+      if (!cleanOtherTool && !cleanNote) return;
+      elements.push(
+        <p key={"sv-other-" + i} style={{ fontSize: 15, fontWeight: 500, lineHeight: 1.8, color: C.textMid, marginBottom: 10, fontFamily: FF }}>
+          <strong style={{ color: C.text }}>{cleanOtherTool}:</strong> {cleanNote}
+        </p>
+      );
+    });
+  }
+  return elements;
+}
+
+
 function renderContent(content, sectionTitle, reportType) {
   const lines = content.join("\n").split("\n");
   const elements = [];
@@ -1219,7 +1472,7 @@ export default function Delphi({ paymentStatus, startCheckout, onHome, initialRe
       // Route to correct parser
       const sections = reportType === "evaluation"
         ? parseEvalReport(data.text)
-        : parseReport(data.text, reportType);
+        : parseStackReport(data.text);
 
       console.log("SECTIONS PARSED:", sections.map(s => s.title));
       const parsedSections = sections.length
@@ -1425,7 +1678,9 @@ export default function Delphi({ paymentStatus, startCheckout, onHome, initialRe
             {section && (
               reportType === "evaluation" && section.parsed !== undefined
                 ? renderEvalSection(section)
-                : renderContent(section.content, section.title, reportType)
+                : reportType === "stack_fit" && section.parsed !== undefined
+                  ? renderStackSection(section)
+                  : renderContent(section.content, section.title, reportType)
             )}
           </div>
 
@@ -1466,12 +1721,6 @@ export default function Delphi({ paymentStatus, startCheckout, onHome, initialRe
             <span style={{ fontSize: 13, fontWeight: 700, letterSpacing: 1.5, textTransform: "uppercase", color: C.accent }}>{reportType === "stack_fit" ? "The Stack Fit" : "The Evaluation"}</span>
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
-            {currentQ > 0 && (
-              <button onClick={() => setCurrentQ(currentQ - 1)}
-                style={{ background: "none", border: "none", color: C.textLight, fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: FF, letterSpacing: 0.5 }}>
-                &larr; Back
-              </button>
-            )}
             <span style={{ fontSize: 13, fontWeight: 500, color: C.textLight }}>{currentQ + 1} / {questionQueue.length}</span>
           </div>
         </div>
@@ -1496,7 +1745,14 @@ export default function Delphi({ paymentStatus, startCheckout, onHome, initialRe
                   placeholder="Type your answer here..."
                   style={{ width: "100%", background: C.white, border: "1.5px solid " + C.border, borderRadius: 4, color: C.text, fontSize: 16, fontWeight: 500, padding: "14px 16px", resize: "vertical", lineHeight: 1.7, fontFamily: FF }} />
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 12 }}>
-                  <span style={{ fontSize: 12, fontWeight: 500, color: C.borderDark, fontFamily: FF }}>Command + Enter to continue</span>
+                  {currentQ > 0 ? (
+                    <button onClick={() => setCurrentQ(currentQ - 1)}
+                      style={{ background: "none", border: "none", color: C.textLight, fontSize: 14, fontWeight: 600, cursor: "pointer", fontFamily: FF, letterSpacing: 0.5 }}>
+                      &larr; Back
+                    </button>
+                  ) : (
+                    <span style={{ fontSize: 12, fontWeight: 500, color: C.borderDark, fontFamily: FF }}>Command + Enter to continue</span>
+                  )}
                   <Btn onClick={() => currentInput.trim() && submitAnswer(currentInput.trim())} disabled={!currentInput.trim()}>Continue</Btn>
                 </div>
                 <button onClick={() => submitAnswer("Not provided")}
@@ -1507,16 +1763,26 @@ export default function Delphi({ paymentStatus, startCheckout, onHome, initialRe
             )}
 
             {q.type === "choice" && (
-              <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-                {q.options.map(opt => (
-                  <button key={opt} onClick={() => submitAnswer(opt)}
-                    onMouseEnter={() => setHoveredChoice(opt)}
-                    onMouseLeave={() => setHoveredChoice(null)}
-                    style={{ background: hoveredChoice === opt ? C.accent : C.white, border: "1.5px solid " + (hoveredChoice === opt ? C.accent : C.border), borderRadius: 4, color: hoveredChoice === opt ? C.white : C.text, fontSize: 16, fontWeight: 500, padding: "14px 18px", textAlign: "left", lineHeight: 1.4, cursor: "pointer", transition: "all 0.15s", fontFamily: FF }}>
-                    {opt}
-                  </button>
-                ))}
-              </div>
+              <>
+                <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                  {q.options.map(opt => (
+                    <button key={opt} onClick={() => submitAnswer(opt)}
+                      onMouseEnter={() => setHoveredChoice(opt)}
+                      onMouseLeave={() => setHoveredChoice(null)}
+                      style={{ background: hoveredChoice === opt ? C.accent : C.white, border: "1.5px solid " + (hoveredChoice === opt ? C.accent : C.border), borderRadius: 4, color: hoveredChoice === opt ? C.white : C.text, fontSize: 16, fontWeight: 500, padding: "14px 18px", textAlign: "left", lineHeight: 1.4, cursor: "pointer", transition: "all 0.15s", fontFamily: FF }}>
+                      {opt}
+                    </button>
+                  ))}
+                </div>
+                {currentQ > 0 && (
+                  <div style={{ display: "flex", justifyContent: "flex-start", marginTop: 16 }}>
+                    <button onClick={() => setCurrentQ(currentQ - 1)}
+                      style={{ background: "none", border: "none", color: C.textLight, fontSize: 14, fontWeight: 600, cursor: "pointer", fontFamily: FF, letterSpacing: 0.5 }}>
+                      &larr; Back
+                    </button>
+                  </div>
+                )}
+              </>
             )}
           </>
         )}
