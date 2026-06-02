@@ -114,7 +114,7 @@ export default function App() {
         <div style={{ display: "flex", alignItems: "center", gap: 32 }}>
           <a href="#how-it-works" className="nav-link" style={{ fontSize: 14, color: C.textLight, fontWeight: 500, textDecoration: "none", transition: "color 0.15s" }}>How it works</a>
           <a href="#pricing" className="nav-link" style={{ fontSize: 14, color: C.textLight, fontWeight: 500, textDecoration: "none", transition: "color 0.15s" }}>Pricing</a>
-          <button onClick={() => startCheckout("single_report", "evaluation")} className="btn-primary" style={{ background: C.accent, color: C.white, border: "none", borderRadius: 3, padding: "11px 28px", fontSize: 13, fontWeight: 700, letterSpacing: 2, textTransform: "uppercase", cursor: "pointer", fontFamily: FF, transition: "background 0.15s" }}>Get a Report</button>
+          <button onClick={() => document.getElementById('how-it-works').scrollIntoView({ behavior: 'smooth' })} className="btn-primary" style={{ background: C.accent, color: C.white, border: "none", borderRadius: 3, padding: "11px 28px", fontSize: 13, fontWeight: 700, letterSpacing: 2, textTransform: "uppercase", cursor: "pointer", fontFamily: FF, transition: "background 0.15s" }}>Get a Report</button>
         </div>
       </nav>
 
@@ -129,7 +129,7 @@ export default function App() {
           Delphi gives B2B buyers an independent second opinion on any software decision — translating vendor promises into a personalized assessment of what the tool actually requires for your business, and whether your organization is ready to make it work.
         </p>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 24, flexWrap: "wrap" }}>
-          <button onClick={() => startCheckout("single_report", "evaluation")} className="btn-primary" style={{ background: C.accent, color: C.white, border: "none", borderRadius: 3, padding: "16px 40px", fontSize: 14, fontWeight: 700, letterSpacing: 2.5, textTransform: "uppercase", cursor: "pointer", fontFamily: FF, transition: "background 0.15s" }}>Start your evaluation — $175</button>
+          <button onClick={() => document.getElementById('how-it-works').scrollIntoView({ behavior: 'smooth' })} className="btn-primary" style={{ background: C.accent, color: C.white, border: "none", borderRadius: 3, padding: "16px 40px", fontSize: 14, fontWeight: 700, letterSpacing: 2.5, textTransform: "uppercase", cursor: "pointer", fontFamily: FF, transition: "background 0.15s" }}>Start your evaluation — $175</button>
           <a href="#how-it-works" style={{ color: C.textMid, fontSize: 14, fontWeight: 600, letterSpacing: 2, textTransform: "uppercase", textDecoration: "none", borderBottom: "1.5px solid " + C.borderDark, paddingBottom: 2 }}>See what's in the report</a>
         </div>
       </div>
