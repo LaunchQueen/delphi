@@ -230,8 +230,9 @@ export default function App() {
           </div>
           <div style={{ background: C.card, borderRadius: 8, padding: "40px 36px", borderLeft: "3px solid " + C.accent }}>
             <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: 3, textTransform: "uppercase", color: C.accent, marginBottom: 20 }}>Built by someone who has been on both sides</div>
-            <p style={{ fontSize: 16, color: C.textMid, lineHeight: 1.85, marginBottom: 16 }}>After nearly 20 years in B2B SaaS product marketing — including roles at Salesforce/ExactTarget running global launches across six product lines — one thing became clear: the buying cycle is hard for everyone.</p>
-            <p style={{ fontSize: 16, color: C.textMid, lineHeight: 1.85, marginBottom: 16 }}>Vendors are trying to show their product at its best. Buyers are trying to make a significant investment with incomplete information. Delphi is an attempt to make that process easier for the buyer — to help them ask better questions and go into an implementation with a realistic picture of what success requires.</p>
+            <p style={{ fontSize: 16, color: C.textMid, lineHeight: 1.85, marginBottom: 16 }}>Product marketing is built to help buyers understand what a tool does. What it isn't built to do is help buyers understand what bringing that tool into their organization actually requires — the business readiness, the process changes, the ownership questions that determine whether an implementation succeeds or fails.</p>
+            <p style={{ fontSize: 16, color: C.textMid, lineHeight: 1.85, marginBottom: 16 }}>Analysts cover the market. G2 covers user sentiment. Neither one helps you understand what you need to change inside your organization before you sign.</p>
+            <p style={{ fontSize: 16, color: C.textMid, lineHeight: 1.85 }}>With nearly 20 years of experience in product marketing, I'm turning my expertise to helping the buyer understand their readiness when it comes to buying software.</p>
             <p style={{ fontSize: 15, color: C.textLight, fontStyle: "italic", marginTop: 24, paddingTop: 20, borderTop: "1px solid " + C.border }}>— Maureen West, Founder</p>
           </div>
         </div>
