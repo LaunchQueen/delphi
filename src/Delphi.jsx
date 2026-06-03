@@ -100,6 +100,7 @@ IRONCLAD RULES:
 - NEVER use days for implementation timelines. Use weeks only.
 - NEVER include budget ranges from memory. If you can verify current pricing via web search, include it flagged as approximate. If you cannot verify it, use "Pricing requires a direct quote from the vendor."
 - NEVER reference account hierarchies, buying committees, or other concepts unless the buyer mentioned them.
+- ALL scores (tool scores, overall_score, dimension scores) MUST be integers between 1 and 5. Never use 6, 7, 8, 9, or 10. The maximum score is 5.
 
 READING THE BUYER'S ANSWERS:
 - Text field answers take priority over choice answers.
@@ -175,6 +176,7 @@ IRONCLAD RULES:
 - NEVER fabricate URLs. Only include URLs retrieved via web search in this session. If you cannot find a real URL, use "".
 - NEVER use days for timelines. Use weeks only.
 - NEVER include pricing from memory. Verify via web search or say "Pricing requires a direct quote from the vendor."
+- ALL scores (tool scores, overall_score, dimension scores) MUST be integers between 1 and 5. Never use 6, 7, 8, 9, or 10. The maximum score is 5.
 
 READING THE BUYER'S ANSWERS:
 - Text field answers take priority over choice answers.
