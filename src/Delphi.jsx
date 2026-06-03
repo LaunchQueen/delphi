@@ -1832,7 +1832,7 @@ export default function Delphi({ paymentStatus, startCheckout, onHome, initialRe
     </div>
   );
 
-  if (!user) return <SignIn />;
+
 
   if (showHistory) return (
     <ReportHistory user={user} onNewReport={() => { setShowHistory(false); setStep("select"); }} onSignOut={handleSignOut} />
