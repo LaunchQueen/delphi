@@ -118,7 +118,7 @@ function UpgradeModal({ purchase, onUpgrade, onSingleReport, onClose }) {
 }
 
 // ─── ACCOUNT PAGE ─────────────────────────────────────────────────────────────
-function AccountPage({ user, onNewReport, onSignOut }) {
+function AccountPage({ user, onNewReport, onSignOut, onHome }) {
   const [activeTab, setActiveTab] = useState("reports");
   const [reports, setReports] = useState([]);
   const [purchase, setPurchase] = useState(null);
@@ -203,11 +203,14 @@ function AccountPage({ user, onNewReport, onSignOut }) {
       )}
 
       <div style={{ borderBottom: "1px solid " + C.border, background: C.sidebar, padding: "14px 28px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+        <button onClick={onHome} style={{ background: "none", border: "none", cursor: "pointer", display: "flex", alignItems: "center", gap: 10, padding: 0 }}>
           <div style={{ width: 30, height: 30, borderRadius: "50%", background: C.accent, color: C.white, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13, fontWeight: 700, fontFamily: FFD }}>D</div>
           <span style={{ fontSize: 16, fontWeight: 700, color: C.text, fontFamily: FFD }}>Delphi</span>
-        </div>
-        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+        </button>
+        <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+          <button onClick={() => setActiveTab("reports")} style={{ background: "none", border: "none", fontSize: 13, color: activeTab === "reports" ? C.accent : C.textLight, fontWeight: activeTab === "reports" ? 700 : 500, cursor: "pointer", fontFamily: FF }}>My Reports</button>
+          <button onClick={() => setActiveTab("billing")} style={{ background: "none", border: "none", fontSize: 13, color: activeTab === "billing" ? C.accent : C.textLight, fontWeight: activeTab === "billing" ? 700 : 500, cursor: "pointer", fontFamily: FF }}>Billing</button>
+          <span style={{ color: C.border }}>|</span>
           <span style={{ fontSize: 13, color: C.textLight }}>{user.email}</span>
           <button onClick={onNewReport} style={{ background: C.accent, color: C.white, border: "none", borderRadius: 4, padding: "8px 16px", fontSize: 12, fontWeight: 700, letterSpacing: 1.5, textTransform: "uppercase", fontFamily: FF }}>New Report</button>
           <button onClick={onSignOut} style={{ background: "none", border: "1px solid " + C.border, borderRadius: 4, color: C.textLight, fontSize: 11, fontWeight: 700, padding: "7px 14px", letterSpacing: 1.5, textTransform: "uppercase", fontFamily: FF }}>Sign out</button>
@@ -215,14 +218,6 @@ function AccountPage({ user, onNewReport, onSignOut }) {
       </div>
 
       <div style={{ maxWidth: 760, margin: "0 auto", padding: "48px 24px" }}>
-        <div style={{ display: "flex", gap: 0, marginBottom: 32, borderBottom: "1px solid " + C.border }}>
-          {[["reports", "My Reports"], ["billing", "Billing"]].map(([key, label]) => (
-            <button key={key} onClick={() => setActiveTab(key)}
-              style={{ background: "none", border: "none", borderBottom: "2px solid " + (activeTab === key ? C.accent : "transparent"), color: activeTab === key ? C.accent : C.textLight, fontSize: 14, fontWeight: activeTab === key ? 700 : 500, padding: "10px 20px", fontFamily: FF, marginBottom: -1, letterSpacing: 0.5, cursor: "pointer" }}>
-              {label}
-            </button>
-          ))}
-        </div>
 
         {loading ? (
           <div style={{ textAlign: "center", padding: "60px 0" }}>
@@ -433,7 +428,7 @@ export default function App() {
   );
 
   if (page === "account") return (
-    <AccountPage user={user} onNewReport={() => { setPage("tool"); }} onSignOut={handleSignOut} />
+    <AccountPage user={user} onNewReport={() => { setPage("tool"); }} onSignOut={handleSignOut} onHome={() => setPage("home")} />
   );
 
   if (page === "tool") return (
