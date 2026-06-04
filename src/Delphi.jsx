@@ -2285,10 +2285,13 @@ function StackTableInput({ onSubmit, onBack }) {
 
   return (
     <div>
+      <div style={{ background: C.card, border: "1px solid " + C.border, borderRadius: 6, padding: "12px 16px", marginBottom: 16 }}>
+        <p style={{ fontSize: 13, color: C.textMid, lineHeight: 1.6, margin: 0, fontFamily: FF }}>For CRM and marketing automation platforms, indicating data health will improve the quality of your recommendation. All other fields are optional.</p>
+      </div>
       <div style={{ border: "1px solid " + C.border, borderRadius: 6, overflow: "hidden", marginBottom: 16 }}>
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", background: C.accent }}>
           <div style={{ padding: "10px 16px", fontSize: 11, fontWeight: 700, letterSpacing: 1.5, textTransform: "uppercase", color: C.white }}>Tool name</div>
-          <div style={{ padding: "10px 16px", fontSize: 11, fontWeight: 700, letterSpacing: 1.5, textTransform: "uppercase", color: C.white, borderLeft: "1px solid rgba(255,255,255,0.2)" }}>Health</div>
+          <div style={{ padding: "10px 16px", fontSize: 11, fontWeight: 700, letterSpacing: 1.5, textTransform: "uppercase", color: C.white, borderLeft: "1px solid rgba(255,255,255,0.2)" }}>Health (optional)</div>
         </div>
         {rows.map((row, i) => (
           <div key={i} style={{ display: "grid", gridTemplateColumns: "1fr 1fr", borderBottom: i < rows.length - 1 ? "1px solid " + C.border : "none" }}>
@@ -2303,7 +2306,7 @@ function StackTableInput({ onSubmit, onBack }) {
               value={row.health}
               onChange={e => updateRow(i, "health", e.target.value)}
               style={{ border: "none", padding: "12px 16px", fontSize: 14, fontFamily: FF, color: row.health ? C.text : C.textLight, background: i % 2 === 0 ? C.white : C.card, outline: "none", cursor: "pointer" }}>
-              <option value="">Select health...</option>
+              <option value="">—</option>
               {HEALTH_OPTIONS.map(opt => <option key={opt} value={opt}>{opt}</option>)}
             </select>
           </div>
@@ -2323,7 +2326,7 @@ function StackTableInput({ onSubmit, onBack }) {
   );
 }
 
-export default function Delphi({ paymentStatus, startCheckout, onHome, initialReportType }) {
+export default function Delphi({ paymentStatus, startCheckout, onHome, initialReportType, onMyReports }) {
   const [user, setUser] = useState(null);
   const [authLoading, setAuthLoading] = useState(true);
   const [showHistory, setShowHistory] = useState(false);
@@ -2514,7 +2517,7 @@ export default function Delphi({ paymentStatus, startCheckout, onHome, initialRe
         <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 0 }}>
           <Logo />
           <div style={{ display: "flex", alignItems: "center", gap: 14, marginTop: 4 }}>
-            <button onClick={() => setShowHistory(true)} style={{ background: "none", border: "1px solid " + C.border, borderRadius: 4, color: C.textMid, fontSize: 12, fontWeight: 700, padding: "7px 14px", letterSpacing: 1.5, textTransform: "uppercase", fontFamily: FF, cursor: "pointer" }}>My Reports</button>
+            <button onClick={() => onMyReports && onMyReports()} style={{ background: "none", border: "1px solid " + C.border, borderRadius: 4, color: C.textMid, fontSize: 12, fontWeight: 700, padding: "7px 14px", letterSpacing: 1.5, textTransform: "uppercase", fontFamily: FF, cursor: "pointer" }}>My Reports</button>
             <button onClick={handleSignOut} style={{ background: "none", border: "none", color: C.textLight, fontSize: 13, fontWeight: 500, cursor: "pointer", fontFamily: FF }}>Sign out</button>
           </div>
         </div>
@@ -2641,7 +2644,7 @@ export default function Delphi({ paymentStatus, startCheckout, onHome, initialRe
           </nav>
           <div style={{ height: 1, background: C.border, margin: "16px 0" }} />
           <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-            <button onClick={() => setShowHistory(true)} style={{ background: "none", border: "1px solid " + C.border, borderRadius: 4, color: C.textLight, fontSize: 12, fontWeight: 700, padding: "9px 12px", letterSpacing: 1.5, textTransform: "uppercase", fontFamily: FF }}>My Reports</button>
+            <button onClick={() => onMyReports && onMyReports()} style={{ background: "none", border: "1px solid " + C.border, borderRadius: 4, color: C.textLight, fontSize: 12, fontWeight: 700, padding: "9px 12px", letterSpacing: 1.5, textTransform: "uppercase", fontFamily: FF }}>My Reports</button>
             <button onClick={restart} style={{ background: "none", border: "1px solid " + C.border, borderRadius: 4, color: C.textLight, fontSize: 12, fontWeight: 700, padding: "9px 12px", letterSpacing: 1.5, textTransform: "uppercase", fontFamily: FF }}>New Report</button>
           </div>
         </div>

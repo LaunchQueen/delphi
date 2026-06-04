@@ -432,7 +432,7 @@ export default function App() {
   );
 
   if (page === "tool") return (
-    <Delphi paymentStatus={paymentStatus} startCheckout={startCheckout} onHome={() => setPage("home")} initialReportType={initialReportType} />
+    <Delphi paymentStatus={paymentStatus} startCheckout={startCheckout} onHome={() => setPage("home")} initialReportType={initialReportType} onMyReports={() => setPage("account")} />
   );
 
   return (
