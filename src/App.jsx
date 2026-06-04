@@ -468,7 +468,7 @@ export default function App() {
           ) : (
             <button onClick={() => setShowSignIn(true)} className="nav-link" style={{ background: "none", border: "none", fontSize: 14, color: C.textLight, fontWeight: 500, cursor: "pointer", fontFamily: FF }}>Sign in</button>
           )}
-          <button onClick={() => document.getElementById("how-it-works").scrollIntoView({ behavior: "smooth" })} className="btn-primary" style={{ background: C.accent, color: C.white, border: "none", borderRadius: 3, padding: "11px 28px", fontSize: 13, fontWeight: 700, letterSpacing: 2, textTransform: "uppercase", cursor: "pointer", fontFamily: FF, transition: "background 0.15s" }}>Get a Report</button>
+          <button onClick={user ? handleNewReport : () => document.getElementById("how-it-works").scrollIntoView({ behavior: "smooth" })} className="btn-primary" style={{ background: C.accent, color: C.white, border: "none", borderRadius: 3, padding: "11px 28px", fontSize: 13, fontWeight: 700, letterSpacing: 2, textTransform: "uppercase", cursor: "pointer", fontFamily: FF, transition: "background 0.15s" }}>Get a Report</button>
         </div>
       </nav>
 
