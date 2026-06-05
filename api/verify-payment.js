@@ -1,5 +1,4 @@
 import Stripe from "stripe";
-
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
 const HEADERS = {
@@ -8,23 +7,34 @@ const HEADERS = {
   "Content-Type": "application/json",
 };
 
+const PRICE_TYPES = {
+  "price_1TcsDNCzdpqwekegzRjP3fUF": "single_report",
+  "price_1TcsceCzdpqwekegMLNrJcxG": "single_report",
+  "price_1Tf0C6CzdpqwekegeiNPwIza": "unlimited",
+};
+
 export default async function handler(req, res) {
   Object.entries(HEADERS).forEach(([k, v]) => res.setHeader(k, v));
   if (req.method === "OPTIONS") return res.status(204).end();
   if (req.method !== "POST") return res.status(405).json({ error: "Method not allowed" });
-
   try {
     const { sessionId } = req.body;
-    const session = await stripe.checkout.sessions.retrieve(sessionId);
-
-    // FIXED: Now checks for standard card payments AND zero-dollar promo code completions
-    const paid = 
-      session.status === "complete" && 
+    const session = await stripe.checkout.sessions.retrieve(sessionId, {
+      expand: ["line_items"],
+    });
+    const paid =
+      session.status === "complete" &&
       (session.payment_status === "paid" || session.payment_status === "no_payment_required");
+
+    const priceId = session.line_items?.data?.[0]?.price?.id || "";
+    const priceType = PRICE_TYPES[priceId] || "single_report";
+    const amountPaid = session.amount_total || 0;
 
     return res.status(200).json({
       paid,
       mode: session.mode,
+      priceType,
+      amountPaid,
       customerEmail: session.customer_details?.email ?? "",
     });
   } catch (err) {
