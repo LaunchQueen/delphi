@@ -306,6 +306,7 @@ export default function App() {
   const [page, setPage] = useState("home");
   const [paymentStatus, setPaymentStatus] = useState(null);
   const [checkingPayment, setCheckingPayment] = useState(false);
+  const [authLoading, setAuthLoading] = useState(true);
   const [initialReportType, setInitialReportType] = useState(null);
   const [user, setUser] = useState(null);
   const [showSignIn, setShowSignIn] = useState(false);
@@ -316,10 +317,13 @@ export default function App() {
   const [reportCount, setReportCount] = useState(0);
   const [showUpgrade, setShowUpgrade] = useState(false);
 
+  const [pendingSessionId, setPendingSessionId] = useState(null);
+
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setUser(session?.user ?? null);
       if (session?.user) loadPurchaseData(session.user.id);
+      setAuthLoading(false);
     });
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setUser(session?.user ?? null);
@@ -331,8 +335,16 @@ export default function App() {
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const sessionId = params.get("session_id");
-    if (sessionId) { setCheckingPayment(true); verifyPayment(sessionId); }
+    if (sessionId) { setCheckingPayment(true); setPendingSessionId(sessionId); }
   }, []);
+
+  // Wait for auth to load before verifying payment
+  useEffect(() => {
+    if (pendingSessionId && !authLoading) {
+      verifyPayment(pendingSessionId);
+      setPendingSessionId(null);
+    }
+  }, [pendingSessionId, authLoading]);
 
   const loadPurchaseData = async (userId) => {
     const [{ data: purchaseData }, { count }] = await Promise.all([
@@ -357,13 +369,15 @@ export default function App() {
         setPaymentStatus({ paid: true, mode: data.mode, email: data.customerEmail });
         setInitialReportType(savedReportType);
         if (user) {
+          const isUnlimited = data.priceType === "unlimited";
           await supabase.from("purchases").insert({
             user_id: user.id,
-            plan_type: data.mode === "unlimited" ? "unlimited" : "single_report",
-            amount_paid: data.mode === "unlimited" ? 300 : 175,
+            plan_type: data.priceType || "single_report",
+            amount_paid: data.amountPaid || 0,
             stripe_session: sessionId,
-            valid_until: data.mode === "unlimited" ? new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString() : null,
+            valid_until: isUnlimited ? new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString() : null,
           });
+          await loadPurchaseData(user.id);
         }
         setPage("tool");
         window.history.replaceState({}, "", "/");
