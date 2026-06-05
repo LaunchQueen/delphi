@@ -338,31 +338,31 @@ export default function App() {
     if (sessionId) { setCheckingPayment(true); verifyPayment(sessionId); }
   }, []);
 
-  // If payment was verified but user wasn't loaded yet, save purchase when user loads
+  // Save purchase when user becomes available after payment
   useEffect(() => {
-    if (user && paymentStatus?.paid && !purchase) {
-      const sessionId = sessionStorage.getItem("completedSessionId");
-      const priceType = sessionStorage.getItem("completedPriceType");
-      const amountPaid = sessionStorage.getItem("completedAmountPaid");
-      if (sessionId && priceType) {
-        const isUnlimited = priceType === "unlimited";
-        supabase.from("purchases").insert({
-          user_id: user.id,
-          plan_type: priceType,
-          amount_paid: parseInt(amountPaid) || 0,
-          stripe_session: sessionId,
-          valid_until: isUnlimited ? new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString() : null,
-        }).then(({ error }) => {
-          if (!error) {
-            sessionStorage.removeItem("completedSessionId");
-            sessionStorage.removeItem("completedPriceType");
-            sessionStorage.removeItem("completedAmountPaid");
-            loadPurchaseData(user.id);
-          }
-        });
+    if (!user) return;
+    const sessionId = sessionStorage.getItem("completedSessionId");
+    const priceType = sessionStorage.getItem("completedPriceType");
+    const amountPaid = sessionStorage.getItem("completedAmountPaid");
+    if (!sessionId || !priceType) return;
+    const isUnlimited = priceType === "unlimited";
+    supabase.from("purchases").insert({
+      user_id: user.id,
+      plan_type: priceType,
+      amount_paid: parseInt(amountPaid) || 0,
+      stripe_session: sessionId,
+      valid_until: isUnlimited ? new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString() : null,
+    }).then(({ error }) => {
+      if (error) { console.error("Deferred purchase insert error:", error); }
+      else {
+        console.log("Deferred purchase saved successfully");
+        sessionStorage.removeItem("completedSessionId");
+        sessionStorage.removeItem("completedPriceType");
+        sessionStorage.removeItem("completedAmountPaid");
+        loadPurchaseData(user.id);
       }
-    }
-  }, [user, paymentStatus]);
+    });
+  }, [user]);
 
   const loadPurchaseData = async (userId) => {
     const [{ data: purchaseData }, { count }] = await Promise.all([
