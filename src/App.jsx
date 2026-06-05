@@ -357,27 +357,34 @@ export default function App() {
 
   const verifyPayment = async (sessionId) => {
     try {
+      console.log("verifyPayment called, user:", user?.id, "sessionId:", sessionId);
       const res = await fetch("/api/verify-payment", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ sessionId }),
       });
       const data = await res.json();
+      console.log("verify-payment response:", data);
       if (data.paid) {
         const savedReportType = sessionStorage.getItem("pendingReportType") || null;
         sessionStorage.removeItem("pendingReportType");
         setPaymentStatus({ paid: true, mode: data.mode, email: data.customerEmail });
         setInitialReportType(savedReportType);
         if (user) {
+          console.log("inserting purchase for user:", user.id, "priceType:", data.priceType);
           const isUnlimited = data.priceType === "unlimited";
-          await supabase.from("purchases").insert({
+          const { error } = await supabase.from("purchases").insert({
             user_id: user.id,
             plan_type: data.priceType || "single_report",
             amount_paid: data.amountPaid || 0,
             stripe_session: sessionId,
             valid_until: isUnlimited ? new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString() : null,
           });
+          if (error) console.error("Purchase insert error:", error);
+          else console.log("Purchase inserted successfully");
           await loadPurchaseData(user.id);
+        } else {
+          console.log("No user found — purchase not saved");
         }
         setPage("tool");
         window.history.replaceState({}, "", "/");
