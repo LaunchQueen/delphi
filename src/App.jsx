@@ -338,13 +338,31 @@ export default function App() {
     if (sessionId) { setCheckingPayment(true); setPendingSessionId(sessionId); }
   }, []);
 
-  // Wait for auth to load before verifying payment
+  // If payment was verified but user wasn't loaded yet, save purchase when user loads
   useEffect(() => {
-    if (pendingSessionId && !authLoading) {
-      verifyPayment(pendingSessionId);
-      setPendingSessionId(null);
+    if (user && paymentStatus?.paid && !purchase) {
+      const sessionId = sessionStorage.getItem("completedSessionId");
+      const priceType = sessionStorage.getItem("completedPriceType");
+      const amountPaid = sessionStorage.getItem("completedAmountPaid");
+      if (sessionId && priceType) {
+        const isUnlimited = priceType === "unlimited";
+        supabase.from("purchases").insert({
+          user_id: user.id,
+          plan_type: priceType,
+          amount_paid: parseInt(amountPaid) || 0,
+          stripe_session: sessionId,
+          valid_until: isUnlimited ? new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString() : null,
+        }).then(({ error }) => {
+          if (!error) {
+            sessionStorage.removeItem("completedSessionId");
+            sessionStorage.removeItem("completedPriceType");
+            sessionStorage.removeItem("completedAmountPaid");
+            loadPurchaseData(user.id);
+          }
+        });
+      }
     }
-  }, [pendingSessionId, authLoading]);
+  }, [user, paymentStatus]);
 
   const loadPurchaseData = async (userId) => {
     const [{ data: purchaseData }, { count }] = await Promise.all([
@@ -384,7 +402,10 @@ export default function App() {
           else console.log("Purchase inserted successfully");
           await loadPurchaseData(user.id);
         } else {
-          console.log("No user found — purchase not saved");
+          console.log("No user yet — storing session data for later save");
+          sessionStorage.setItem("completedSessionId", sessionId);
+          sessionStorage.setItem("completedPriceType", data.priceType || "single_report");
+          sessionStorage.setItem("completedAmountPaid", String(data.amountPaid || 0));
         }
         setPage("tool");
         window.history.replaceState({}, "", "/");
