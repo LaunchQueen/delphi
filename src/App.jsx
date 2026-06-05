@@ -335,7 +335,7 @@ export default function App() {
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const sessionId = params.get("session_id");
-    if (sessionId) { setCheckingPayment(true); setPendingSessionId(sessionId); }
+    if (sessionId) { setCheckingPayment(true); verifyPayment(sessionId); }
   }, []);
 
   // If payment was verified but user wasn't loaded yet, save purchase when user loads
