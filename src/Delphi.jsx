@@ -17,19 +17,18 @@ const FF = "'EB Garamond', Georgia, serif";
 const FFD = "'Playfair Display', Georgia, serif";
 const GS = "@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,700;1,600&family=EB+Garamond:wght@400;500;600;700&display=swap'); * { box-sizing: border-box; margin: 0; padding: 0; } button { cursor: pointer; } textarea { outline: none; } textarea:focus { border-color: " + C.accent + " !important; } input:focus { outline: none; border-color: " + C.accent + " !important; } @keyframes fadeUp { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:translateY(0); } } @keyframes spin { to { transform: rotate(360deg); } } ::-webkit-scrollbar { width: 5px; } ::-webkit-scrollbar-thumb { background: " + C.border + "; border-radius: 3px; }";
 
-// ─── TOOL CATEGORIES (no tools list — open input) ─────────────────────────────
+// ─── TOOL CATEGORIES ──────────────────────────────────────────────────────────
 const TOOL_CATEGORIES = [
-  { id: "abm", label: "Account-Based Marketing (ABM)" },
-  { id: "sales_engagement", label: "Sales Engagement" },
-  { id: "revenue_intelligence", label: "Revenue Intelligence" },
-  { id: "data_enrichment", label: "Data & Enrichment" },
-  { id: "marketing_automation", label: "Marketing Automation" },
-  { id: "crm", label: "CRM" },
+  { id: "abm", label: "Account-Based Marketing (ABM)", examples: "Demandbase, 6sense, RollWorks, Terminus, Triblio, MRP, etc." },
+  { id: "sales_engagement", label: "Sales Engagement", examples: "Outreach, Salesloft, Apollo, Groove, Klenty, Reply.io, etc." },
+  { id: "revenue_intelligence", label: "Revenue Intelligence", examples: "Gong, Chorus, Clari, Avoma, Jiminny, Wingman, etc." },
+  { id: "data_enrichment", label: "Data & Enrichment", examples: "ZoomInfo, Apollo, Cognism, Clearbit, Lusha, Clay, etc." },
+  { id: "marketing_automation", label: "Marketing Automation", examples: "HubSpot, Marketo, Pardot, Eloqua, ActiveCampaign, Act-On, etc." },
+  { id: "crm", label: "CRM", examples: "Salesforce, HubSpot, MS Dynamics, Pipedrive, SugarCRM, Zoho, etc." },
 ];
 
 // ─── UNIVERSAL CORE QUESTIONS ─────────────────────────────────────────────────
 const CORE_QUESTIONS = [
-  // GROUP 1 — WHO YOU ARE
   {
     id: "company_size", layer: 1,
     text: "How large is your organization?",
@@ -86,7 +85,6 @@ const CORE_QUESTIONS = [
       type: "text",
     },
   },
-  // GROUP 2 — THE EVALUATION CONTEXT
   {
     id: "problem", layer: 1,
     text: "What problem are you trying to solve with this tool?",
@@ -121,7 +119,6 @@ const CORE_QUESTIONS = [
       type: "text",
     },
   },
-  // GROUP 3 — READINESS SIGNALS
   {
     id: "change_readiness", layer: 2,
     text: "How would you describe your organization's appetite for change right now?",
@@ -321,7 +318,7 @@ const CATEGORY_QUESTIONS = {
     {
       id: "se_contact_data", layer: 2,
       text: "How would you rate your contact data quality — email validity, phone numbers, titles?",
-      hint: "Sequences sent to bad data destroy your domain reputation and demoralizes reps.",
+      hint: "Sequences sent to bad data destroy your domain reputation and demoralize reps.",
       type: "choice",
       options: ["Clean — regularly validated", "Decent but aging", "Patchy — some segments good, some bad", "It's a mess"],
       branch: {
@@ -608,11 +605,11 @@ const CATEGORY_QUESTIONS = {
     {
       id: "crm_consolidation", layer: 1,
       text: "Are you implementing a single new CRM or consolidating multiple existing instances?",
-      hint: "PE rollup and acquisition scenarios are a fundamentally different implementation — plan accordingly.",
+      hint: "M&A and acquisition scenarios are a fundamentally different implementation — plan accordingly.",
       type: "choice",
-      options: ["Single implementation — one system, one migration", "Consolidating two systems", "Consolidating three or more — PE rollup or acquisition scenario", "Partially consolidated — some business units still on separate systems"],
+      options: ["Single implementation — one system, one migration", "Consolidating two systems", "Consolidating three or more — M&A or acquisition scenario", "Partially consolidated — some business units still on separate systems"],
       branch: {
-        trigger: ["Consolidating two systems", "Consolidating three or more — PE rollup or acquisition scenario", "Partially consolidated — some business units still on separate systems"],
+        trigger: ["Consolidating two systems", "Consolidating three or more — M&A or acquisition scenario", "Partially consolidated — some business units still on separate systems"],
         id: "crm_consolidation_detail",
         text: "Who owns the data reconciliation across instances — specifically duplicate accounts, conflicting contact records, and different pipeline stage definitions?",
         hint: "This is the highest-risk element of a multi-instance consolidation. It needs a named owner before day one.",
@@ -677,6 +674,7 @@ const CATEGORY_QUESTIONS = {
     },
   ],
 };
+
 const EVAL_PROMPT = `You are Delphi, an independent software evaluation analyst for B2B SaaS buyers. You have no financial relationship with any vendor. Your job is to help buyers understand the gap between what a software tool actually requires and where their organization currently stands.
 
 CRITICAL: You must respond with ONLY a valid JSON object. No text before it, no text after it, no markdown code fences, no explanation. The response must begin with { and end with }.
@@ -685,7 +683,7 @@ IRONCLAD RULES:
 - NEVER mention any tool, vendor, or product not explicitly on the buyer's shortlist.
 - NEVER fabricate URLs. Only include URLs retrieved via web search in this session. If you cannot find a real URL, use "".
 - NEVER use days for implementation timelines. Use weeks only.
-- NEVER include budget ranges from memory. If you can verify current pricing via web search, include it flagged as approximate. If you cannot verify it, use "Pricing requires a direct quote from the vendor."
+- NEVER include budget ranges from memory. If you can verify current pricing via web search, include it flagged as approximate and include the source URL in pricing_source. If you cannot verify it, use "Pricing requires a direct quote from the vendor."
 - NEVER reference account hierarchies, buying committees, or other concepts unless the buyer mentioned them.
 - ALL scores (tool scores, overall_score, dimension scores) MUST be integers between 1 and 5. Never use 6, 7, 8, 9, or 10. The maximum score is 5.
 
@@ -696,13 +694,24 @@ READING THE BUYER'S ANSWERS:
 - If a buyer says they have dedicated resources for something, do not flag that thing as a resource risk.
 - If a buyer describes a sequenced plan, recognize that as organized planning, not a risk.
 
-TONE: Matter-of-fact. Guidance over assumption. Balanced.
+WRITING STYLE — READ CAREFULLY:
+- Write like a senior adviser talking to a peer, not a consultant writing a deliverable.
+- Vary sentence length. Mix short sentences with longer ones. Avoid a rhythm where every sentence is the same length.
+- No em dashes. Use commas, periods, or restructure the sentence instead.
+- No "It's not X, it's Y" constructions. No "Not X. Not Y. Just Z." No self-posed rhetorical questions answered immediately after.
+- No hyperbolic language. Avoid "fundamentally," "remarkably," "critically," "pivotal."
+- No invented compound labels like "the adoption paradox" or "the data trap." Say what you mean plainly.
+- No bullet points inside prose fields. Write in complete paragraphs.
+- No fractal summaries. Do not restate what was already said at the end of a section.
+- State observations directly. "Your CRM data is in poor shape" is clearer than "There may be some challenges around data quality."
 
 CATEGORY-SPECIFIC LOGIC:
 - For niche markets with known, finite TAMs: deterministic intent data (Demandbase approach) delivers faster ROI than probabilistic models (6sense approach).
 - Spell tool names correctly: 6sense not Six Sense, Demandbase not DemandBase.
 
 SHORTLIST ORDERING: Order tools from most recommended to least. First tool in shortlist array has "recommended": true, all others false.
+
+PRICING SOURCE REQUIREMENT: When you find pricing via web search, include the source URL in pricing_source. If you cannot find a verified source, use "".
 
 SOURCES: Use web search to find real URLs. Do not fabricate. Use "" for any URL you cannot verify.
 
@@ -716,41 +725,42 @@ Return ONLY this JSON structure, all fields populated:
   "sections": {
     "what_we_heard": {
       "summary": "2-3 paragraphs. Read between the lines. Arrive somewhere the buyer has not articulated yet. Do not restate their answers. Do not open with Based on what you shared.",
-      "table": [{ "tool": "Tool name", "score": 4, "budget_fit": "phrase", "readiness_match": "phrase", "our_take": "one sharp sentence" }]
+      "table": [{ "tool": "Tool name", "score": 4, "budget_fit": "phrase", "readiness_match": "phrase", "our_take": "one direct sentence" }]
     },
     "shortlist": [{
       "name": "Tool name", "score": 4, "budget": "Strong fit", "readiness": "Excellent match",
-      "does_well": "2-3 sentences specific to this buyer.",
-      "does_not_do_well": "2-3 sentences specific to this buyer.",
+      "does_well": "2-3 sentences specific to this buyer. Varied sentence length. No em dashes.",
+      "does_not_do_well": "2-3 sentences specific to this buyer. Varied sentence length. No em dashes.",
       "implementation_timeline": "X to Y weeks",
-      "pricing": "Verified price or Pricing requires a direct quote from the vendor.",
-      "integration_requirements": "Plain prose.",
+      "pricing": "Verified price (approximate) or Pricing requires a direct quote from the vendor.",
+      "pricing_source": "URL used to verify pricing, or empty string if not found",
+      "integration_requirements": "Plain prose. No em dashes.",
       "bottom_line": "One direct sentence.",
       "recommended": true
     }],
     "readiness_score": {
-      "summary": "2-3 sentences on overall posture.",
+      "summary": "2-3 sentences on overall posture. No em dashes.",
       "overall_score": 4,
       "dimensions": [
-        { "name": "Data Readiness", "score": 4, "analysis": "2-3 sentences." },
-        { "name": "Ops Capacity", "score": 4, "analysis": "2-3 sentences." },
-        { "name": "Sales and Marketing Alignment", "score": 4, "analysis": "2-3 sentences." },
-        { "name": "Change Management", "score": 4, "analysis": "2-3 sentences." },
-        { "name": "Integration Readiness", "score": 4, "analysis": "2-3 sentences." },
-        { "name": "Executive Sponsorship", "score": 4, "analysis": "2-3 sentences." }
+        { "name": "Data Readiness", "score": 4, "analysis": "2-3 sentences. No em dashes." },
+        { "name": "Ops Capacity", "score": 4, "analysis": "2-3 sentences. No em dashes." },
+        { "name": "Sales and Marketing Alignment", "score": 4, "analysis": "2-3 sentences. No em dashes." },
+        { "name": "Change Management", "score": 4, "analysis": "2-3 sentences. No em dashes." },
+        { "name": "Integration Readiness", "score": 4, "analysis": "2-3 sentences. No em dashes." },
+        { "name": "Executive Sponsorship", "score": 4, "analysis": "2-3 sentences. No em dashes." }
       ]
     },
-    "what_you_should_know": [{ "theme": "Tool Name — short theme", "body": "2-3 sentences of vendor-specific gotchas. Nothing generic. Nothing the vendor volunteers." }],
+    "what_you_should_know": [{ "theme": "Tool Name — short theme", "body": "2-3 sentences of vendor-specific gotchas. Nothing generic. Nothing the vendor volunteers. No em dashes." }],
     "questions": [
       { "group": "Ask All Vendors", "items": [{ "question": "Question text.", "listen_for": "One sentence." }] },
       { "group": "Ask [Vendor Name] specifically", "items": [{ "question": "Question text.", "listen_for": "One sentence." }] }
     ],
     "recommendation": {
       "recommended_tool": "Tool name",
-      "rationale": "2-4 sentences on fit.",
+      "rationale": "2-4 sentences on fit. No em dashes.",
       "others": [{ "tool": "Tool name", "note": "Genuine strength and specific reason not best fit." }]
     },
-    "sources": [{ "tool": "Tool name", "g2_label": "Tool Name G2 Reviews", "g2_url": "https://...", "docs_label": "Tool Name Knowledge Base", "docs_url": "https://..." }]
+    "sources": [{ "tool": "Tool name", "g2_label": "Tool Name G2 Reviews", "g2_url": "https://...", "docs_label": "Tool Name Knowledge Base", "docs_url": "https://...", "pricing_label": "Tool Name Pricing", "pricing_url": "https://..." }]
   }
 }`;
 
@@ -762,7 +772,7 @@ IRONCLAD RULES:
 - NEVER mention any tool not on the buyer's shortlist.
 - NEVER fabricate URLs. Only include URLs retrieved via web search in this session. If you cannot find a real URL, use "".
 - NEVER use days for timelines. Use weeks only.
-- NEVER include pricing from memory. Verify via web search or say "Pricing requires a direct quote from the vendor."
+- NEVER include pricing from memory. Verify via web search or say "Pricing requires a direct quote from the vendor." When verified, include the source URL in pricing_source.
 - ALL scores (tool scores, overall_score, dimension scores) MUST be integers between 1 and 5. Never use 6, 7, 8, 9, or 10. The maximum score is 5.
 
 READING THE BUYER'S ANSWERS:
@@ -771,9 +781,20 @@ READING THE BUYER'S ANSWERS:
 - Never flag problems the buyer said are solved or nearly solved.
 - If a buyer describes a sequenced plan, recognize that as organized planning, not a risk.
 
-TONE: Matter-of-fact. Balanced. Write as a senior technical adviser who has seen this stack before.
+WRITING STYLE — READ CAREFULLY:
+- Write like a senior adviser talking to a peer, not a consultant writing a deliverable.
+- Vary sentence length. Mix short sentences with longer ones. Avoid a rhythm where every sentence is the same length.
+- No em dashes. Use commas, periods, or restructure the sentence instead.
+- No "It's not X, it's Y" constructions. No "Not X. Not Y. Just Z." No self-posed rhetorical questions answered immediately after.
+- No hyperbolic language. Avoid "fundamentally," "remarkably," "critically," "pivotal."
+- No invented compound labels like "the adoption paradox" or "the data trap." Say what you mean plainly.
+- No bullet points inside prose fields. Write in complete paragraphs.
+- No fractal summaries. Do not restate what was already said at the end of a section.
+- State observations directly. "Your CRM data is in poor shape" is clearer than "There may be some challenges around data quality."
 
 SHORTLIST ORDERING: Order tools from most to least compatible throughout. First tool in compatibility array has "recommended": true, all others false.
+
+PRICING SOURCE REQUIREMENT: When you find pricing via web search, include the source URL in pricing_source. If you cannot find a verified source, use "".
 
 SOURCES: Use web search to find real URLs. Do not fabricate. Use "" for any URL you cannot verify.
 
@@ -786,9 +807,9 @@ Return ONLY this JSON structure, all fields populated:
   "report_type": "stack_fit",
   "sections": {
     "what_we_heard": {
-      "summary": "2-3 paragraphs. Read between the lines. Arrive at something the buyer has not yet articulated. Write as a senior technical adviser. Do not open with Based on what you shared. Do not restate their answers.",
+      "summary": "2-3 paragraphs. Read between the lines. Arrive at something the buyer has not yet articulated. Write as a senior technical adviser. Do not open with Based on what you shared. Do not restate their answers. No em dashes.",
       "table": [
-        { "tool": "Tool name", "score": 4, "stack_compatibility": "Strong", "integration_complexity": "Moderate", "our_take": "one sharp sentence specific to this buyer's stack" }
+        { "tool": "Tool name", "score": 4, "stack_compatibility": "Strong", "integration_complexity": "Moderate", "our_take": "one direct sentence specific to this buyer's stack" }
       ]
     },
     "compatibility": [
@@ -797,26 +818,28 @@ Return ONLY this JSON structure, all fields populated:
         "score": 4,
         "compatibility": "Strong",
         "complexity": "Moderate",
-        "body": "One paragraph of 4-6 sentences: what integrates natively with their specific stack, what requires custom work, how data flows, and the implementation timeline. Plain prose only.",
+        "body": "One paragraph of 4-6 sentences: what integrates natively with their specific stack, what requires custom work, how data flows, and the implementation timeline. Plain prose only. No em dashes.",
+        "pricing": "Verified price (approximate) or Pricing requires a direct quote from the vendor.",
+        "pricing_source": "URL used to verify pricing, or empty string if not found",
         "bottom_line": "One sentence on stack fit for this buyer.",
         "recommended": true
       }
     ],
     "integration_readiness": {
-      "summary": "2-3 sentences introducing what this section measures. End with implement successfully.",
+      "summary": "2-3 sentences introducing what this section measures. End with implement successfully. No em dashes.",
       "overall_score": 4,
       "dimensions": [
-        { "name": "Integration Ownership Clarity", "score": 4, "analysis": "2-3 sentences specific to this buyer." },
-        { "name": "Current Stack Health", "score": 4, "analysis": "2-3 sentences specific to this buyer." },
-        { "name": "Data Model Maturity", "score": 4, "analysis": "2-3 sentences specific to this buyer." },
-        { "name": "Team Capacity for New Integrations", "score": 3, "analysis": "2-3 sentences specific to this buyer." },
-        { "name": "Historical Integration Track Record", "score": 3, "analysis": "2-3 sentences specific to this buyer." }
+        { "name": "Integration Ownership Clarity", "score": 4, "analysis": "2-3 sentences specific to this buyer. No em dashes." },
+        { "name": "Current Stack Health", "score": 4, "analysis": "2-3 sentences specific to this buyer. No em dashes." },
+        { "name": "Data Model Maturity", "score": 4, "analysis": "2-3 sentences specific to this buyer. No em dashes." },
+        { "name": "Team Capacity for New Integrations", "score": 3, "analysis": "2-3 sentences specific to this buyer. No em dashes." },
+        { "name": "Historical Integration Track Record", "score": 3, "analysis": "2-3 sentences specific to this buyer. No em dashes." }
       ]
     },
     "what_you_should_know": [
       {
         "theme": "Tool Name — short theme label",
-        "body": "2-3 sentences of vendor-specific integration gotchas for this tool, specific to this buyer's stack. Things the vendor will not volunteer. Nothing generic."
+        "body": "2-3 sentences of vendor-specific integration gotchas for this tool, specific to this buyer's stack. Things the vendor will not volunteer. Nothing generic. No em dashes."
       }
     ],
     "questions": [
@@ -835,7 +858,7 @@ Return ONLY this JSON structure, all fields populated:
     ],
     "verdict": {
       "recommended_tool": "Tool name",
-      "rationale": "2-4 sentences on why this tool is the best stack fit for this specific buyer.",
+      "rationale": "2-4 sentences on why this tool is the best stack fit for this specific buyer. No em dashes.",
       "others": [
         { "tool": "Tool name", "note": "Genuine strength and specific reason not best stack fit for this buyer." }
       ]
@@ -846,7 +869,9 @@ Return ONLY this JSON structure, all fields populated:
         "g2_label": "Tool Name G2 Reviews",
         "g2_url": "https://www.g2.com/products/...",
         "docs_label": "Tool Name Knowledge Base",
-        "docs_url": "https://..."
+        "docs_url": "https://...",
+        "pricing_label": "Tool Name Pricing",
+        "pricing_url": "https://..."
       }
     ]
   }
@@ -1236,6 +1261,8 @@ function renderSources(parsed) {
   if (!parsed || parsed.length === 0) return elements;
   const g2Items = parsed.filter(s => s.g2_url);
   const docsItems = parsed.filter(s => s.docs_url);
+  const pricingItems = parsed.filter(s => s.pricing_url);
+
   if (g2Items.length > 0) {
     elements.push(<p key="src-g2-hdr" style={{ fontSize: 12, fontWeight: 700, letterSpacing: 2, textTransform: "uppercase", color: C.accent, margin: "20px 0 10px", fontFamily: FF }}>G2 Reviews</p>);
     g2Items.forEach((src, i) => {
@@ -1256,6 +1283,18 @@ function renderSources(parsed) {
         <div key={"docs-" + i} style={{ marginBottom: 14 }}>
           <p style={{ fontSize: 14, fontWeight: 600, color: C.textMid, margin: "0 0 3px", fontFamily: FF }}>{src.docs_label || src.tool + " Documentation"}</p>
           <a href={src.docs_url} target="_blank" rel="noopener noreferrer" style={{ color: C.accent, fontSize: 14, fontFamily: FF, wordBreak: "break-all", textDecoration: "underline" }}>{src.docs_url}</a>
+        </div>
+      );
+    });
+  }
+  if (pricingItems.length > 0) {
+    elements.push(<p key="src-pricing-hdr" style={{ fontSize: 12, fontWeight: 700, letterSpacing: 2, textTransform: "uppercase", color: C.accent, margin: "20px 0 10px", fontFamily: FF }}>Pricing Sources</p>);
+    pricingItems.forEach((src, i) => {
+      if (!src.pricing_url) return;
+      elements.push(
+        <div key={"pricing-" + i} style={{ marginBottom: 14 }}>
+          <p style={{ fontSize: 14, fontWeight: 600, color: C.textMid, margin: "0 0 3px", fontFamily: FF }}>{src.pricing_label || src.tool + " Pricing"}</p>
+          <a href={src.pricing_url} target="_blank" rel="noopener noreferrer" style={{ color: C.accent, fontSize: 14, fontFamily: FF, wordBreak: "break-all", textDecoration: "underline" }}>{src.pricing_url}</a>
         </div>
       );
     });
@@ -1737,7 +1776,7 @@ function renderContent(content, sectionTitle, reportType) {
       if (inQuestionGroup) { i++; continue; }
     }
 
-    if (sectionTitle === "Sources" && (line.trim() === "G2 Reviews" || line.trim() === "Vendor Documentation" || line.trim() === "Analyst Reports")) {
+    if (sectionTitle === "Sources" && (line.trim() === "G2 Reviews" || line.trim() === "Vendor Documentation" || line.trim() === "Pricing Sources" || line.trim() === "Analyst Reports")) {
       elements.push(<p key={i} style={{ fontSize: 12, fontWeight: 700, letterSpacing: 2, textTransform: "uppercase", color: C.accent, margin: "20px 0 10px", fontFamily: FF }}>{line.trim()}</p>);
       i++; continue;
     }
@@ -2024,6 +2063,7 @@ function buildEmailHtml(sections, reportType) {
     else if (title === "Sources") {
       const g2 = (parsed || []).filter(s => s.g2_url);
       const docs = (parsed || []).filter(s => s.docs_url);
+      const pricing = (parsed || []).filter(s => s.pricing_url);
       let src = "";
       if (g2.length) {
         src += `<p style="font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:${accent};margin:16px 0 8px;">G2 Reviews</p>`;
@@ -2032,6 +2072,10 @@ function buildEmailHtml(sections, reportType) {
       if (docs.length) {
         src += `<p style="font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:${accent};margin:16px 0 8px;">Vendor Documentation</p>`;
         src += docs.map(s => `<p style="margin:0 0 8px;"><span style="font-size:13px;font-weight:600;color:#3E3830;">${clean(s.docs_label || s.tool)}</span><br><a href="${s.docs_url}" style="color:${accent};font-size:13px;">${s.docs_url}</a></p>`).join("");
+      }
+      if (pricing.length) {
+        src += `<p style="font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:${accent};margin:16px 0 8px;">Pricing Sources</p>`;
+        src += pricing.map(s => `<p style="margin:0 0 8px;"><span style="font-size:13px;font-weight:600;color:#3E3830;">${clean(s.pricing_label || s.tool + " Pricing")}</span><br><a href="${s.pricing_url}" style="color:${accent};font-size:13px;">${s.pricing_url}</a></p>`).join("");
       }
       content = src;
     }
@@ -2257,32 +2301,20 @@ const Btn = ({ children, onClick, disabled, variant = "primary", full }) => (
     }}>{children}</button>
 );
 
-// ─── STACK TABLE INPUT ────────────────────────────────────────────────────────
 const HEALTH_OPTIONS = ["Clean and well-governed", "Decent with some gaps", "Messy but functional", "It's a disaster and we know it"];
 
 function StackTableInput({ onSubmit, onBack }) {
   const [rows, setRows] = useState([
-    { tool: "", health: "" },
-    { tool: "", health: "" },
-    { tool: "", health: "" },
-    { tool: "", health: "" },
-    { tool: "", health: "" },
+    { tool: "", health: "" }, { tool: "", health: "" }, { tool: "", health: "" },
+    { tool: "", health: "" }, { tool: "", health: "" },
   ]);
-
-  const updateRow = (i, field, val) => {
-    const updated = rows.map((r, idx) => idx === i ? { ...r, [field]: val } : r);
-    setRows(updated);
-  };
-
+  const updateRow = (i, field, val) => setRows(rows.map((r, idx) => idx === i ? { ...r, [field]: val } : r));
   const addRow = () => setRows([...rows, { tool: "", health: "" }]);
-
   const handleSubmit = () => {
     const filled = rows.filter(r => r.tool.trim());
     if (filled.length === 0) { onSubmit("Not provided"); return; }
-    const summary = filled.map(r => r.tool.trim() + (r.health ? " (" + r.health + ")" : "")).join(", ");
-    onSubmit(summary);
+    onSubmit(filled.map(r => r.tool.trim() + (r.health ? " (" + r.health + ")" : "")).join(", "));
   };
-
   return (
     <div>
       <div style={{ background: C.card, border: "1px solid " + C.border, borderRadius: 6, padding: "12px 16px", marginBottom: 16 }}>
@@ -2295,16 +2327,9 @@ function StackTableInput({ onSubmit, onBack }) {
         </div>
         {rows.map((row, i) => (
           <div key={i} style={{ display: "grid", gridTemplateColumns: "1fr 1fr", borderBottom: i < rows.length - 1 ? "1px solid " + C.border : "none" }}>
-            <input
-              type="text"
-              placeholder={"Tool " + (i + 1)}
-              value={row.tool}
-              onChange={e => updateRow(i, "tool", e.target.value)}
-              style={{ border: "none", borderRight: "1px solid " + C.border, padding: "12px 16px", fontSize: 15, fontFamily: FF, color: C.text, background: i % 2 === 0 ? C.white : C.card, outline: "none" }}
-            />
-            <select
-              value={row.health}
-              onChange={e => updateRow(i, "health", e.target.value)}
+            <input type="text" placeholder={"Tool " + (i + 1)} value={row.tool} onChange={e => updateRow(i, "tool", e.target.value)}
+              style={{ border: "none", borderRight: "1px solid " + C.border, padding: "12px 16px", fontSize: 15, fontFamily: FF, color: C.text, background: i % 2 === 0 ? C.white : C.card, outline: "none" }} />
+            <select value={row.health} onChange={e => updateRow(i, "health", e.target.value)}
               style={{ border: "none", padding: "12px 16px", fontSize: 14, fontFamily: FF, color: row.health ? C.text : C.textLight, background: i % 2 === 0 ? C.white : C.card, outline: "none", cursor: "pointer" }}>
               <option value="">—</option>
               {HEALTH_OPTIONS.map(opt => <option key={opt} value={opt}>{opt}</option>)}
@@ -2314,14 +2339,10 @@ function StackTableInput({ onSubmit, onBack }) {
       </div>
       <button onClick={addRow} style={{ background: "none", border: "1px dashed " + C.border, borderRadius: 4, color: C.textLight, fontSize: 13, fontWeight: 500, padding: "10px 16px", cursor: "pointer", fontFamily: FF, width: "100%", marginBottom: 20 }}>+ Add another tool</button>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-        {onBack ? (
-          <button onClick={onBack} style={{ background: "none", border: "none", color: C.textLight, fontSize: 14, fontWeight: 600, cursor: "pointer", fontFamily: FF }}>&larr; Back</button>
-        ) : <span />}
+        {onBack ? <button onClick={onBack} style={{ background: "none", border: "none", color: C.textLight, fontSize: 14, fontWeight: 600, cursor: "pointer", fontFamily: FF }}>&larr; Back</button> : <span />}
         <Btn onClick={handleSubmit} disabled={!rows.some(r => r.tool.trim())}>Continue</Btn>
       </div>
-      <button onClick={() => onSubmit("Not provided")} style={{ background: "none", border: "none", color: C.textLight, fontSize: 13, fontWeight: 500, marginTop: 16, textDecoration: "underline", cursor: "pointer", display: "block", fontFamily: FF }}>
-        Skip this question
-      </button>
+      <button onClick={() => onSubmit("Not provided")} style={{ background: "none", border: "none", color: C.textLight, fontSize: 13, fontWeight: 500, marginTop: 16, textDecoration: "underline", cursor: "pointer", display: "block", fontFamily: FF }}>Skip this question</button>
     </div>
   );
 }
@@ -2356,14 +2377,10 @@ export default function Delphi({ paymentStatus, startCheckout, onHome, initialRe
     const title = [categoryLabel, type === "stack_fit" ? "Stack Fit" : "Evaluation", tools ? "· " + tools : ""].filter(Boolean).join(" ");
     try {
       await supabase.from("reports").insert({
-        user_id: user.id,
-        report_type: type,
-        title: title.trim(),
+        user_id: user.id, report_type: type, title: title.trim(),
         email_html: buildEmailHtml(sections, type),
       });
-    } catch (err) {
-      console.error("Failed to save report:", err);
-    }
+    } catch (err) { console.error("Failed to save report:", err); }
   };
 
   const [reportType, setReportType] = useState(initialReportType || null);
@@ -2386,9 +2403,7 @@ export default function Delphi({ paymentStatus, startCheckout, onHome, initialRe
   const sectionIcons = reportType === "stack_fit" ? STACK_ICONS : EVAL_ICONS;
 
   useEffect(() => {
-    if (step === "questions" && q?.type === "text") {
-      setTimeout(() => inputRef.current?.focus(), 50);
-    }
+    if (step === "questions" && q?.type === "text") setTimeout(() => inputRef.current?.focus(), 50);
   }, [currentQ, step]);
 
   const buildQuestionQueue = (categories, currentType) => {
@@ -2397,11 +2412,8 @@ export default function Delphi({ paymentStatus, startCheckout, onHome, initialRe
     const seen = new Set(baseQueue.map(item => item.id));
     categories.forEach(catId => {
       const catQs = CATEGORY_QUESTIONS[catId] || [];
-      catQs.forEach(item => {
-        if (!seen.has(item.id)) { seen.add(item.id); queue.push(item); }
-      });
+      catQs.forEach(item => { if (!seen.has(item.id)) { seen.add(item.id); queue.push(item); } });
     });
-    // Filter out showIf questions — they'll be evaluated dynamically during submitAnswer
     return queue;
   };
 
@@ -2419,9 +2431,10 @@ export default function Delphi({ paymentStatus, startCheckout, onHome, initialRe
     setShowHistory(false);
   };
 
-  const toggleCategory = (id) => setSelectedCategories(prev =>
-    prev.includes(id) ? prev.filter(c => c !== id) : [...prev, id]
-  );
+  // Single-category enforcement: selecting one grays out all others
+  const toggleCategory = (id) => {
+    setSelectedCategories(prev => prev.includes(id) ? [] : [id]);
+  };
 
   const confirmSelection = () => {
     const shortlistKey = reportType === "stack_fit" ? "stack_shortlist" : "shortlist";
@@ -2440,16 +2453,10 @@ export default function Delphi({ paymentStatus, startCheckout, onHome, initialRe
       setQuestionQueue(newQueue);
     }
     setAnswers(newAnswers); setCurrentInput(""); setHoveredChoice(null);
-    // Find next question that passes showIf check
     let nextQ = currentQ + 1;
-    while (nextQ < questionQueue.length && !shouldShowQuestion(questionQueue[nextQ], newAnswers)) {
-      nextQ++;
-    }
-    if (nextQ < questionQueue.length) {
-      setCurrentQ(nextQ);
-    } else {
-      generateReport(newAnswers);
-    }
+    while (nextQ < questionQueue.length && !shouldShowQuestion(questionQueue[nextQ], newAnswers)) nextQ++;
+    if (nextQ < questionQueue.length) setCurrentQ(nextQ);
+    else generateReport(newAnswers);
   };
 
   const generateReport = async (finalAnswers) => {
@@ -2477,8 +2484,7 @@ export default function Delphi({ paymentStatus, startCheckout, onHome, initialRe
       if (paymentStatus?.email) {
         const emailHtml = buildEmailHtml(parsedSections, reportType);
         fetch("/api/send-report", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
+          method: "POST", headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ email: paymentStatus.email, html: emailHtml, reportType }),
         }).catch(err => console.error("Email send failed:", err));
       }
@@ -2503,8 +2509,6 @@ export default function Delphi({ paymentStatus, startCheckout, onHome, initialRe
       <div style={{ width: 36, height: 36, border: "3px solid " + C.border, borderTop: "3px solid " + C.accent, borderRadius: "50%", animation: "spin 0.9s linear infinite" }} />
     </div>
   );
-
-
 
   if (showHistory) return (
     <ReportHistory user={user} onNewReport={() => { setShowHistory(false); setStep("select"); }} onSignOut={handleSignOut} />
@@ -2545,64 +2549,74 @@ export default function Delphi({ paymentStatus, startCheckout, onHome, initialRe
     </div>
   );
 
-  if (step === "category_select") return (
-    <div style={pageWrap}>
-      <style>{GS}</style>
-      <div style={{ maxWidth: 600, width: "100%", animation: "fadeUp 0.4s ease" }}>
-        <Logo />
-        <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: 2, textTransform: "uppercase", color: C.accent, background: "rgba(61,107,33,0.08)", borderRadius: 20, padding: "4px 12px", marginBottom: 16, display: "inline-block" }}>
-          {reportType === "stack_fit" ? "The Stack Fit" : "The Evaluation"}
+  if (step === "category_select") {
+    const hasSelection = selectedCategories.length > 0;
+    return (
+      <div style={pageWrap}>
+        <style>{GS}</style>
+        <div style={{ maxWidth: 600, width: "100%", animation: "fadeUp 0.4s ease" }}>
+          <Logo />
+          <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: 2, textTransform: "uppercase", color: C.accent, background: "rgba(61,107,33,0.08)", borderRadius: 20, padding: "4px 12px", marginBottom: 16, display: "inline-block" }}>
+            {reportType === "stack_fit" ? "The Stack Fit" : "The Evaluation"}
+          </div>
+          {categoryStep === "categories" ? (
+            <>
+              <h2 style={{ fontFamily: FFD, fontSize: 28, fontWeight: 700, color: C.text, marginBottom: 8, lineHeight: 1.2 }}>What category are you evaluating?</h2>
+              <p style={{ fontSize: 15, fontWeight: 500, color: C.textMid, lineHeight: 1.7, marginBottom: 28 }}>Delphi evaluates one category at a time. Select one to continue.</p>
+              <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 28 }}>
+                {TOOL_CATEGORIES.map(cat => {
+                  const sel = selectedCategories.includes(cat.id);
+                  const grayed = hasSelection && !sel;
+                  return (
+                    <button key={cat.id} onClick={() => toggleCategory(cat.id)}
+                      style={{
+                        background: sel ? C.accent : C.white,
+                        border: "1.5px solid " + (sel ? C.accent : C.border),
+                        borderRadius: 4, padding: "14px 18px", textAlign: "left",
+                        cursor: grayed ? "default" : "pointer",
+                        opacity: grayed ? 0.38 : 1,
+                        pointerEvents: grayed ? "none" : "auto",
+                        transition: "all 0.15s",
+                        display: "flex", alignItems: "flex-start", gap: 12,
+                      }}>
+                      <div style={{ width: 20, height: 20, borderRadius: 3, border: "2px solid " + (sel ? "rgba(255,255,255,0.6)" : C.borderDark), background: sel ? "rgba(255,255,255,0.25)" : "transparent", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, fontSize: 12, color: C.white, fontWeight: 700, marginTop: 2 }}>{sel ? "✓" : ""}</div>
+                      <div>
+                        <p style={{ fontSize: 16, fontWeight: 500, color: sel ? C.white : C.text, margin: 0, lineHeight: 1.4 }}>{cat.label}</p>
+                        <p style={{ fontSize: 13, color: sel ? "rgba(255,255,255,0.65)" : C.textLight, margin: "3px 0 0", fontFamily: FF, lineHeight: 1.4 }}>{cat.examples}</p>
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+              <Btn onClick={() => setCategoryStep("tools")} disabled={selectedCategories.length === 0}>Enter Tools</Btn>
+            </>
+          ) : (
+            <>
+              <h2 style={{ fontFamily: FFD, fontSize: 28, fontWeight: 700, color: C.text, marginBottom: 12, lineHeight: 1.2 }}>Which tools are you considering?</h2>
+              <p style={{ fontSize: 16, fontWeight: 500, color: C.textMid, lineHeight: 1.75, marginBottom: 8 }}>List the top three tools you're considering.</p>
+              <p style={{ fontSize: 13, fontWeight: 500, color: C.textLight, lineHeight: 1.6, marginBottom: 28 }}>Spell tool names accurately for the best results. You can enter up to 3.</p>
+              <div style={{ display: "flex", flexDirection: "column", gap: 12, marginBottom: 28 }}>
+                {[0, 1, 2].map(i => (
+                  <div key={i} style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                    <span style={{ fontSize: 13, fontWeight: 600, color: C.textLight, minWidth: 60, fontFamily: FF }}>Choice {i + 1}</span>
+                    <input type="text"
+                      placeholder={i === 0 ? "e.g. Salesforce" : i === 1 ? "e.g. HubSpot CRM" : "Optional"}
+                      value={selectedTools[i] || ""}
+                      onChange={e => { const updated = [...selectedTools]; updated[i] = e.target.value; setSelectedTools(updated); }}
+                      style={{ flex: 1, border: "1.5px solid " + C.border, borderRadius: 4, padding: "13px 16px", fontSize: 16, fontFamily: FF, color: C.text, background: C.white }} />
+                  </div>
+                ))}
+              </div>
+              <div style={{ display: "flex", gap: 12 }}>
+                <Btn variant="ghost" onClick={() => setCategoryStep("categories")}>Back</Btn>
+                <Btn onClick={confirmSelection} disabled={!selectedTools.some(t => t?.trim())}>Continue</Btn>
+              </div>
+            </>
+          )}
         </div>
-        {categoryStep === "categories" ? (
-          <>
-            <h2 style={{ fontFamily: FFD, fontSize: 28, fontWeight: 700, color: C.text, marginBottom: 12, lineHeight: 1.2 }}>What category are you evaluating?</h2>
-            <p style={{ fontSize: 16, fontWeight: 500, color: C.textMid, lineHeight: 1.75, marginBottom: 28 }}>Select all that apply.</p>
-            <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 28 }}>
-              {TOOL_CATEGORIES.map(cat => {
-                const sel = selectedCategories.includes(cat.id);
-                return (
-                  <button key={cat.id} onClick={() => toggleCategory(cat.id)}
-                    style={{ background: sel ? C.accent : C.white, border: "1.5px solid " + (sel ? C.accent : C.border), borderRadius: 4, padding: "14px 18px", textAlign: "left", fontSize: 16, fontWeight: 500, color: sel ? C.white : C.text, transition: "all 0.15s", display: "flex", alignItems: "center", gap: 12 }}>
-                    <div style={{ width: 20, height: 20, borderRadius: 3, border: "2px solid " + (sel ? "rgba(255,255,255,0.6)" : C.borderDark), background: sel ? "rgba(255,255,255,0.25)" : "transparent", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, fontSize: 12, color: C.white, fontWeight: 700 }}>{sel ? "✓" : ""}</div>
-                    {cat.label}
-                  </button>
-                );
-              })}
-            </div>
-            <Btn onClick={() => setCategoryStep("tools")} disabled={selectedCategories.length === 0}>Enter Tools</Btn>
-          </>
-        ) : (
-          <>
-            <h2 style={{ fontFamily: FFD, fontSize: 28, fontWeight: 700, color: C.text, marginBottom: 12, lineHeight: 1.2 }}>Which tools are you considering?</h2>
-            <p style={{ fontSize: 16, fontWeight: 500, color: C.textMid, lineHeight: 1.75, marginBottom: 8 }}>List the top three tools you're considering.</p>
-            <p style={{ fontSize: 13, fontWeight: 500, color: C.textLight, lineHeight: 1.6, marginBottom: 28 }}>Spell tool names accurately for the best results. You can enter up to 3.</p>
-            <div style={{ display: "flex", flexDirection: "column", gap: 12, marginBottom: 28 }}>
-              {[0, 1, 2].map(i => (
-                <div key={i} style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                  <span style={{ fontSize: 13, fontWeight: 600, color: C.textLight, minWidth: 60, fontFamily: FF }}>Choice {i + 1}</span>
-                  <input
-                    type="text"
-                    placeholder={i === 0 ? "e.g. Salesforce" : i === 1 ? "e.g. HubSpot CRM" : "Optional"}
-                    value={selectedTools[i] || ""}
-                    onChange={e => {
-                      const updated = [...selectedTools];
-                      updated[i] = e.target.value;
-                      setSelectedTools(updated);
-                    }}
-                    style={{ flex: 1, border: "1.5px solid " + C.border, borderRadius: 4, padding: "13px 16px", fontSize: 16, fontFamily: FF, color: C.text, background: C.white }}
-                  />
-                </div>
-              ))}
-            </div>
-            <div style={{ display: "flex", gap: 12 }}>
-              <Btn variant="ghost" onClick={() => setCategoryStep("categories")}>Back</Btn>
-              <Btn onClick={confirmSelection} disabled={!selectedTools.some(t => t?.trim())}>Continue</Btn>
-            </div>
-          </>
-        )}
       </div>
-    </div>
-  );
+    );
+  }
 
   if (step === "generating") return (
     <div style={pageWrap}>
@@ -2648,7 +2662,6 @@ export default function Delphi({ paymentStatus, startCheckout, onHome, initialRe
             <button onClick={restart} style={{ background: "none", border: "1px solid " + C.border, borderRadius: 4, color: C.textLight, fontSize: 12, fontWeight: 700, padding: "9px 12px", letterSpacing: 1.5, textTransform: "uppercase", fontFamily: FF }}>New Report</button>
           </div>
         </div>
-
         <div style={{ flex: 1, padding: "40px 56px 40px 48px", maxWidth: 780, overflowY: "auto" }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 28, paddingBottom: 22, borderBottom: "2px solid " + C.borderDark }}>
             <h2 style={{ fontSize: 26, fontWeight: 700, color: C.text, fontFamily: FFD }}>{section?.title}</h2>
@@ -2665,9 +2678,7 @@ export default function Delphi({ paymentStatus, startCheckout, onHome, initialRe
           </div>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", paddingTop: 20, borderTop: "1px solid " + C.border }}>
             <button onClick={() => activeSection > 0 && setActiveSection(activeSection - 1)}
-              style={{ background: "none", border: "none", color: C.textMid, fontSize: 15, fontWeight: 500, opacity: activeSection === 0 ? 0.3 : 1, cursor: activeSection === 0 ? "default" : "pointer", fontFamily: FF }}>
-              &larr; Previous
-            </button>
+              style={{ background: "none", border: "none", color: C.textMid, fontSize: 15, fontWeight: 500, opacity: activeSection === 0 ? 0.3 : 1, cursor: activeSection === 0 ? "default" : "pointer", fontFamily: FF }}>&larr; Previous</button>
             <div style={{ display: "flex", gap: 7 }}>
               {reportSections.map((_, i) => (
                 <div key={i} onClick={() => setActiveSection(i)}
@@ -2676,9 +2687,7 @@ export default function Delphi({ paymentStatus, startCheckout, onHome, initialRe
             </div>
             {activeSection < reportSections.length - 1 ? (
               <button onClick={() => setActiveSection(activeSection + 1)}
-                style={{ background: "none", border: "none", color: C.textMid, fontSize: 15, fontWeight: 500, cursor: "pointer", fontFamily: FF }}>
-                Next &rarr;
-              </button>
+                style={{ background: "none", border: "none", color: C.textMid, fontSize: 15, fontWeight: 500, cursor: "pointer", fontFamily: FF }}>Next &rarr;</button>
             ) : (
               <span style={{ fontSize: 13, fontWeight: 500, color: C.textLight, fontFamily: FF }}>End of report</span>
             )}
@@ -2699,9 +2708,7 @@ export default function Delphi({ paymentStatus, startCheckout, onHome, initialRe
             <div style={{ width: 30, height: 30, borderRadius: "50%", background: C.accent, color: C.white, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13, fontWeight: 700, fontFamily: FFD }}>D</div>
             <span style={{ fontSize: 13, fontWeight: 700, letterSpacing: 1.5, textTransform: "uppercase", color: C.accent }}>{reportType === "stack_fit" ? "The Stack Fit" : "The Evaluation"}</span>
           </div>
-          <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
-            <span style={{ fontSize: 13, fontWeight: 500, color: C.textLight }}>{currentQ + 1} / {questionQueue.length}</span>
-          </div>
+          <span style={{ fontSize: 13, fontWeight: 500, color: C.textLight }}>{currentQ + 1} / {questionQueue.length}</span>
         </div>
         <div style={{ width: "100%", height: 3, background: C.border, borderRadius: 2, marginBottom: 36 }}>
           <div style={{ width: progress + "%", height: "100%", background: C.accent, borderRadius: 2, transition: "width 0.35s ease" }} />
@@ -2722,17 +2729,13 @@ export default function Delphi({ paymentStatus, startCheckout, onHome, initialRe
                   style={{ width: "100%", background: C.white, border: "1.5px solid " + C.border, borderRadius: 4, color: C.text, fontSize: 16, fontWeight: 500, padding: "14px 16px", resize: "vertical", lineHeight: 1.7, fontFamily: FF }} />
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 12 }}>
                   {currentQ > 0 ? (
-                    <button onClick={() => setCurrentQ(currentQ - 1)}
-                      style={{ background: "none", border: "none", color: C.textLight, fontSize: 14, fontWeight: 600, cursor: "pointer", fontFamily: FF, letterSpacing: 0.5 }}>&larr; Back</button>
+                    <button onClick={() => setCurrentQ(currentQ - 1)} style={{ background: "none", border: "none", color: C.textLight, fontSize: 14, fontWeight: 600, cursor: "pointer", fontFamily: FF }}>&larr; Back</button>
                   ) : (
                     <span style={{ fontSize: 12, fontWeight: 500, color: C.borderDark, fontFamily: FF }}>Command + Enter to continue</span>
                   )}
                   <Btn onClick={() => currentInput.trim() && submitAnswer(currentInput.trim())} disabled={!currentInput.trim()}>Continue</Btn>
                 </div>
-                <button onClick={() => submitAnswer("Not provided")}
-                  style={{ background: "none", border: "none", color: C.textLight, fontSize: 13, fontWeight: 500, marginTop: 16, textDecoration: "underline", cursor: "pointer", display: "block", fontFamily: FF }}>
-                  Skip this question
-                </button>
+                <button onClick={() => submitAnswer("Not provided")} style={{ background: "none", border: "none", color: C.textLight, fontSize: 13, fontWeight: 500, marginTop: 16, textDecoration: "underline", cursor: "pointer", display: "block", fontFamily: FF }}>Skip this question</button>
               </>
             )}
             {q.type === "choice" && (
@@ -2749,8 +2752,7 @@ export default function Delphi({ paymentStatus, startCheckout, onHome, initialRe
                 </div>
                 {currentQ > 0 && (
                   <div style={{ display: "flex", justifyContent: "flex-start", marginTop: 16 }}>
-                    <button onClick={() => setCurrentQ(currentQ - 1)}
-                      style={{ background: "none", border: "none", color: C.textLight, fontSize: 14, fontWeight: 600, cursor: "pointer", fontFamily: FF, letterSpacing: 0.5 }}>&larr; Back</button>
+                    <button onClick={() => setCurrentQ(currentQ - 1)} style={{ background: "none", border: "none", color: C.textLight, fontSize: 14, fontWeight: 600, cursor: "pointer", fontFamily: FF }}>&larr; Back</button>
                   </div>
                 )}
               </>
