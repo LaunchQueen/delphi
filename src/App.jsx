@@ -428,7 +428,11 @@ export default function App() {
     </div>
   );
 
-if (page === "account") return (
+if (page === "tool") return (
+    <Delphi paymentStatus={paymentStatus} startCheckout={startCheckout} onHome={() => setPage("home")} initialReportType={initialReportType} onMyReports={() => setPage("account")} />
+  );
+
+  if (page === "account") return (
   <AccountPage user={user} onNewReport={() => { setPage("tool"); }} onSignOut={handleSignOut} onHome={() => setPage("home")} />
 );
   
