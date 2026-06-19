@@ -2503,7 +2503,7 @@ export default function Delphi({ paymentStatus, startCheckout, onHome, initialRe
 
   const pageWrap = { minHeight: "100vh", background: C.bg, display: "flex", alignItems: "center", justifyContent: "center", padding: "40px 24px", fontFamily: FF };
 
-  if (authLoading) return (
+  if (authLoading && !paymentStatus?.paid) return (
     <div style={pageWrap}>
       <style>{GS}</style>
       <div style={{ width: 36, height: 36, border: "3px solid " + C.border, borderTop: "3px solid " + C.accent, borderRadius: "50%", animation: "spin 0.9s linear infinite" }} />
