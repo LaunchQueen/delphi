@@ -428,13 +428,13 @@ export default function App() {
     </div>
   );
 
- if (page === "account") {
+if (page === "account") {
+  if (authLoading) return null;
   if (!user) { setShowSignIn(true); setPage("home"); return null; }
   return (
     <AccountPage user={user} onNewReport={() => { setPage("tool"); }} onSignOut={handleSignOut} onHome={() => setPage("home")} />
   );
 }
-
   return (
     <div style={{ minHeight: "100vh", background: C.bg, fontFamily: FF }}>
       {showSignIn && <SignInModal signInEmail={signInEmail} setSignInEmail={setSignInEmail} signInStatus={signInStatus} setSignInStatus={setSignInStatus} signInError={signInError} handleSignIn={handleSignIn} onClose={closeSignIn} />}
