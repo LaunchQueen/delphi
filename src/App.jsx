@@ -180,7 +180,7 @@ function AccountPage({ user, onNewReport, onSignOut, onHome }) {
           <span style={{ color: C.border }}>|</span>
           <span style={{ fontSize: 14, color: C.textLight }}>{activeReport.title || "Report"}</span>
         </div>
-        <button onClick={() => downloadReport({ id: activeReport.id })} style={{ background: "none", border: "1px solid " + C.border, borderRadius: 4, color: C.textMid, fontSize: 12, fontWeight: 700, padding: "7px 14px", letterSpacing: 1.5, textTransform: "uppercase", fontFamily: FF, cursor: "pointer" }}>Download</button>
+      
       </div>
       <iframe srcDoc={activeReport.email_html} style={{ width: "100%", border: "none", minHeight: "calc(100vh - 53px)" }} title="Report" />
     </div>
