@@ -2357,8 +2357,28 @@ export default function Delphi({ paymentStatus, startCheckout, onHome, initialRe
       setUser(session?.user ?? null);
       setAuthLoading(false);
     });
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user ?? null);
+  const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      const newUser = session?.user ?? null;
+      setUser(newUser);
+      if (newUser) {
+        try {
+          const pending = sessionStorage.getItem("delphi_pending_report");
+          if (pending) {
+            const { sections, type, finalAnswers } = JSON.parse(pending);
+            sessionStorage.removeItem("delphi_pending_report");
+            const shortlistKey = type === "stack_fit" ? "stack_shortlist" : "shortlist";
+            const tools = (finalAnswers[shortlistKey] || []).slice(0, 3).join(", ");
+            const categoryLabel = (finalAnswers.categories || []).slice(0, 1).join("");
+            const title = [categoryLabel, type === "stack_fit" ? "Stack Fit" : "Evaluation", tools ? "· " + tools : ""].filter(Boolean).join(" ");
+            supabase.from("reports").insert({
+              user_id: newUser.id,
+              report_type: type,
+              title: title.trim(),
+              email_html: buildEmailHtml(sections, type),
+            }).then(({ error }) => { if (error) console.error("Failed to save pending report:", error); });
+          }
+        } catch(e) { console.error("sessionStorage read failed:", e); }
+      }
     });
     return () => subscription.unsubscribe();
   }, []);
@@ -2369,8 +2389,13 @@ export default function Delphi({ paymentStatus, startCheckout, onHome, initialRe
     setShowHistory(false);
   };
 
-  const saveReport = async (sections, type, finalAnswers) => {
-    if (!user) return;
+const saveReport = async (sections, type, finalAnswers) => {
+    if (!user) {
+      try {
+        sessionStorage.setItem("delphi_pending_report", JSON.stringify({ sections, type, finalAnswers }));
+      } catch(e) { console.error("sessionStorage write failed:", e); }
+      return;
+    }
     const shortlistKey = type === "stack_fit" ? "stack_shortlist" : "shortlist";
     const tools = (finalAnswers[shortlistKey] || []).slice(0, 3).join(", ");
     const categoryLabel = (finalAnswers.categories || []).slice(0, 1).join("");
