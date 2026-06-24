@@ -473,7 +473,7 @@ if (page === "tool") return (
           <a href="#pricing" className="nav-link" style={{ fontSize: 14, color: C.textLight, fontWeight: 500, textDecoration: "none", transition: "color 0.15s" }}>Pricing</a>
           {user ? (
             <>
-              <button onClick={() => setPage("account")} className="nav-link" style={{ background: "none", border: "none", fontSize: 14, color: C.textLight, fontWeight: 500, cursor: "pointer", fontFamily: FF }}>My Account</button>
+              <button onClick={() => setPage("account")} className="nav-link" style={{ background: "none", border: "none", fontSize: 14, color: C.textLight, fontWeight: 500, cursor: "pointer", fontFamily: FF }}>My Reports</button>
               <button onClick={handleSignOut} style={{ background: "none", border: "1px solid " + C.border, borderRadius: 3, padding: "8px 16px", fontSize: 13, fontWeight: 600, color: C.textMid, cursor: "pointer", fontFamily: FF }}>Sign out</button>
             </>
           ) : (
