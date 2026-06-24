@@ -212,7 +212,7 @@ function AccountPage({ user, onNewReport, onSignOut, onHome }) {
           <button onClick={() => setActiveTab("billing")} style={{ background: "none", border: "none", fontSize: 13, color: activeTab === "billing" ? C.accent : C.textLight, fontWeight: activeTab === "billing" ? 700 : 500, cursor: "pointer", fontFamily: FF }}>Billing</button>
           <span style={{ color: C.border }}>|</span>
           <span style={{ fontSize: 13, color: C.textLight }}>{user.email}</span>
-          <button onClick={onNewReport} style={{ background: C.accent, color: C.white, border: "none", borderRadius: 4, padding: "8px 16px", fontSize: 12, fontWeight: 700, letterSpacing: 1.5, textTransform: "uppercase", fontFamily: FF }}>New Report</button>
+          <button onClick={() => onNewReport()} style={{ background: C.accent, color: C.white, border: "none", borderRadius: 4, padding: "8px 16px", fontSize: 12, fontWeight: 700, letterSpacing: 1.5, textTransform: "uppercase", fontFamily: FF }}>New Report</button>
           <button onClick={onSignOut} style={{ background: "none", border: "1px solid " + C.border, borderRadius: 4, color: C.textLight, fontSize: 11, fontWeight: 700, padding: "7px 14px", letterSpacing: 1.5, textTransform: "uppercase", fontFamily: FF }}>Sign out</button>
         </div>
       </div>
@@ -338,8 +338,6 @@ export default function App() {
     if (sessionId) { setCheckingPayment(true); verifyPayment(sessionId); }
   }, []);
 
-  
-
   const loadPurchaseData = async (userId) => {
     const [{ data: purchaseData }, { count }] = await Promise.all([
       supabase.from("purchases").select("*").eq("user_id", userId).order("purchased_at", { ascending: false }).limit(1).single(),
@@ -414,6 +412,15 @@ export default function App() {
     setPage("home");
   };
 
+  // ─── THE FIX: guard onMyReports against null user ───────────────────────────
+  const handleMyReports = () => {
+    if (user) {
+      setPage("account");
+    } else {
+      setShowSignIn(true);
+    }
+  };
+
   const closeSignIn = () => { setShowSignIn(false); setSignInStatus("idle"); setSignInEmail(""); };
 
   if (window.location.pathname === "/feedback") return <FeedbackForm />;
@@ -428,14 +435,14 @@ export default function App() {
     </div>
   );
 
-if (page === "tool") return (
-    <Delphi paymentStatus={paymentStatus} startCheckout={startCheckout} onHome={() => setPage("home")} initialReportType={initialReportType} onMyReports={() => setPage("account")} />
+  if (page === "tool") return (
+    <Delphi paymentStatus={paymentStatus} startCheckout={startCheckout} onHome={() => setPage("home")} initialReportType={initialReportType} onMyReports={handleMyReports} />
   );
 
   if (page === "account") return (
-  <AccountPage user={user} onNewReport={() => { setPage("tool"); }} onSignOut={handleSignOut} onHome={() => setPage("home")} />
-);
-  
+    <AccountPage user={user} onNewReport={() => { setPage("tool"); }} onSignOut={handleSignOut} onHome={() => setPage("home")} />
+  );
+
   return (
     <div style={{ minHeight: "100vh", background: C.bg, fontFamily: FF }}>
       {showSignIn && <SignInModal signInEmail={signInEmail} setSignInEmail={setSignInEmail} signInStatus={signInStatus} setSignInStatus={setSignInStatus} signInError={signInError} handleSignIn={handleSignIn} onClose={closeSignIn} />}
