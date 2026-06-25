@@ -136,13 +136,13 @@ export default function Sample({ onHome, onGetReport }) {
 
       {/* NAV */}
       <nav style={shared.nav}>
-        <button onClick={onHome} style={{ background: "none", border: "none", cursor: "pointer", display: "flex", alignItems: "center", gap: 12, padding: 0 }}>
+        <a href="/" style={{ background: "none", border: "none", cursor: "pointer", display: "flex", alignItems: "center", gap: 12, padding: 0, textDecoration: "none" }}>
           <div style={shared.logoCircle}>D</div>
           <span style={shared.logoName}>Delphi</span>
-        </button>
+        </a>
         <div style={{ display: "flex", alignItems: "center", gap: 24 }}>
-          <button onClick={onHome} style={{ background: "none", border: "none", fontSize: 14, color: C.textLight, cursor: "pointer", fontFamily: FF }}>How it works</button>
-          <button onClick={() => { onHome(); setTimeout(() => document.getElementById("pricing")?.scrollIntoView({ behavior: "smooth" }), 100); }} style={{ background: "none", border: "none", fontSize: 14, color: C.textLight, cursor: "pointer", fontFamily: FF }}>Pricing</button>
+          <a href="/#how-it-works" style={{ fontSize: 14, color: C.textLight, fontFamily: FF, textDecoration: "none" }}>How it works</a>
+          <a href="/#pricing" style={{ fontSize: 14, color: C.textLight, fontFamily: FF, textDecoration: "none" }}>Pricing</a>
           <span style={{ fontSize: 14, color: C.accent, fontWeight: 600, fontFamily: FF }}>Sample Reports</span>
           <button onClick={onGetReport} style={{ background: C.accent, color: C.white, border: "none", borderRadius: 3, padding: "11px 28px", fontSize: 13, fontWeight: 700, letterSpacing: 2, textTransform: "uppercase", cursor: "pointer", fontFamily: FF }}>Get a Report</button>
         </div>
