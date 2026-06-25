@@ -62,7 +62,7 @@ function UpgradeModal({ purchase, onUpgrade, onSingleReport, onClose }) {
   const purchasedAt = purchase ? new Date(purchase.purchased_at) : null;
   const daysSince = purchasedAt ? Math.floor((Date.now() - purchasedAt) / (1000 * 60 * 60 * 24)) : 999;
   const withinWindow = daysSince <= 30;
-  const upgradePrice = withinWindow ? 125 : 300;
+  const upgradePrice = withinWindow ? 200 : 500;
   const daysLeft = withinWindow ? 30 - daysSince : 0;
 
   return (
@@ -85,7 +85,7 @@ function UpgradeModal({ purchase, onUpgrade, onSingleReport, onClose }) {
             </div>
             {withinWindow ? (
               <p style={{ fontSize: 13, color: C.textMid, lineHeight: 1.6, marginBottom: 12 }}>
-                Your $175 purchase is credited toward the $300 annual plan. You only pay the $125 difference. <strong style={{ color: C.accent }}>This offer expires in {daysLeft} day{daysLeft !== 1 ? "s" : ""}.</strong>
+                Your $300 purchase is credited toward the $500 annual plan. You only pay the $200 difference. <strong style={{ color: C.accent }}>This offer expires in {daysLeft} day{daysLeft !== 1 ? "s" : ""}.</strong>
               </p>
             ) : (
               <p style={{ fontSize: 13, color: C.textMid, lineHeight: 1.6, marginBottom: 12 }}>
@@ -101,7 +101,7 @@ function UpgradeModal({ purchase, onUpgrade, onSingleReport, onClose }) {
           <div style={{ border: "1px solid " + C.border, borderRadius: 8, padding: "20px 20px" }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 8 }}>
               <p style={{ fontSize: 15, fontWeight: 700, color: C.text, fontFamily: FFD }}>Single report</p>
-              <p style={{ fontSize: 18, fontWeight: 700, color: C.text, fontFamily: FFD }}>$175</p>
+              <p style={{ fontSize: 18, fontWeight: 700, color: C.text, fontFamily: FFD }}>$300</p>
             </div>
             <p style={{ fontSize: 13, color: C.textMid, lineHeight: 1.6, marginBottom: 12 }}>One Evaluation or Stack Fit report.</p>
             <button onClick={onSingleReport}
@@ -494,7 +494,7 @@ if (page === "tool") return (
           Delphi gives B2B buyers an independent second opinion on any software decision — translating vendor promises into a personalized assessment of what the tool actually requires for your business, and whether your organization is ready to make it work.
         </p>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 24, flexWrap: "wrap" }}>
-          <button onClick={() => document.getElementById("how-it-works").scrollIntoView({ behavior: "smooth" })} className="btn-primary" style={{ background: C.accent, color: C.white, border: "none", borderRadius: 3, padding: "16px 40px", fontSize: 14, fontWeight: 700, letterSpacing: 2.5, textTransform: "uppercase", cursor: "pointer", fontFamily: FF, transition: "background 0.15s" }}>Start your evaluation — $175</button>
+          <button onClick={() => document.getElementById("how-it-works").scrollIntoView({ behavior: "smooth" })} className="btn-primary" style={{ background: C.accent, color: C.white, border: "none", borderRadius: 3, padding: "16px 40px", fontSize: 14, fontWeight: 700, letterSpacing: 2.5, textTransform: "uppercase", cursor: "pointer", fontFamily: FF, transition: "background 0.15s" }}>Start your evaluation — $300</button>
           <a href="#how-it-works" style={{ color: C.textMid, fontSize: 14, fontWeight: 600, letterSpacing: 2, textTransform: "uppercase", textDecoration: "none", borderBottom: "1.5px solid " + C.borderDark, paddingBottom: 2 }}>See what's in the report</a>
         </div>
       </div>
@@ -618,8 +618,8 @@ if (page === "tool") return (
           <h2 style={{ fontFamily: FFD, fontSize: "clamp(34px, 4vw, 52px)", fontWeight: 700, color: C.text, lineHeight: 1.1, letterSpacing: -0.5, marginBottom: 48 }}>No subscriptions.<br /><em style={{ fontStyle: "italic", color: C.accent }}>No vendor relationships. Ever.</em></h2>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 20, maxWidth: 580 }}>
             {[
-              { label: "Single report", price: "$175", desc: "One Evaluation or one Stack Fit report.", btn: "Get started", featured: false, priceType: "single_report" },
-              { label: "Unlimited annual plan", price: "$300", desc: "Run unlimited reports for one year. No auto-renewal — you choose when to repurchase.", btn: "Get started", featured: true, priceType: "unlimited" },
+              { label: "Single report", price: "$300", desc: "One Evaluation or one Stack Fit report.", btn: "Get started", featured: false, priceType: "single_report" },
+              { label: "Unlimited annual plan", price: "$500", desc: "Run unlimited reports for one year. No auto-renewal — you choose when to repurchase.", btn: "Get started", featured: true, priceType: "unlimited" },
             ].map((card, i) => (
               <div key={i} className="card-lift" style={{ background: card.featured ? C.accent : C.white, border: card.featured ? "1.5px solid " + C.accent : "1.5px solid " + C.border, borderRadius: 8, padding: "32px", display: "flex", flexDirection: "column", gap: 12, position: "relative" }}>
                 {card.featured && <div style={{ position: "absolute", top: -1, right: 20, background: C.accentDark, color: C.white, fontSize: 10, fontWeight: 700, letterSpacing: 1.5, textTransform: "uppercase", padding: "4px 12px", borderRadius: "0 0 4px 4px" }}>Best value</div>}
@@ -638,7 +638,7 @@ if (page === "tool") return (
       <div style={{ textAlign: "center", padding: "88px 48px", background: C.dark }}>
         <h2 style={{ fontFamily: FFD, fontSize: "clamp(30px, 4vw, 52px)", fontWeight: 700, color: C.white, letterSpacing: -0.5, marginBottom: 14, lineHeight: 1.1 }}>The second opinion<br /><em style={{ fontStyle: "italic", color: C.gold }}>your vendor can't give you.</em></h2>
         <p style={{ fontSize: 18, fontWeight: 500, color: "rgba(255,255,255,0.5)", marginBottom: 36, fontFamily: FF }}>Independent. Personalized. Built for the buyer.</p>
-        <button onClick={() => startCheckout("single_report", "evaluation")} style={{ background: C.white, color: C.accent, border: "none", borderRadius: 3, padding: "16px 40px", fontSize: 14, fontWeight: 700, letterSpacing: 2.5, textTransform: "uppercase", cursor: "pointer", fontFamily: FF }}>Get your report — $175</button>
+        <button onClick={() => startCheckout("single_report", "evaluation")} style={{ background: C.white, color: C.accent, border: "none", borderRadius: 3, padding: "16px 40px", fontSize: 14, fontWeight: 700, letterSpacing: 2.5, textTransform: "uppercase", cursor: "pointer", fontFamily: FF }}>Get your report — $300</button>
       </div>
 
       {/* ── FOOTER ── */}
