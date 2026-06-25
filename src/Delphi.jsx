@@ -19,12 +19,12 @@ const GS = "@import url('https://fonts.googleapis.com/css2?family=Playfair+Displ
 
 // ─── TOOL CATEGORIES ──────────────────────────────────────────────────────────
 const TOOL_CATEGORIES = [
-  { id: "abm", label: "Account-Based Marketing (ABM)", examples: "Demandbase, 6sense, RollWorks, Terminus, Triblio, MRP, etc." },
-  { id: "sales_engagement", label: "Sales Engagement", examples: "Outreach, Salesloft, Apollo, Groove, Klenty, Reply.io, etc." },
-  { id: "revenue_intelligence", label: "Revenue Intelligence", examples: "Gong, Chorus, Clari, Avoma, Jiminny, Wingman, etc." },
-  { id: "data_enrichment", label: "Data & Enrichment", examples: "ZoomInfo, Apollo, Cognism, Clearbit, Lusha, Clay, etc." },
-  { id: "marketing_automation", label: "Marketing Automation", examples: "HubSpot, Marketo, Pardot, Eloqua, ActiveCampaign, Act-On, etc." },
-  { id: "crm", label: "CRM", examples: "Salesforce, HubSpot, MS Dynamics, Pipedrive, SugarCRM, Zoho, etc." },
+  { id: "abm", label: "Account-Based Marketing (ABM)", shortLabel: "ABM", examples: "Demandbase, 6sense, RollWorks, Terminus, Triblio, MRP, etc." },
+  { id: "sales_engagement", label: "Sales Engagement", shortLabel: "Sales Engagement", examples: "Outreach, Salesloft, Apollo, Groove, Klenty, Reply.io, etc." },
+  { id: "revenue_intelligence", label: "Revenue Intelligence", shortLabel: "Revenue Intelligence", examples: "Gong, Chorus, Clari, Avoma, Jiminny, Wingman, etc." },
+  { id: "data_enrichment", label: "Data & Enrichment", shortLabel: "Data & Enrichment", examples: "ZoomInfo, Apollo, Cognism, Clearbit, Lusha, Clay, etc." },
+  { id: "marketing_automation", label: "Marketing Automation", shortLabel: "Marketing Automation", examples: "HubSpot, Marketo, Pardot, Eloqua, ActiveCampaign, Act-On, etc." },
+  { id: "crm", label: "CRM", shortLabel: "CRM", examples: "Salesforce, HubSpot, MS Dynamics, Pipedrive, SugarCRM, Zoho, etc." },
 ];
 
 // ─── UNIVERSAL CORE QUESTIONS ─────────────────────────────────────────────────
@@ -2389,7 +2389,7 @@ export default function Delphi({ paymentStatus, startCheckout, onHome, initialRe
     setShowHistory(false);
   };
 
-const saveReport = async (sections, type, finalAnswers) => {
+  const saveReport = async (sections, type, finalAnswers) => {
     if (!user) {
       try {
         sessionStorage.setItem("delphi_pending_report", JSON.stringify({ sections, type, finalAnswers }));
@@ -2664,9 +2664,12 @@ const saveReport = async (sections, type, finalAnswers) => {
         <style>{GS}</style>
         <div style={{ width: 240, minWidth: 240, background: C.sidebar, borderRight: "1px solid " + C.border, padding: "32px 20px", display: "flex", flexDirection: "column", position: "sticky", top: 0, height: "100vh", overflowY: "auto" }}>
           <Logo small color={reportType === "stack_fit" ? C.stack : C.accent} />
-          <p style={{ fontSize: 11, fontWeight: 700, color: C.textLight, letterSpacing: 1.5, textTransform: "uppercase", marginBottom: 24, marginLeft: 44 }}>
-            {reportType === "stack_fit" ? "Stack Fit Report" : "Evaluation Report"}
-          </p>
+          <div style={{ marginLeft: 44, marginBottom: 24 }}>
+            <p style={{ fontSize: 11, fontWeight: 700, color: C.textLight, letterSpacing: 1.5, textTransform: "uppercase", margin: 0 }}>
+              {reportType === "stack_fit" ? "Stack Fit Report" : "Evaluation Report"}
+            </p>
+            {selectedCategories.length > 0 && (() => { const cat = TOOL_CATEGORIES.find(c => c.id === selectedCategories[0]); return cat ? <p style={{ fontSize: 11, fontWeight: 700, color: reportType === "stack_fit" ? C.stack : C.accent, letterSpacing: 1.5, textTransform: "uppercase", margin: "3px 0 0" }}>{cat.shortLabel}</p> : null; })()}
+          </div>
           <div style={{ height: 1, background: C.border, marginBottom: 16 }} />
           <nav style={{ display: "flex", flexDirection: "column", gap: 4, flex: 1 }}>
             {reportSections.map((sec, i) => {
@@ -2732,12 +2735,18 @@ const saveReport = async (sections, type, finalAnswers) => {
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
             <div style={{ width: 30, height: 30, borderRadius: "50%", background: C.accent, color: C.white, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13, fontWeight: 700, fontFamily: FFD }}>D</div>
             <span style={{ fontSize: 13, fontWeight: 700, letterSpacing: 1.5, textTransform: "uppercase", color: C.accent }}>{reportType === "stack_fit" ? "The Stack Fit" : "The Evaluation"}</span>
+            {selectedCategories.length > 0 && (() => { const cat = TOOL_CATEGORIES.find(c => c.id === selectedCategories[0]); return cat ? <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: 1.5, textTransform: "uppercase", color: C.white, background: reportType === "stack_fit" ? C.stack : C.accent, borderRadius: 20, padding: "3px 10px" }}>{cat.shortLabel}</span> : null; })()}
           </div>
           <span style={{ fontSize: 13, fontWeight: 500, color: C.textLight }}>{currentQ + 1} / {questionQueue.length}</span>
         </div>
         <div style={{ width: "100%", height: 3, background: C.border, borderRadius: 2, marginBottom: 36 }}>
           <div style={{ width: progress + "%", height: "100%", background: C.accent, borderRadius: 2, transition: "width 0.35s ease" }} />
         </div>
+        {q && currentQ === 0 && (
+          <p style={{ fontSize: 15, fontWeight: 500, color: C.textMid, lineHeight: 1.75, marginBottom: 28, paddingBottom: 24, borderBottom: "1px solid " + C.border }}>
+            {reportType === "stack_fit" ? "This questionnaire focuses on your technical environment, your current stack, and whether your infrastructure is ready to support a new integration." : "This questionnaire focuses on your organizational readiness for change, your team, and whether your organization is set up to make this tool work."}
+          </p>
+        )}
         {q && (
           <>
             <p style={{ fontSize: 12, fontWeight: 700, letterSpacing: 2.5, textTransform: "uppercase", color: C.textLight, marginBottom: 16 }}>
