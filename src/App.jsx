@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import Delphi from "./Delphi.jsx";
 import FeedbackForm from "./FeedbackForm.jsx";
+import Sample from "./Sample.jsx";
 import { createClient } from "@supabase/supabase-js";
 
 const supabase = createClient(
@@ -424,6 +425,7 @@ export default function App() {
   const closeSignIn = () => { setShowSignIn(false); setSignInStatus("idle"); setSignInEmail(""); };
 
   if (window.location.pathname === "/feedback") return <FeedbackForm />;
+  if (window.location.pathname === "/sample") return <Sample onHome={() => setPage("home")} onGetReport={handleNewReport} />;
 
   if (checkingPayment) return (
     <div style={{ minHeight: "100vh", background: C.bg, display: "flex", alignItems: "center", justifyContent: "center", fontFamily: FF }}>
