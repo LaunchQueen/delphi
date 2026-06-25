@@ -14,9 +14,9 @@ const HEADERS = {
 };
 
 const PRICE_TYPES = {
-  "price_1TcsDNCzdpqwekegzRjP3fUF": "single_report",
-  "price_1TcsceCzdpqwekegMLNrJcxG": "single_report",
-  "price_1Tf0C6CzdpqwekegeiNPwIza": "unlimited",
+  "price_1TmF4OCzdpqwekegu4D3y6xt": "single_report",
+  "price_1TmF4OCzdpqwekegu4D3y6xt": "single_report",
+  "price_1TmF3NCzdpqwekegwyeEGMCO": "unlimited",
 };
 
 export default async function handler(req, res) {

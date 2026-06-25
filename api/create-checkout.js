@@ -8,9 +8,9 @@ const HEADERS = {
 };
 
 const PRICES = {
-  single_report: "price_1TcsDNCzdpqwekegzRjP3fUF",
-  beta: "price_1TcsceCzdpqwekegMLNrJcxG",
-  unlimited: "price_1Tf0C6CzdpqwekegeiNPwIza",
+  single_report: "price_1TmF4OCzdpqwekegu4D3y6xt",
+  beta: "price_1TmF4OCzdpqwekegu4D3y6xt",
+  unlimited: "price_1TmF3NCzdpqwekegwyeEGMCO",
 };
 
 export default async function handler(req, res) {
