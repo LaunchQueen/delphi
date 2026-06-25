@@ -471,6 +471,7 @@ if (page === "tool") return (
         <div style={{ display: "flex", alignItems: "center", gap: 24 }}>
           <a href="#how-it-works" className="nav-link" style={{ fontSize: 14, color: C.textLight, fontWeight: 500, textDecoration: "none", transition: "color 0.15s" }}>How it works</a>
           <a href="#pricing" className="nav-link" style={{ fontSize: 14, color: C.textLight, fontWeight: 500, textDecoration: "none", transition: "color 0.15s" }}>Pricing</a>
+          <a href="/sample" className="nav-link" style={{ fontSize: 14, color: C.textLight, fontWeight: 500, textDecoration: "none", transition: "color 0.15s" }}>Sample Reports</a>
           {user ? (
             <>
               <button onClick={() => setPage("account")} className="nav-link" style={{ background: "none", border: "none", fontSize: 14, color: C.textLight, fontWeight: 500, cursor: "pointer", fontFamily: FF }}>My Reports</button>
