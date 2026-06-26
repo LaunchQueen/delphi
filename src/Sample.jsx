@@ -64,7 +64,7 @@ function Prose({ children, fade }) {
 }
 
 function Eyebrow({ children, color }) {
-  return <p style={{ fontSize: 10, fontWeight: 700, letterSpacing: 2.5, textTransform: "uppercase", color: color || C.accent, marginBottom: 10, fontFamily: FF }}>{children}</p>;
+  return <p style={{ fontSize: 12, fontWeight: 700, letterSpacing: 2.5, textTransform: "uppercase", color: color || C.accent, marginBottom: 12, fontFamily: FF }}>{children}</p>;
 }
 
 function SectionHeading({ children }) {
@@ -73,9 +73,9 @@ function SectionHeading({ children }) {
 
 function ValueProp({ text, accentColor }) {
   return (
-    <div style={{ marginTop: 28, paddingTop: 24, borderTop: "1px solid " + C.border }}>
-      <p style={{ fontSize: 10, fontWeight: 700, letterSpacing: 2.5, textTransform: "uppercase", color: accentColor || C.accent, marginBottom: 8, fontFamily: FF }}>What this gives you</p>
-      <p style={{ fontSize: 17, color: C.textBody, lineHeight: 1.85, maxWidth: 680, fontFamily: FF }}>{text}</p>
+    <div style={{ marginTop: 32, paddingTop: 28, borderTop: "1px solid " + C.border }}>
+      <p style={{ fontSize: 12, fontWeight: 700, letterSpacing: 2.5, textTransform: "uppercase", color: accentColor || C.accent, marginBottom: 10, fontFamily: FF }}>What this gives you</p>
+      <p style={{ fontSize: 18, color: C.textBody, lineHeight: 1.85, fontFamily: FF }}>{text}</p>
     </div>
   );
 }
@@ -169,7 +169,7 @@ function QGroup({ label, items, color, highlightFirst }) {
 function Section({ bg, children, first, className }) {
   return (
     <div className={"sample-section " + (className || "")} style={{ background: bg, padding: first ? "72px 56px 56px" : "72px 56px" }}>
-      <div style={{ maxWidth: 1100, margin: "0 auto", position: "relative" }}>
+      <div style={{ maxWidth: 780, margin: "0 auto", position: "relative" }}>
         {children}
       </div>
     </div>
@@ -179,8 +179,8 @@ function Section({ bg, children, first, className }) {
 function ScenarioIntro({ pill, pillColor, pillBg, pillBorder, h2color, title, sub, ruleColor }) {
   return (
     <div className="sample-scenario" style={{ background: C.bg, padding: "72px 56px 0", textAlign: "center" }}>
-      <div style={{ display: "inline-block", fontSize: 11, fontWeight: 700, letterSpacing: 2, textTransform: "uppercase", borderRadius: 20, padding: "5px 16px", marginBottom: 20, background: pillBg, color: pillColor, border: "1px solid " + pillBorder, fontFamily: FF }}>{pill}</div>
-      <h2 style={{ fontFamily: FFD, fontSize: "clamp(26px, 3vw, 36px)", fontWeight: 700, color: C.text, lineHeight: 1.15, marginBottom: 14 }} dangerouslySetInnerHTML={{ __html: title }} />
+      <div style={{ display: "inline-block", fontSize: 12, fontWeight: 700, letterSpacing: 2, textTransform: "uppercase", borderRadius: 20, padding: "5px 16px", marginBottom: 20, background: pillBg, color: pillColor, border: "1px solid " + pillBorder, fontFamily: FF }}>{pill}</div>
+      <h2 style={{ fontFamily: FFD, fontSize: "clamp(26px, 3vw, 36px)", fontWeight: 700, color: C.text, lineHeight: 1.15, marginBottom: 14, maxWidth: 780, margin: "0 auto 14px" }} dangerouslySetInnerHTML={{ __html: title }} />
       <p style={{ fontSize: 18, color: C.textLight, lineHeight: 1.75, maxWidth: 600, margin: "0 auto" }}>{sub}</p>
       <div style={{ width: 48, height: 3, background: ruleColor, margin: "28px auto 0", borderRadius: 2 }} />
     </div>
