@@ -311,6 +311,7 @@ export default function App() {
   const [initialReportType, setInitialReportType] = useState(null);
   const [user, setUser] = useState(null);
   const [showSignIn, setShowSignIn] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [signInEmail, setSignInEmail] = useState("");
   const [signInStatus, setSignInStatus] = useState("idle");
   const [signInError, setSignInError] = useState("");
@@ -466,11 +467,22 @@ if (page === "tool") return (
 
       {/* ── NAV ── */}
       <nav style={{ position: "fixed", top: 0, left: 0, right: 0, zIndex: 100, padding: "18px 56px", display: "flex", justifyContent: "space-between", alignItems: "center", background: "rgba(250,247,242,0.95)", backdropFilter: "blur(10px)", borderBottom: "1px solid " + C.border }}>
+        <style>{`
+          @media (max-width: 768px) {
+            .nav-desktop { display: none !important; }
+            .nav-hamburger { display: flex !important; }
+            nav { padding: 14px 24px !important; }
+          }
+          @media (min-width: 769px) {
+            .nav-hamburger { display: none !important; }
+            .mobile-menu { display: none !important; }
+          }
+        `}</style>
         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
           <div style={{ width: 38, height: 38, borderRadius: "50%", background: C.accent, color: C.white, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18, fontWeight: 700, fontFamily: FFD }}>D</div>
           <span style={{ fontSize: 22, fontWeight: 700, color: C.text, fontFamily: FFD }}>Delphi</span>
         </div>
-        <div style={{ display: "flex", alignItems: "center", gap: 24 }}>
+        <div className="nav-desktop" style={{ display: "flex", alignItems: "center", gap: 24 }}>
           <a href="#how-it-works" className="nav-link" style={{ fontSize: 14, color: C.textLight, fontWeight: 500, textDecoration: "none", transition: "color 0.15s" }}>How it works</a>
           <a href="#pricing" className="nav-link" style={{ fontSize: 14, color: C.textLight, fontWeight: 500, textDecoration: "none", transition: "color 0.15s" }}>Pricing</a>
           <a href="/sample" className="nav-link" style={{ fontSize: 14, color: C.textLight, fontWeight: 500, textDecoration: "none", transition: "color 0.15s" }}>Sample Reports</a>
@@ -484,7 +496,28 @@ if (page === "tool") return (
           )}
           <button onClick={user ? handleNewReport : () => document.getElementById("how-it-works").scrollIntoView({ behavior: "smooth" })} className="btn-primary" style={{ background: C.accent, color: C.white, border: "none", borderRadius: 3, padding: "11px 28px", fontSize: 13, fontWeight: 700, letterSpacing: 2, textTransform: "uppercase", cursor: "pointer", fontFamily: FF, transition: "background 0.15s" }}>Get a Report</button>
         </div>
+        <button className="nav-hamburger" onClick={() => setMobileMenuOpen(v => !v)} style={{ display: "none", background: "none", border: "none", cursor: "pointer", flexDirection: "column", gap: 5, padding: 4 }}>
+          <div style={{ width: 22, height: 2, background: C.text, borderRadius: 1 }} />
+          <div style={{ width: 22, height: 2, background: C.text, borderRadius: 1 }} />
+          <div style={{ width: 22, height: 2, background: C.text, borderRadius: 1 }} />
+        </button>
       </nav>
+      {mobileMenuOpen && (
+        <div className="mobile-menu" style={{ position: "fixed", top: 73, left: 0, right: 0, zIndex: 99, background: "rgba(250,247,242,0.98)", backdropFilter: "blur(10px)", borderBottom: "1px solid " + C.border, flexDirection: "column", padding: "16px 24px 24px", display: "flex" }}>
+          <a href="#how-it-works" onClick={() => setMobileMenuOpen(false)} style={{ fontSize: 16, color: C.textLight, fontWeight: 500, textDecoration: "none", padding: "12px 0", borderBottom: "1px solid " + C.border, fontFamily: FF }}>How it works</a>
+          <a href="#pricing" onClick={() => setMobileMenuOpen(false)} style={{ fontSize: 16, color: C.textLight, fontWeight: 500, textDecoration: "none", padding: "12px 0", borderBottom: "1px solid " + C.border, fontFamily: FF }}>Pricing</a>
+          <a href="/sample" onClick={() => setMobileMenuOpen(false)} style={{ fontSize: 16, color: C.textLight, fontWeight: 500, textDecoration: "none", padding: "12px 0", borderBottom: "1px solid " + C.border, fontFamily: FF }}>Sample Reports</a>
+          {user ? (
+            <>
+              <button onClick={() => { setPage("account"); setMobileMenuOpen(false); }} style={{ background: "none", border: "none", fontSize: 16, color: C.textLight, fontWeight: 500, cursor: "pointer", fontFamily: FF, textAlign: "left", padding: "12px 0", borderBottom: "1px solid " + C.border }}>My Reports</button>
+              <button onClick={() => { handleSignOut(); setMobileMenuOpen(false); }} style={{ background: "none", border: "none", fontSize: 16, color: C.textLight, fontWeight: 500, cursor: "pointer", fontFamily: FF, textAlign: "left", padding: "12px 0", borderBottom: "1px solid " + C.border }}>Sign out</button>
+            </>
+          ) : (
+            <button onClick={() => { setShowSignIn(true); setMobileMenuOpen(false); }} style={{ background: "none", border: "none", fontSize: 16, color: C.textLight, fontWeight: 500, cursor: "pointer", fontFamily: FF, textAlign: "left", padding: "12px 0", borderBottom: "1px solid " + C.border }}>Sign in</button>
+          )}
+          <button onClick={() => { user ? handleNewReport() : document.getElementById("how-it-works").scrollIntoView({ behavior: "smooth" }); setMobileMenuOpen(false); }} style={{ background: C.accent, color: C.white, border: "none", borderRadius: 3, padding: "14px 28px", fontSize: 13, fontWeight: 700, letterSpacing: 2, textTransform: "uppercase", cursor: "pointer", fontFamily: FF, marginTop: 16 }}>Get a Report</button>
+        </div>
+      )}
 
       {/* ── HERO ── */}
       <div style={{ minHeight: "88vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", textAlign: "center", padding: "140px 48px 80px", maxWidth: 900, margin: "0 auto", animation: "fadeUp 0.65s ease" }}>

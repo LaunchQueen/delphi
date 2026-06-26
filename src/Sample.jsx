@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 
 const C = {
   bg: "#FAF7F2", warm: "#F2EDE6", sidebar: "#EDE6DC", border: "#E0D8CE",
@@ -8,7 +8,34 @@ const C = {
 };
 const FF = "'EB Garamond', Georgia, serif";
 const FFD = "'Playfair Display', Georgia, serif";
-const GS = `@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,700;1,600;1,700&family=EB+Garamond:wght@400;500;600;700&display=swap'); * { box-sizing: border-box; margin: 0; padding: 0; } button { cursor: pointer; }`;
+const GS = `@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,700;1,600;1,700&family=EB+Garamond:wght@400;500;600;700&display=swap'); * { box-sizing: border-box; margin: 0; padding: 0; } button { cursor: pointer; }
+@media (max-width: 768px) {
+  .sample-nav-desktop { display: none !important; }
+  .sample-nav-hamburger { display: flex !important; }
+  .sample-section { padding: 48px 24px !important; }
+  .sample-scenario { padding: 48px 24px 0 !important; }
+  .sample-hero { padding: 60px 24px 48px !important; }
+  .sample-indep { padding: 12px 24px !important; }
+  .sample-divider { margin: 0 24px !important; }
+  .sample-dark-section { padding: 48px 24px !important; }
+  .sample-cta { padding: 48px 24px !important; }
+  .sample-footer { padding: 24px 24px !important; }
+  .sample-callout { display: none !important; }
+  .sample-highlight-mobile { margin-bottom: 12px !important; }
+  .sample-score-num { font-size: 36px !important; }
+  .sample-frame-content { padding: 18px 18px !important; }
+  .sample-shortlist-grid { grid-template-columns: 1fr !important; }
+  .sample-dim-row { font-size: 13px !important; }
+  .sample-compare-grid { grid-template-columns: 1fr !important; }
+  .sample-section-heading { font-size: 22px !important; margin-bottom: 20px !important; }
+  .sample-scenario-h2 { font-size: 24px !important; }
+  .sample-hero-h1 { font-size: 36px !important; }
+}
+@media (min-width: 769px) {
+  .sample-nav-hamburger { display: none !important; }
+  .sample-mobile-menu { display: none !important; }
+}
+`;
 
 function FrameBar({ label }) {
   return (
@@ -53,7 +80,7 @@ function ValueProp({ text, accentColor }) {
   );
 }
 
-function Callout({ label, text, color, side }) {
+function Callout({ label, text, color, side }) { // mobile: hidden via .sample-callout CSS
   const isRight = side !== "left";
   return (
     <div style={{ position: "absolute", [isRight ? "right" : "left"]: isRight ? -260 : -260, top: "50%", transform: "translateY(-50%)", display: "flex", alignItems: "center", gap: 0, zIndex: 10, pointerEvents: "none" }}>
@@ -139,9 +166,9 @@ function QGroup({ label, items, color, highlightFirst }) {
   );
 }
 
-function Section({ bg, children, first }) {
+function Section({ bg, children, first, className }) {
   return (
-    <div style={{ background: bg, padding: first ? "72px 56px 56px" : "72px 56px" }}>
+    <div className={"sample-section " + (className || "")} style={{ background: bg, padding: first ? "72px 56px 56px" : "72px 56px" }}>
       <div style={{ maxWidth: 1100, margin: "0 auto", position: "relative" }}>
         {children}
       </div>
@@ -151,7 +178,7 @@ function Section({ bg, children, first }) {
 
 function ScenarioIntro({ pill, pillColor, pillBg, pillBorder, h2color, title, sub, ruleColor }) {
   return (
-    <div style={{ background: C.bg, padding: "72px 56px 0", textAlign: "center" }}>
+    <div className="sample-scenario" style={{ background: C.bg, padding: "72px 56px 0", textAlign: "center" }}>
       <div style={{ display: "inline-block", fontSize: 11, fontWeight: 700, letterSpacing: 2, textTransform: "uppercase", borderRadius: 20, padding: "5px 16px", marginBottom: 20, background: pillBg, color: pillColor, border: "1px solid " + pillBorder, fontFamily: FF }}>{pill}</div>
       <h2 style={{ fontFamily: FFD, fontSize: "clamp(26px, 3vw, 36px)", fontWeight: 700, color: C.text, lineHeight: 1.15, marginBottom: 14 }} dangerouslySetInnerHTML={{ __html: title }} />
       <p style={{ fontSize: 18, color: C.textLight, lineHeight: 1.75, maxWidth: 600, margin: "0 auto" }}>{sub}</p>
@@ -161,6 +188,7 @@ function ScenarioIntro({ pill, pillColor, pillBg, pillBorder, h2color, title, su
 }
 
 export default function Sample({ onHome, onGetReport }) {
+  const [sampleMenuOpen, setSampleMenuOpen] = useState(false);
   useEffect(() => { window.scrollTo(0, 0); }, []);
 
   return (
@@ -173,21 +201,36 @@ export default function Sample({ onHome, onGetReport }) {
           <div style={{ width: 36, height: 36, borderRadius: "50%", background: C.accent, color: C.white, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16, fontWeight: 700, fontFamily: FFD }}>D</div>
           <span style={{ fontSize: 20, fontWeight: 700, color: C.text, fontFamily: FFD }}>Delphi</span>
         </a>
-        <div style={{ display: "flex", alignItems: "center", gap: 28 }}>
+        <div className="sample-nav-desktop" style={{ display: "flex", alignItems: "center", gap: 28 }}>
           <a href="/#how-it-works" style={{ fontSize: 14, color: C.textLight, fontFamily: FF, textDecoration: "none" }}>How it works</a>
           <a href="/#pricing" style={{ fontSize: 14, color: C.textLight, fontFamily: FF, textDecoration: "none" }}>Pricing</a>
           <span style={{ fontSize: 14, color: C.accent, fontWeight: 600, fontFamily: FF }}>Sample Reports</span>
+          <a href="/" style={{ fontSize: 14, color: C.textLight, fontFamily: FF, textDecoration: "none" }}>Sign in</a>
           <button onClick={onGetReport} style={{ background: C.accent, color: C.white, border: "none", borderRadius: 3, padding: "11px 24px", fontSize: 13, fontWeight: 700, letterSpacing: 2, textTransform: "uppercase", fontFamily: FF }}>Get a Report</button>
         </div>
+        <button className="sample-nav-hamburger" onClick={() => setSampleMenuOpen(v => !v)} style={{ display: "none", background: "none", border: "none", cursor: "pointer", flexDirection: "column", gap: 5, padding: 4 }}>
+          <div style={{ width: 22, height: 2, background: C.text, borderRadius: 1 }} />
+          <div style={{ width: 22, height: 2, background: C.text, borderRadius: 1 }} />
+          <div style={{ width: 22, height: 2, background: C.text, borderRadius: 1 }} />
+        </button>
       </nav>
+      {sampleMenuOpen && (
+        <div className="sample-mobile-menu" style={{ position: "sticky", top: 65, zIndex: 99, background: "rgba(250,247,242,0.98)", borderBottom: "1px solid " + C.border, flexDirection: "column", padding: "16px 24px 24px", display: "flex" }}>
+          <a href="/#how-it-works" onClick={() => setSampleMenuOpen(false)} style={{ fontSize: 16, color: C.textLight, textDecoration: "none", padding: "12px 0", borderBottom: "1px solid " + C.border, fontFamily: FF }}>How it works</a>
+          <a href="/#pricing" onClick={() => setSampleMenuOpen(false)} style={{ fontSize: 16, color: C.textLight, textDecoration: "none", padding: "12px 0", borderBottom: "1px solid " + C.border, fontFamily: FF }}>Pricing</a>
+          <span style={{ fontSize: 16, color: C.accent, fontWeight: 600, padding: "12px 0", borderBottom: "1px solid " + C.border, fontFamily: FF }}>Sample Reports</span>
+          <a href="/" style={{ fontSize: 16, color: C.textLight, textDecoration: "none", padding: "12px 0", borderBottom: "1px solid " + C.border, fontFamily: FF }}>Sign in</a>
+          <button onClick={() => { onGetReport(); setSampleMenuOpen(false); }} style={{ background: C.accent, color: C.white, border: "none", borderRadius: 3, padding: "14px 28px", fontSize: 13, fontWeight: 700, letterSpacing: 2, textTransform: "uppercase", cursor: "pointer", fontFamily: FF, marginTop: 16 }}>Get a Report</button>
+        </div>
+      )}
 
       {/* HERO */}
-      <div style={{ background: C.bg, padding: "88px 56px 80px", textAlign: "center", borderBottom: "1px solid " + C.border }}>
-        <p style={{ fontSize: 11, fontWeight: 700, letterSpacing: 3, textTransform: "uppercase", color: C.accent, marginBottom: 20, fontFamily: FF }}>Sample Reports</p>
-        <h1 style={{ fontFamily: FFD, fontSize: "clamp(38px, 5vw, 56px)", fontWeight: 700, color: C.text, lineHeight: 1.05, letterSpacing: -1.5, marginBottom: 20 }}>
-          See exactly what<br /><em style={{ fontStyle: "italic", color: C.accent }}>you're buying.</em>
+      <div className="sample-hero" style={{ background: C.dark, padding: "88px 56px 80px", textAlign: "center", borderBottom: "1px solid " + C.border }}>
+        <p style={{ fontSize: 11, fontWeight: 700, letterSpacing: 3, textTransform: "uppercase", color: C.gold, marginBottom: 20, fontFamily: FF }}>Sample Reports</p>
+        <h1 className="sample-hero-h1" style={{ fontFamily: FFD, fontSize: "clamp(38px, 5vw, 56px)", fontWeight: 700, color: C.white, lineHeight: 1.05, letterSpacing: -1.5, marginBottom: 20 }}>
+          See exactly what<br /><em style={{ fontStyle: "italic", color: C.gold }}>you're buying.</em>
         </h1>
-        <p style={{ fontSize: 20, color: C.textLight, lineHeight: 1.8, maxWidth: 520, margin: "0 auto", fontWeight: 400 }}>
+        <p style={{ fontSize: 20, color: "rgba(255,255,255,0.6)", lineHeight: 1.8, maxWidth: 520, margin: "0 auto", fontWeight: 400 }}>
           Real report output from a real buyer scenario. Names and companies are anonymized. The analysis is not.
         </p>
       </div>
@@ -211,13 +254,13 @@ export default function Sample({ onHome, onGetReport }) {
       />
 
       {/* EVAL 1 — What We Heard · warm */}
-      <Section bg={C.warm} first>
+      <Section bg={C.warm} first className='sample-section'>
         <Eyebrow color={C.accent}>What We Heard</Eyebrow>
         <SectionHeading>Delphi reads the situation, <em style={{ fontStyle: "italic", color: C.accent }}>not just the answers.</em></SectionHeading>
         <Frame label="What We Heard">
           <FrameTitle accentColor={C.accent}>What We Heard</FrameTitle>
           <Prose>You are not really buying an ABM platform right now. You are buying a stabilization tool for a company still finding its footing. Five companies merging under a new brand, an exec team new to the industry, reps who have never prospected, and a CRM described as a disaster — that is a lot of weight for any software purchase to carry.</Prose>
-          <div style={{ position: "relative" }}>
+          <div className="sample-callout-wrap" style={{ position: "relative" }}>
             <Highlight color={C.accent}>
               <Prose>Your TAM is genuinely small, under 250 named accounts on your target list. You do not need a platform built to score millions of anonymous signals. The question is how to stay visible to your accounts across a long buying cycle while your team figures out how to actually sell.</Prose>
             </Highlight>
@@ -236,14 +279,14 @@ export default function Sample({ onHome, onGetReport }) {
         <Frame label="Readiness Score">
           <FrameTitle accentColor={C.accent}>Readiness Score</FrameTitle>
           <Prose>You are at an early but honest starting point. The self-awareness about your CRM, your reps, and your organizational change fatigue is actually a strong signal — teams that overestimate their readiness make worse buying decisions.</Prose>
-          <div style={{ position: "relative" }}>
+          <div className="sample-callout-wrap" style={{ position: "relative" }}>
             <ScoreCard score="2" verdict="Needs attention before purchasing" note="Dimensional breakdown shows where the gaps are." color={C.red} />
             <Callout color={C.red} side="right" label="Low score = setup list" text="A 2/5 tells you what to fix before go-live — not whether to buy." />
           </div>
           <div style={{ marginTop: 8 }}>
             <DimRow name="Data Readiness" score="2/5" status="Address before go-live" color={C.red} />
             <DimRow name="Sales & Marketing Alignment" score="2/5" status="Address before go-live" color={C.red} />
-            <div style={{ position: "relative" }}>
+            <div className="sample-callout-wrap" style={{ position: "relative" }}>
               <DimRow name="Change Management" score="1/5" status="Address before go-live" color={C.red} flagged />
               <Callout color={C.red} side="right" label="Lowest score" text="1/5 here affects every tool equally — it's not a tool problem, it's an org problem." />
             </div>
@@ -270,7 +313,7 @@ export default function Sample({ onHome, onGetReport }) {
               <div style={{ background: "rgba(255,255,255,0.2)", borderRadius: 3, padding: "2px 8px", fontSize: 9, fontWeight: 700, color: C.white, letterSpacing: 1.5, textTransform: "uppercase", flexShrink: 0, fontFamily: FF }}>Recommended</div>
             </div>
             <div style={{ border: "1px solid " + C.border, borderTop: "none", borderRadius: "0 0 6px 6px" }}>
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", borderBottom: "1px solid " + C.border }}>
+              <div className="sample-shortlist-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", borderBottom: "1px solid " + C.border }}>
                 <div style={{ padding: "12px 14px", borderRight: "1px solid " + C.border }}>
                   <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: 1.5, textTransform: "uppercase", color: C.accent, marginBottom: 5, fontFamily: FF }}>Does Well</div>
                   <div style={{ fontSize: 14, color: C.textMid, lineHeight: 1.6, fontFamily: FF }}>Purpose-built for a defined list of target accounts and a small marketing team. HubSpot and Salesforce integrations are among the most reliable in the category.</div>
@@ -280,7 +323,7 @@ export default function Sample({ onHome, onGetReport }) {
                   <div style={{ fontSize: 14, color: C.textMid, lineHeight: 1.6, fontFamily: FF }}>Will not fix the gap between marketing signals and sales action on its own. Self-service reporting is limited.</div>
                 </div>
               </div>
-              <div style={{ position: "relative" }}>
+              <div className="sample-callout-wrap" style={{ position: "relative" }}>
                 <div style={{ padding: "12px 14px", fontSize: 14, color: C.textMid, fontStyle: "italic", lineHeight: 1.6, fontFamily: FF, background: "rgba(61,107,33,0.03)", borderLeft: "3px solid " + C.accent }}>
                   The right tool for where you are today: focused, fast to stand up, and matched to a finite account list without requiring organizational change you cannot sustain right now.
                 </div>
@@ -299,7 +342,7 @@ export default function Sample({ onHome, onGetReport }) {
         <SectionHeading>What the scripted demo <em style={{ fontStyle: "italic", color: C.accent }}>doesn't address about your situation.</em></SectionHeading>
         <Frame label="What You Should Know">
           <FrameTitle accentColor={C.accent}>What You Should Know</FrameTitle>
-          <div style={{ position: "relative" }}>
+          <div className="sample-callout-wrap" style={{ position: "relative" }}>
             <WYSKCard color={C.accent} highlight theme="Rollworks — Intent setup has a known configuration trap" body="Bombora intent data within Rollworks defaults to contact-level targeting. Rollworks' own team recommends account-level instead — but this is not documented prominently. If your onboarding contact doesn't flag it, you will run campaigns incorrectly from day one." />
             <Callout color={C.accent} side="right" label="Your rep won't raise this" text="This configuration error happens in the first week. By the time you notice, you've been running campaigns wrong for months." />
           </div>
@@ -319,7 +362,7 @@ export default function Sample({ onHome, onGetReport }) {
             { q: "Our Salesforce data has significant gaps. How does your platform handle account matching when domain data is missing or duplicated?", listen: "Vendors with a structured pre-launch audit process are lower risk than those who say the integration handles it automatically." },
             { q: "We have fewer than 250 target accounts. How does your pricing scale down to that list size, and are there features unavailable below a certain threshold?", listen: "Some platforms have feature lockouts below 500 accounts that make the lower tiers significantly less capable." },
           ]} />
-          <div style={{ position: "relative" }}>
+          <div className="sample-callout-wrap" style={{ position: "relative" }}>
             <div>
               <QGroup color={C.accent} label="Ask Rollworks Specifically" items={[
                 { q: "We have heard that Bombora intent defaults to contact-level targeting. Can you walk us through exactly how you configure intent for a small, named account list?", listen: "Whether the rep proactively confirms this known issue and walks you through the correct setup, or whether they are unaware of it." },
@@ -341,7 +384,7 @@ export default function Sample({ onHome, onGetReport }) {
           <p style={{ fontFamily: FFD, fontSize: 20, fontWeight: 700, color: C.text, marginBottom: 14 }}>We recommend Rollworks.</p>
           <Prose>Your account list is small, your team is lean, your stack is already HubSpot and Salesforce, and your organization cannot absorb a complex implementation right now. Rollworks is the only tool on your shortlist designed for exactly that profile.</Prose>
           <p style={{ fontSize: 14, color: C.textMid, lineHeight: 1.7, marginBottom: 10, paddingLeft: 12, borderLeft: "2px solid " + C.border, fontFamily: FF }}><strong>Terminus:</strong> The multi-channel capability is genuinely stronger, but the post-acquisition uncertainty and separate ad spend minimums create cost and stability risks your organization is not positioned to absorb right now.</p>
-          <div style={{ position: "relative" }}>
+          <div className="sample-callout-wrap" style={{ position: "relative" }}>
             <p style={{ fontSize: 14, color: C.textMid, lineHeight: 1.7, paddingLeft: 12, borderLeft: "2px solid " + C.border, fontFamily: FF, background: "rgba(61,107,33,0.03)", padding: "10px 12px", borderRadius: "0 4px 4px 0" }}><strong>Demandbase:</strong> The best account intelligence in the category for a known, finite TAM, but the all-in cost and implementation complexity rule it out until your CRM is clean and your sales team is functioning as an active selling team.</p>
             <Callout color={C.accent} side="right" label="One clear answer" text="No ranked list. No caveats to decode. One named recommendation with reasoning tied to what you told us." />
           </div>
@@ -363,13 +406,13 @@ export default function Sample({ onHome, onGetReport }) {
       />
 
       {/* STACK 1 — What We Heard · warm */}
-      <Section bg={C.warm} first>
+      <Section bg={C.warm} first className='sample-section'>
         <Eyebrow color={C.stack}>What We Heard</Eyebrow>
         <SectionHeading>The Stack Fit reads your environment, <em style={{ fontStyle: "italic", color: C.stack }}>not your goals.</em></SectionHeading>
         <Frame label="What We Heard">
           <FrameTitle accentColor={C.stack}>What We Heard</FrameTitle>
           <Prose>You are running a tightly scoped ABM program against a finite list of very large accounts with multi-year, multi-million dollar deal cycles. The value of the platform is not in reach or volume — it is in depth of insight at the buying committee level and how well that insight surfaces inside Salesforce for your reps.</Prose>
-          <div style={{ position: "relative" }}>
+          <div className="sample-callout-wrap" style={{ position: "relative" }}>
             <Highlight color={C.stack}>
               <Prose>What you have not fully articulated yet is that you are running two systems of record in parallel. Any ABM platform you add will sit between Salesforce and HubSpot and will need to pull segmentation from both while writing engagement signals back to Salesforce. That is a three-way data flow, not a simple two-way sync.</Prose>
             </Highlight>
@@ -431,7 +474,7 @@ export default function Sample({ onHome, onGetReport }) {
         <Frame label="Integration Readiness">
           <FrameTitle accentColor={C.stack}>Integration Readiness</FrameTitle>
           <Prose>Integration readiness measures how prepared your current stack, data, team, and processes are to absorb a new ABM platform and get meaningful value out of it quickly.</Prose>
-          <div style={{ position: "relative" }}>
+          <div className="sample-callout-wrap" style={{ position: "relative" }}>
             <ScoreCard score="4" verdict="Well positioned" note="Strong stack health, clear ownership, mature data model." color={C.stack} />
             <Callout color={C.stack} side="right" label="Same org, different score" text="This org scored 2/5 on organizational readiness. Their technical environment is a different story." />
           </div>
@@ -452,7 +495,7 @@ export default function Sample({ onHome, onGetReport }) {
         <SectionHeading>What the scripted demo <em style={{ fontStyle: "italic", color: C.stack }}>doesn't address about your stack.</em></SectionHeading>
         <Frame label="What You Should Know">
           <FrameTitle accentColor={C.stack}>What You Should Know</FrameTitle>
-          <div style={{ position: "relative" }}>
+          <div className="sample-callout-wrap" style={{ position: "relative" }}>
             <WYSKCard color={C.stack} highlight theme="Demandbase — Custom object blind spot" body="Demandbase's Salesforce integration cannot sync data to or from custom objects. Engagement signals written back will land on standard fields only. Your Salesforce admin will need to build bridge fields or workflow rules to carry those signals into your custom object views." />
             <Callout color={C.stack} side="right" label="A structural limitation" text="This isn't a configuration issue — it's how the integration works. Know it before you sign." />
           </div>
@@ -472,7 +515,7 @@ export default function Sample({ onHome, onGetReport }) {
             { q: "Walk me through exactly how buying committee member engagement is tracked and surfaced. Can I see which specific contacts at a target account have engaged with which content inside Salesforce?", listen: "A good answer names the specific CRM object and field where contact-level engagement lands. A bad answer stays at the account level." },
             { q: "We have three custom Salesforce objects. Can your platform read from and write to those objects, and if not, how do customers typically handle the gap?", listen: "A good answer is specific about which direction the sync works and proposes a concrete workaround." },
           ]} />
-          <div style={{ position: "relative" }}>
+          <div className="sample-callout-wrap" style={{ position: "relative" }}>
             <QGroup color={C.stack} label="Ask Demandbase Specifically" items={[
               { q: "We use LeanData for account routing. What is the current state of your native integration with LeanData, and can Demandbase intent signals trigger LeanData routing flows automatically?", listen: "A good answer references a specific integration mechanism such as an API action node or named connector. A bad answer says 'we work with LeanData' without explaining how." },
             ]} />
@@ -492,7 +535,7 @@ export default function Sample({ onHome, onGetReport }) {
           <p style={{ fontFamily: FFD, fontSize: 20, fontWeight: 700, color: C.text, marginBottom: 14 }}>We recommend Demandbase for integration.</p>
           <Prose>Your use case is defined by depth, not breadth: under 250 accounts, $1M+ contracts, 12 to 14 month cycles, and a requirement to track engagement at the buying committee level. Demandbase is the only platform on your shortlist with a published, native integration with LeanData that can convert intent signals into Salesforce-routed account owner actions automatically.</Prose>
           <p style={{ fontSize: 14, color: C.textMid, lineHeight: 1.7, marginBottom: 10, paddingLeft: 12, borderLeft: "2px solid " + C.border, fontFamily: FF }}><strong>Terminus:</strong> Strong multi-channel orchestration, but post-acquisition roadmap uncertainty and absence of a native LeanData routing integration make it a less reliable foundation for a long-running enterprise program.</p>
-          <div style={{ position: "relative" }}>
+          <div className="sample-callout-wrap" style={{ position: "relative" }}>
             <p style={{ fontSize: 14, color: C.textMid, lineHeight: 1.7, padding: "10px 12px", borderLeft: "2px solid " + C.border, background: "rgba(74,111,165,0.03)", borderRadius: "0 4px 4px 0", fontFamily: FF }}><strong>RollWorks:</strong> Fastest to implement and most HubSpot-native, but its advertising-reach orientation and limitation on contact-level tracking make it a poor fit for a program designed to measure buying committee engagement.</p>
             <Callout color={C.stack} side="right" label="One clear answer" text="The Stack Fit and Evaluation disagreed. This is the technical verdict — the Evaluation gave the organizational one." />
           </div>
@@ -507,7 +550,7 @@ export default function Sample({ onHome, onGetReport }) {
           <h2 style={{ fontFamily: FFD, fontSize: "clamp(26px, 3vw, 36px)", fontWeight: 700, color: C.white, lineHeight: 1.2, marginBottom: 20, maxWidth: 700 }}>Why the recommendations can differ</h2>
           <p style={{ fontSize: 17, color: "rgba(255,255,255,0.55)", lineHeight: 1.85, maxWidth: 680, marginBottom: 48, fontFamily: FF }}>The Evaluation is based on your organizational readiness for change — your team, your alignment, your capacity to absorb a new process and make it stick. The Stack Fit is based on your technical environment — your current stack, your integration architecture, your data flows. They are designed to surface different constraints. In the sample reports above, they did not agree. The question you need to decide is which constraint is harder to change — your organizational capacity to make a change, or the amount of work it takes to prepare your stack to bring in a new tool.</p>
 
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20, marginBottom: 40 }}>
+          <div className="sample-compare-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20, marginBottom: 40 }}>
             {[
               { label: "The Evaluation — Organizational fit", labelColor: "#7AB84A", score: "2", scoreColor: C.red, verdict: "Needs attention before purchasing", sub: "Organizational readiness score", rec: "Rollworks", recNote: "the tool that asks the least of a team not yet ready to run a complex ABM program" },
               { label: "The Stack Fit — Technical fit", labelColor: "#7A9FD4", score: "4", scoreColor: C.stack, verdict: "Well positioned", sub: "Integration readiness score", rec: "Demandbase", recNote: "the tool with the deepest native integration for a LeanData-enabled, Salesforce-primary stack" },
