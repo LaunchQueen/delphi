@@ -544,37 +544,37 @@ export default function Sample({ onHome, onGetReport }) {
       </Section>
 
       {/* ── WHEN REPORTS DIVERGE ── */}
-      <div style={{ background: C.dark, padding: "72px 56px" }}>
+      <div style={{ background: "#D9CDB8", padding: "72px 56px" }}>
         <div style={{ maxWidth: 1100, margin: "0 auto" }}>
-          <p style={{ fontSize: 11, fontWeight: 700, letterSpacing: 3, textTransform: "uppercase", color: C.gold, marginBottom: 18, fontFamily: FF }}>When the reports diverge</p>
-          <h2 style={{ fontFamily: FFD, fontSize: "clamp(26px, 3vw, 36px)", fontWeight: 700, color: C.white, lineHeight: 1.2, marginBottom: 20, maxWidth: 700 }}>Why the recommendations can differ</h2>
-          <p style={{ fontSize: 17, color: "rgba(255,255,255,0.55)", lineHeight: 1.85, maxWidth: 680, marginBottom: 48, fontFamily: FF }}>The Evaluation is based on your organizational readiness for change — your team, your alignment, your capacity to absorb a new process and make it stick. The Stack Fit is based on your technical environment — your current stack, your integration architecture, your data flows. They are designed to surface different constraints. In the sample reports above, they did not agree. The question you need to decide is which constraint is harder to change — your organizational capacity to make a change, or the amount of work it takes to prepare your stack to bring in a new tool.</p>
+          <p style={{ fontSize: 11, fontWeight: 700, letterSpacing: 3, textTransform: "uppercase", color: "#7A6A55", marginBottom: 18, fontFamily: FF }}>When the reports diverge</p>
+          <h2 style={{ fontFamily: FFD, fontSize: "clamp(26px, 3vw, 36px)", fontWeight: 700, color: "#1C1C1A", lineHeight: 1.2, marginBottom: 20, maxWidth: 700 }}>Why the recommendations can differ</h2>
+          <p style={{ fontSize: 17, color: "#5A4E40", lineHeight: 1.85, maxWidth: 680, marginBottom: 48, fontFamily: FF }}>The Evaluation is based on your organizational readiness for change — your team, your alignment, your capacity to absorb a new process and make it stick. The Stack Fit is based on your technical environment — your current stack, your integration architecture, your data flows. They are designed to surface different constraints. In the sample reports above, they did not agree. The question you need to decide is which constraint is harder to change — your organizational capacity to make a change, or the amount of work it takes to prepare your stack to bring in a new tool.</p>
 
           <div className="sample-compare-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20, marginBottom: 40 }}>
             {[
               { label: "The Evaluation — Organizational fit", labelColor: "#7AB84A", score: "2", scoreColor: C.red, verdict: "Needs attention before purchasing", sub: "Organizational readiness score", rec: "Rollworks", recNote: "the tool that asks the least of a team not yet ready to run a complex ABM program" },
               { label: "The Stack Fit — Technical fit", labelColor: "#7A9FD4", score: "4", scoreColor: C.stack, verdict: "Well positioned", sub: "Integration readiness score", rec: "Demandbase", recNote: "the tool with the deepest native integration for a LeanData-enabled, Salesforce-primary stack" },
             ].map((card, i) => (
-              <div key={i} style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 10, padding: 28 }}>
+              <div key={i} style={{ background: "#E8DEC8", border: "1.5px solid rgba(184,147,90,0.5)", borderRadius: 10, padding: 28 }}>
                 <p style={{ fontSize: 10, fontWeight: 700, letterSpacing: 2, textTransform: "uppercase", color: card.labelColor, marginBottom: 16, fontFamily: FF }}>{card.label}</p>
                 <div style={{ display: "flex", alignItems: "center", gap: 16, marginBottom: 18 }}>
                   <div>
                     <div style={{ fontSize: 44, fontWeight: 700, color: card.scoreColor, fontFamily: FFD, lineHeight: 1 }}>{card.score}</div>
-                    <div style={{ fontSize: 9, color: "rgba(255,255,255,0.4)", letterSpacing: 1, fontFamily: FF }}>OUT OF 5</div>
+                    <div style={{ fontSize: 9, color: "#7A6A55", letterSpacing: 1, fontFamily: FF }}>OUT OF 5</div>
                   </div>
                   <div style={{ paddingLeft: 14, borderLeft: "1px solid rgba(255,255,255,0.15)" }}>
-                    <div style={{ fontSize: 14, fontWeight: 700, color: C.white, fontFamily: FFD, marginBottom: 3 }}>{card.verdict}</div>
-                    <div style={{ fontSize: 12, color: "rgba(255,255,255,0.45)", fontFamily: FF }}>{card.sub}</div>
+                    <div style={{ fontSize: 14, fontWeight: 700, color: "#1C1C1A", fontFamily: FFD, marginBottom: 3 }}>{card.verdict}</div>
+                    <div style={{ fontSize: 12, color: "#7A6A55", fontFamily: FF }}>{card.sub}</div>
                   </div>
                 </div>
-                <p style={{ fontSize: 14, color: "rgba(255,255,255,0.65)", lineHeight: 1.65, fontFamily: FF }}>Recommends <strong style={{ color: C.white }}>{card.rec}</strong> — {card.recNote}.</p>
+                <p style={{ fontSize: 14, color: "#3E3830", lineHeight: 1.65, fontFamily: FF }}>Recommends <strong style={{ color: "#1C1C1A" }}>{card.rec}</strong> — {card.recNote}.</p>
               </div>
             ))}
           </div>
 
-          <div style={{ background: "rgba(184,147,90,0.1)", border: "1px solid rgba(184,147,90,0.3)", borderRadius: 10, padding: "32px 36px" }}>
-            <p style={{ fontFamily: FFD, fontSize: 20, fontWeight: 700, color: C.gold, marginBottom: 14 }}>How to interpret two different recommendations</p>
-            <p style={{ fontSize: 16, color: "rgba(255,255,255,0.6)", lineHeight: 1.85, marginBottom: 24, fontFamily: FF }}>When the Evaluation and the Stack Fit point to different tools, it means the tool that best fits your use case requires technical accommodations your stack doesn't currently support — or the tool that fits your stack best may not fully serve the use case you're trying to run. Before you decide which to weight more heavily, it is worth asking:</p>
+          <div style={{ background: "rgba(255,255,255,0.35)", border: "1px solid rgba(184,147,90,0.4)", borderRadius: 10, padding: "32px 36px" }}>
+            <p style={{ fontFamily: FFD, fontSize: 20, fontWeight: 700, color: "#7A6A55", marginBottom: 14 }}>How to interpret two different recommendations</p>
+            <p style={{ fontSize: 16, color: "#5A4E40", lineHeight: 1.85, marginBottom: 24, fontFamily: FF }}>When the Evaluation and the Stack Fit point to different tools, it means the tool that best fits your use case requires technical accommodations your stack doesn't currently support — or the tool that fits your stack best may not fully serve the use case you're trying to run. Before you decide which to weight more heavily, it is worth asking:</p>
             <ul style={{ listStyle: "none", padding: 0 }}>
               {[
                 "What specifically needs to change in your environment to support the use case recommendation? Who owns that work, and do they have capacity to do it before go-live?",
@@ -583,8 +583,8 @@ export default function Sample({ onHome, onGetReport }) {
                 "Are the organizational gaps in your Evaluation something you can close before go-live, or will they still be present on day one regardless of which tool you choose?",
                 "Which constraint is harder to change — your organization or your stack?",
               ].map((q, i) => (
-                <li key={i} style={{ fontSize: 15, color: "rgba(255,255,255,0.6)", lineHeight: 1.75, padding: "10px 0", borderBottom: i < 4 ? "1px solid rgba(255,255,255,0.08)" : "none", display: "flex", gap: 14, fontFamily: FF }}>
-                  <span style={{ color: C.gold, flexShrink: 0, fontWeight: 700 }}>—</span>
+                <li key={i} style={{ fontSize: 15, color: "#5A4E40", lineHeight: 1.75, padding: "10px 0", borderBottom: i < 4 ? "1px solid rgba(0,0,0,0.08)" : "none", display: "flex", gap: 14, fontFamily: FF }}>
+                  <span style={{ color: "#B8935A", flexShrink: 0, fontWeight: 700 }}>—</span>
                   {q}
                 </li>
               ))}
