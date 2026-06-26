@@ -562,7 +562,7 @@ export default function Sample({ onHome, onGetReport }) {
                     <div style={{ fontSize: 44, fontWeight: 700, color: card.scoreColor, fontFamily: FFD, lineHeight: 1 }}>{card.score}</div>
                     <div style={{ fontSize: 9, color: "#7A6A55", letterSpacing: 1, fontFamily: FF }}>OUT OF 5</div>
                   </div>
-                  <div style={{ paddingLeft: 14, borderLeft: "1px solid rgba(255,255,255,0.15)" }}>
+                  <div style={{ paddingLeft: 14, borderLeft: "1px solid rgba(0,0,0,0.1)" }}>
                     <div style={{ fontSize: 14, fontWeight: 700, color: "#1C1C1A", fontFamily: FFD, marginBottom: 3 }}>{card.verdict}</div>
                     <div style={{ fontSize: 12, color: "#7A6A55", fontFamily: FF }}>{card.sub}</div>
                   </div>
