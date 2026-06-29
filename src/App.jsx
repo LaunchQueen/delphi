@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import Delphi from "./Delphi.jsx";
 import FeedbackForm from "./FeedbackForm.jsx";
 import Sample from "./Sample.jsx";
+import About from "./About.jsx";
 import { createClient } from "@supabase/supabase-js";
 
 const supabase = createClient(
@@ -181,7 +182,6 @@ function AccountPage({ user, onNewReport, onSignOut, onHome }) {
           <span style={{ color: C.border }}>|</span>
           <span style={{ fontSize: 14, color: C.textLight }}>{activeReport.title || "Report"}</span>
         </div>
-      
       </div>
       <iframe srcDoc={activeReport.email_html} style={{ width: "100%", border: "none", minHeight: "calc(100vh - 53px)" }} title="Report" />
     </div>
@@ -219,7 +219,6 @@ function AccountPage({ user, onNewReport, onSignOut, onHome }) {
       </div>
 
       <div style={{ maxWidth: 760, margin: "0 auto", padding: "48px 24px" }}>
-
         {loading ? (
           <div style={{ textAlign: "center", padding: "60px 0" }}>
             <div style={{ width: 36, height: 36, border: "3px solid " + C.border, borderTop: "3px solid " + C.accent, borderRadius: "50%", margin: "0 auto 16px", animation: "spin 0.9s linear infinite" }} />
@@ -414,7 +413,6 @@ export default function App() {
     setPage("home");
   };
 
-  // ─── THE FIX: guard onMyReports against null user ───────────────────────────
   const handleMyReports = () => {
     if (user) {
       setPage("account");
@@ -427,6 +425,7 @@ export default function App() {
 
   if (window.location.pathname === "/feedback") return <FeedbackForm />;
   if (window.location.pathname === "/sample") return <Sample onHome={() => setPage("home")} onGetReport={handleNewReport} />;
+  if (window.location.pathname === "/about") return <About onHome={() => { window.history.pushState({}, "", "/"); setPage("home"); }} onGetReport={handleNewReport} />;
 
   if (checkingPayment) return (
     <div style={{ minHeight: "100vh", background: C.bg, display: "flex", alignItems: "center", justifyContent: "center", fontFamily: FF }}>
@@ -438,12 +437,12 @@ export default function App() {
     </div>
   );
 
-if (page === "tool") return (
-  <>
-    {showSignIn && <SignInModal signInEmail={signInEmail} setSignInEmail={setSignInEmail} signInStatus={signInStatus} setSignInStatus={setSignInStatus} signInError={signInError} handleSignIn={handleSignIn} onClose={closeSignIn} />}
-    <Delphi paymentStatus={paymentStatus} startCheckout={startCheckout} onHome={() => setPage("home")} initialReportType={initialReportType} onMyReports={handleMyReports} />
-  </>
-);
+  if (page === "tool") return (
+    <>
+      {showSignIn && <SignInModal signInEmail={signInEmail} setSignInEmail={setSignInEmail} signInStatus={signInStatus} setSignInStatus={setSignInStatus} signInError={signInError} handleSignIn={handleSignIn} onClose={closeSignIn} />}
+      <Delphi paymentStatus={paymentStatus} startCheckout={startCheckout} onHome={() => setPage("home")} initialReportType={initialReportType} onMyReports={handleMyReports} />
+    </>
+  );
 
   if (page === "account") return (
     <AccountPage user={user} onNewReport={() => { setPage("tool"); }} onSignOut={handleSignOut} onHome={() => setPage("home")} />
@@ -486,6 +485,7 @@ if (page === "tool") return (
           <a href="#how-it-works" className="nav-link" style={{ fontSize: 14, color: C.textLight, fontWeight: 500, textDecoration: "none", transition: "color 0.15s" }}>How it works</a>
           <a href="#pricing" className="nav-link" style={{ fontSize: 14, color: C.textLight, fontWeight: 500, textDecoration: "none", transition: "color 0.15s" }}>Pricing</a>
           <a href="/sample" className="nav-link" style={{ fontSize: 14, color: C.textLight, fontWeight: 500, textDecoration: "none", transition: "color 0.15s" }}>Sample Reports</a>
+          <a href="/about" className="nav-link" style={{ fontSize: 14, color: C.textLight, fontWeight: 500, textDecoration: "none", transition: "color 0.15s" }}>About</a>
           {user ? (
             <>
               <button onClick={() => setPage("account")} className="nav-link" style={{ background: "none", border: "none", fontSize: 14, color: C.textLight, fontWeight: 500, cursor: "pointer", fontFamily: FF }}>My Reports</button>
@@ -507,6 +507,7 @@ if (page === "tool") return (
           <a href="#how-it-works" onClick={() => setMobileMenuOpen(false)} style={{ fontSize: 16, color: C.textLight, fontWeight: 500, textDecoration: "none", padding: "12px 0", borderBottom: "1px solid " + C.border, fontFamily: FF }}>How it works</a>
           <a href="#pricing" onClick={() => setMobileMenuOpen(false)} style={{ fontSize: 16, color: C.textLight, fontWeight: 500, textDecoration: "none", padding: "12px 0", borderBottom: "1px solid " + C.border, fontFamily: FF }}>Pricing</a>
           <a href="/sample" onClick={() => setMobileMenuOpen(false)} style={{ fontSize: 16, color: C.textLight, fontWeight: 500, textDecoration: "none", padding: "12px 0", borderBottom: "1px solid " + C.border, fontFamily: FF }}>Sample Reports</a>
+          <a href="/about" onClick={() => setMobileMenuOpen(false)} style={{ fontSize: 16, color: C.textLight, fontWeight: 500, textDecoration: "none", padding: "12px 0", borderBottom: "1px solid " + C.border, fontFamily: FF }}>About</a>
           {user ? (
             <>
               <button onClick={() => { setPage("account"); setMobileMenuOpen(false); }} style={{ background: "none", border: "none", fontSize: 16, color: C.textLight, fontWeight: 500, cursor: "pointer", fontFamily: FF, textAlign: "left", padding: "12px 0", borderBottom: "1px solid " + C.border }}>My Reports</button>
@@ -672,19 +673,23 @@ if (page === "tool") return (
 
       {/* ── CLOSING ── */}
       <div style={{ textAlign: "center", padding: "88px 48px", background: C.dark }}>
-        <h2 style={{ fontFamily: FFD, fontSize: "clamp(30px, 4vw, 52px)", fontWeight: 700, color: C.white, letterSpacing: -0.5, marginBottom: 14, lineHeight: 1.1 }}>The second opinion<br /><em style={{ fontStyle: "italic", color: C.gold }}>your vendor can't give you.</em></h2>
+        <h2 style={{ fontFamily: FFD, fontSize: "clamp(30px, 4vw, 52px)", fontWeight: 700, color: C.white, letterSpacing: -0.5, marginBottom: 14, lineHeight: 1.1 }}>Know what you're getting into.<br /><em style={{ fontStyle: "italic", color: C.gold }}>Before you sign.</em></h2>
         <p style={{ fontSize: 18, fontWeight: 500, color: "rgba(255,255,255,0.5)", marginBottom: 36, fontFamily: FF }}>Independent. Personalized. Built for the buyer.</p>
         <button onClick={() => startCheckout("single_report", "evaluation")} style={{ background: C.white, color: C.accent, border: "none", borderRadius: 3, padding: "16px 40px", fontSize: 14, fontWeight: 700, letterSpacing: 2.5, textTransform: "uppercase", cursor: "pointer", fontFamily: FF }}>Get your report — $300</button>
       </div>
 
       {/* ── FOOTER ── */}
-      <footer style={{ background: C.dark, borderTop: "1px solid rgba(255,255,255,0.07)", padding: "32px 56px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+      <footer style={{ background: C.dark, borderTop: "1px solid rgba(255,255,255,0.07)", padding: "32px 56px", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 16 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
           <div style={{ width: 30, height: 30, borderRadius: "50%", background: C.accent, color: C.white, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14, fontWeight: 700, fontFamily: FFD }}>D</div>
           <span style={{ fontSize: 17, fontWeight: 700, color: C.white, fontFamily: FFD }}>Delphi</span>
         </div>
         <p style={{ fontSize: 13, fontWeight: 500, color: "rgba(255,255,255,0.32)", textAlign: "center", lineHeight: 1.65, maxWidth: 420, fontFamily: FF }}>Funded by subscribers, not vendors. No platform pays for placement, recommendation, or access. Ever.</p>
-        <p style={{ fontSize: 12, color: "rgba(255,255,255,0.2)" }}>© 2025 Delphi</p>
+        <div style={{ display: "flex", alignItems: "center", gap: 20 }}>
+          <a href="/about" style={{ fontSize: 12, color: "rgba(255,255,255,0.3)", textDecoration: "none", fontFamily: FF }}>About</a>
+          <a href="mailto:support@delphi.report" style={{ fontSize: 12, color: "rgba(255,255,255,0.3)", textDecoration: "none", fontFamily: FF }}>support@delphi.report</a>
+          <p style={{ fontSize: 12, color: "rgba(255,255,255,0.2)", margin: 0 }}>© 2025 Delphi</p>
+        </div>
       </footer>
     </div>
   );
