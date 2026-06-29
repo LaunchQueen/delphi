@@ -41,7 +41,7 @@ export default function About({ onHome, onGetReport }) {
       <div className="about-hero" style={{ padding: "140px 56px 80px", maxWidth: 800, margin: "0 auto", animation: "fadeUp 0.65s ease" }}>
         <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: 3, textTransform: "uppercase", color: C.accent, marginBottom: 24 }}>About Delphi</div>
         <h1 style={{ fontFamily: FFD, fontSize: "clamp(38px, 5vw, 62px)", fontWeight: 700, lineHeight: 1.08, color: C.text, marginBottom: 28, letterSpacing: -1.5 }}>
-          Translate your software decision<br />
+          Translate your decision<br />
           <em style={{ fontStyle: "italic", color: C.accent }}>into business success.</em>
         </h1>
         <p style={{ fontSize: 19, lineHeight: 1.85, color: C.textMid, maxWidth: 640, fontWeight: 500 }}>
@@ -132,10 +132,7 @@ export default function About({ onHome, onGetReport }) {
       <div className="about-section" style={{ padding: "88px 56px" }}>
         <div style={{ maxWidth: 800, margin: "0 auto" }}>
           <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: 3, textTransform: "uppercase", color: C.accent, marginBottom: 24 }}>A note on AI</div>
-          <h2 style={{ fontFamily: FFD, fontSize: "clamp(26px, 3vw, 36px)", fontWeight: 700, color: C.text, lineHeight: 1.2, marginBottom: 24, letterSpacing: -0.5 }}>
-            The judgment is<br />
-            <em style={{ fontStyle: "italic", color: C.accent }}>still yours.</em>
-          </h2>
+          <h2 style={{ fontFamily: FFD, fontSize: "clamp(26px, 3vw, 36px)", fontWeight: 700, color: C.text, lineHeight: 1.2, marginBottom: 24, letterSpacing: -0.5 }}>The judgment is still yours.</h2>
           <p style={{ fontSize: 19, color: C.textMid, lineHeight: 1.85, marginBottom: 20, maxWidth: 640, fontWeight: 500 }}>
             Delphi uses AI to analyze your situation against publicly available vendor information and real implementation patterns. AI can be wrong. Vendor capabilities change. Your situation is unique.
           </p>
