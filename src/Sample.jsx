@@ -80,7 +80,7 @@ function ValueProp({ text, accentColor }) {
   );
 }
 
-function Callout({ label, text, color, side }) { // mobile: hidden via .sample-callout CSS
+function Callout({ label, text, color, side }) {
   const isRight = side !== "left";
   return (
     <div style={{ position: "absolute", [isRight ? "right" : "left"]: isRight ? -260 : -260, top: "50%", transform: "translateY(-50%)", display: "flex", alignItems: "center", gap: 0, zIndex: 10, pointerEvents: "none" }}>
@@ -205,6 +205,7 @@ export default function Sample({ onHome, onGetReport }) {
           <a href="/#how-it-works" style={{ fontSize: 14, color: C.textLight, fontFamily: FF, textDecoration: "none" }}>How it works</a>
           <a href="/#pricing" style={{ fontSize: 14, color: C.textLight, fontFamily: FF, textDecoration: "none" }}>Pricing</a>
           <span style={{ fontSize: 14, color: C.accent, fontWeight: 600, fontFamily: FF }}>Sample Reports</span>
+          <a href="/about" style={{ fontSize: 14, color: C.textLight, fontFamily: FF, textDecoration: "none" }}>About</a>
           <a href="/" style={{ fontSize: 14, color: C.textLight, fontFamily: FF, textDecoration: "none" }}>Sign in</a>
           <button onClick={onGetReport} style={{ background: C.accent, color: C.white, border: "none", borderRadius: 3, padding: "11px 24px", fontSize: 13, fontWeight: 700, letterSpacing: 2, textTransform: "uppercase", fontFamily: FF }}>Get a Report</button>
         </div>
@@ -219,6 +220,7 @@ export default function Sample({ onHome, onGetReport }) {
           <a href="/#how-it-works" onClick={() => setSampleMenuOpen(false)} style={{ fontSize: 16, color: C.textLight, textDecoration: "none", padding: "12px 0", borderBottom: "1px solid " + C.border, fontFamily: FF }}>How it works</a>
           <a href="/#pricing" onClick={() => setSampleMenuOpen(false)} style={{ fontSize: 16, color: C.textLight, textDecoration: "none", padding: "12px 0", borderBottom: "1px solid " + C.border, fontFamily: FF }}>Pricing</a>
           <span style={{ fontSize: 16, color: C.accent, fontWeight: 600, padding: "12px 0", borderBottom: "1px solid " + C.border, fontFamily: FF }}>Sample Reports</span>
+          <a href="/about" onClick={() => setSampleMenuOpen(false)} style={{ fontSize: 16, color: C.textLight, textDecoration: "none", padding: "12px 0", borderBottom: "1px solid " + C.border, fontFamily: FF }}>About</a>
           <a href="/" style={{ fontSize: 16, color: C.textLight, textDecoration: "none", padding: "12px 0", borderBottom: "1px solid " + C.border, fontFamily: FF }}>Sign in</a>
           <button onClick={() => { onGetReport(); setSampleMenuOpen(false); }} style={{ background: C.accent, color: C.white, border: "none", borderRadius: 3, padding: "14px 28px", fontSize: 13, fontWeight: 700, letterSpacing: 2, textTransform: "uppercase", cursor: "pointer", fontFamily: FF, marginTop: 16 }}>Get a Report</button>
         </div>
