@@ -27,12 +27,12 @@ export default function About({ onHome, onGetReport }) {
 
       {/* ── NAV ── */}
       <nav className="about-nav" style={{ position: "fixed", top: 0, left: 0, right: 0, zIndex: 100, padding: "18px 56px", display: "flex", justifyContent: "space-between", alignItems: "center", background: "rgba(250,247,242,0.95)", backdropFilter: "blur(10px)", borderBottom: "1px solid " + C.border }}>
-        <button onClick={onHome} style={{ background: "none", border: "none", cursor: "pointer", display: "flex", alignItems: "center", gap: 12, padding: 0 }}>
+        <a href="/" style={{ textDecoration: "none", display: "flex", alignItems: "center", gap: 12 }}>
           <div style={{ width: 38, height: 38, borderRadius: "50%", background: C.accent, color: C.white, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18, fontWeight: 700, fontFamily: FFD }}>D</div>
           <span style={{ fontSize: 22, fontWeight: 700, color: C.text, fontFamily: FFD }}>Delphi</span>
-        </button>
+        </a>
         <div style={{ display: "flex", alignItems: "center", gap: 24 }}>
-          <button onClick={onHome} className="about-nav-link" style={{ background: "none", border: "none", fontSize: 14, color: C.textLight, fontWeight: 500, cursor: "pointer", fontFamily: FF, transition: "color 0.15s" }}>Home</button>
+          <a href="/" className="about-nav-link" style={{ fontSize: 14, color: C.textLight, fontWeight: 500, textDecoration: "none", fontFamily: FF, transition: "color 0.15s" }}>Home</a>
           <button onClick={onGetReport} className="about-btn" style={{ background: C.accent, color: C.white, border: "none", borderRadius: 3, padding: "11px 28px", fontSize: 13, fontWeight: 700, letterSpacing: 2, textTransform: "uppercase", cursor: "pointer", fontFamily: FF, transition: "background 0.15s" }}>Get a Report</button>
         </div>
       </nav>
