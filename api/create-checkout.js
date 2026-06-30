@@ -1,18 +1,16 @@
 import Stripe from "stripe";
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
-
 const HEADERS = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "Content-Type",
   "Content-Type": "application/json",
 };
-
 const PRICES = {
   single_report: "price_1TmF4OCzdpqwekegu4D3y6xt",
   beta: "price_1TmF4OCzdpqwekegu4D3y6xt",
   unlimited: "price_1TmF3NCzdpqwekegwyeEGMCO",
+  upgrade: "price_1To7gsCzdpqwekegyEg3IwZm",
 };
-
 export default async function handler(req, res) {
   Object.entries(HEADERS).forEach(([k, v]) => res.setHeader(k, v));
   if (req.method === "OPTIONS") return res.status(204).end();

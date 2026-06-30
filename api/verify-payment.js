@@ -15,9 +15,89 @@ const HEADERS = {
 
 const PRICE_TYPES = {
   "price_1TmF4OCzdpqwekegu4D3y6xt": "single_report",
-  "price_1TmF4OCzdpqwekegu4D3y6xt": "single_report",
   "price_1TmF3NCzdpqwekegwyeEGMCO": "unlimited",
+  "price_1To7gsCzdpqwekegyEg3IwZm": "unlimited",
 };
+
+async function sendConfirmationEmail(customerEmail, priceType) {
+  const isUnlimited = priceType === "unlimited";
+  const isUpgrade = priceType === "upgrade";
+  const planLabel = isUnlimited ? "Unlimited Annual Plan" : "Single Report";
+  const price = isUnlimited ? "$500" : "$300";
+
+  const html = `
+    <div style="font-family: Georgia, serif; max-width: 600px; margin: 0 auto; padding: 40px 24px; color: #1C1C1A; background: #FAF7F2;">
+
+      <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 32px;">
+        <div style="width: 36px; height: 36px; background: #3D6B21; border-radius: 50%; color: white; font-weight: 700; font-size: 16px; text-align: center; line-height: 36px;">D</div>
+        <span style="font-size: 20px; font-weight: 700; color: #1C1C1A;">Delphi</span>
+      </div>
+
+      <h1 style="font-size: 26px; font-weight: 700; margin: 0 0 16px; line-height: 1.2; color: #1C1C1A;">Your purchase is confirmed.</h1>
+
+      <p style="font-size: 16px; line-height: 1.8; color: #3E3830; margin: 0 0 28px;">
+        You've purchased the <strong>${planLabel}</strong> (${price}). Here's everything you need to know before you start.
+      </p>
+
+      <p style="font-size: 12px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: #3D6B21; margin: 0 0 12px;">How to start</p>
+
+      <table style="width: 100%; border-collapse: collapse; margin-bottom: 24px;">
+        <tr>
+          <td style="width: 34px; vertical-align: top; padding: 0 12px 12px 0;">
+            <div style="width: 22px; height: 22px; border-radius: 50%; background: #3D6B21; color: white; font-size: 12px; font-weight: 700; text-align: center; line-height: 22px;">1</div>
+          </td>
+          <td style="font-size: 15px; color: #3E3830; line-height: 1.6; padding-bottom: 12px;">Go to <strong>delphi.report</strong> and click the green <strong>Get a Report</strong> button</td>
+        </tr>
+        <tr>
+          <td style="width: 34px; vertical-align: top; padding: 0 12px 12px 0;">
+            <div style="width: 22px; height: 22px; border-radius: 50%; background: #3D6B21; color: white; font-size: 12px; font-weight: 700; text-align: center; line-height: 22px;">2</div>
+          </td>
+          <td style="font-size: 15px; color: #3E3830; line-height: 1.6; padding-bottom: 12px;">Answer a short questionnaire about your team, stack, and situation</td>
+        </tr>
+        <tr>
+          <td style="width: 34px; vertical-align: top; padding: 0 12px 0 0;">
+            <div style="width: 22px; height: 22px; border-radius: 50%; background: #3D6B21; color: white; font-size: 12px; font-weight: 700; text-align: center; line-height: 22px;">3</div>
+          </td>
+          <td style="font-size: 15px; color: #3E3830; line-height: 1.6;">Your report generates in under 60 seconds</td>
+        </tr>
+      </table>
+
+      <div style="background: #F2EDE6; border-radius: 6px; padding: 18px 22px; margin-bottom: 24px; border-left: 3px solid #3D6B21;">
+        <p style="font-size: 14px; font-weight: 700; color: #1C1C1A; margin: 0 0 6px;">Complete the questionnaire in one sitting.</p>
+        <p style="font-size: 14px; color: #3E3830; line-height: 1.7; margin: 0;">If you leave mid-questionnaire, your answers won't be saved and you'll need to start over. Your purchase will still be there waiting for you.</p>
+      </div>
+
+      <p style="font-size: 12px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: #3D6B21; margin: 0 0 10px;">If you need to come back later</p>
+      <p style="font-size: 15px; color: #3E3830; line-height: 1.8; margin: 0 0 28px;">Go to delphi.report and click <strong>Sign In</strong>. Enter the email you used to purchase and we'll send you a link — no password required. Once you're signed in, click <strong>New Report</strong> to get started.</p>
+
+      ${!isUnlimited ? `
+      <div style="background: #F2EDE6; border-radius: 6px; padding: 18px 22px; margin-bottom: 28px; border-left: 3px solid #C4BAB0;">
+        <p style="font-size: 14px; font-weight: 700; color: #1C1C1A; margin: 0 0 6px;">Need to run more than one report?</p>
+        <p style="font-size: 14px; color: #3E3830; line-height: 1.7; margin: 0;">Within 30 days of your purchase, you can upgrade to the unlimited annual plan for $200 — your $300 is credited toward it. After 30 days, the full $500 applies. To upgrade, sign in and click New Report.</p>
+      </div>
+      ` : ""}
+
+      <p style="font-size: 13px; color: #7A7060; margin: 0; padding-top: 24px; border-top: 1px solid #E0D8CE;">
+        Questions? Reach us at <a href="mailto:support@delphi.report" style="color: #3D6B21;">support@delphi.report</a>
+      </p>
+
+    </div>
+  `;
+
+  await fetch("https://api.resend.com/emails", {
+    method: "POST",
+    headers: {
+      "Authorization": `Bearer ${process.env.RESEND_API_KEY}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      from: "Delphi <analysis@email.delphi.report>",
+      to: customerEmail,
+      subject: "Your Delphi purchase is confirmed",
+      html,
+    }),
+  });
+}
 
 export default async function handler(req, res) {
   Object.entries(HEADERS).forEach(([k, v]) => res.setHeader(k, v));
@@ -26,7 +106,6 @@ export default async function handler(req, res) {
 
   try {
     const { sessionId, authToken } = req.body;
-
     const session = await stripe.checkout.sessions.retrieve(sessionId, {
       expand: ["line_items"],
     });
@@ -43,7 +122,6 @@ export default async function handler(req, res) {
     if (paid) {
       let userId = null;
 
-      // Try to resolve user from auth token first
       if (authToken) {
         const { data: { user }, error: authError } = await supabase.auth.getUser(authToken);
         if (!authError && user) {
@@ -51,17 +129,12 @@ export default async function handler(req, res) {
         }
       }
 
-      // No authenticated user — create or retrieve one from the Stripe email
       if (!userId && customerEmail) {
-        // Check if a user with this email already exists
         const { data: existingUsers } = await supabase.auth.admin.listUsers();
         const existing = existingUsers?.users?.find(u => u.email === customerEmail);
-
         if (existing) {
           userId = existing.id;
         } else {
-          // Create a new user — email_confirm: true skips the confirmation email
-          // They'll sign in via magic link when they want to access their reports
           const { data: newUser, error: createError } = await supabase.auth.admin.createUser({
             email: customerEmail,
             email_confirm: true,
@@ -74,7 +147,6 @@ export default async function handler(req, res) {
         }
       }
 
-      // Write purchase record if we have a user
       if (userId) {
         const isUnlimited = priceType === "unlimited";
         const { error: insertError } = await supabase.from("purchases").insert({
@@ -86,8 +158,17 @@ export default async function handler(req, res) {
             ? new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString()
             : null,
         });
+
         if (insertError) {
           console.error("Failed to insert purchase:", insertError);
+        }
+      }
+
+      if (customerEmail) {
+        try {
+          await sendConfirmationEmail(customerEmail, priceType);
+        } catch (emailErr) {
+          console.error("Failed to send confirmation email:", emailErr);
         }
       }
     }
@@ -99,7 +180,6 @@ export default async function handler(req, res) {
       amountPaid,
       customerEmail,
     });
-
   } catch (err) {
     return res.status(500).json({ error: err.message });
   }
