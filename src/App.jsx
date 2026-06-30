@@ -437,10 +437,10 @@ export default function App() {
     </div>
   );
 
-if (page === "tool") return (
+  if (page === "tool") return (
     <>
       {showSignIn && <SignInModal signInEmail={signInEmail} setSignInEmail={setSignInEmail} signInStatus={signInStatus} setSignInStatus={setSignInStatus} signInError={signInError} handleSignIn={handleSignIn} onClose={closeSignIn} />}
-      <Delphi paymentStatus={paymentStatus} startCheckout={startCheckout} onHome={() => setPage("home")} initialReportType={initialReportType} onMyReports={handleMyReports} onReportSaved={() => setReportCount(c => c + 1)} />
+      <Delphi paymentStatus={paymentStatus} startCheckout={startCheckout} onHome={() => setPage("home")} initialReportType={initialReportType} onMyReports={handleMyReports} />
     </>
   );
 

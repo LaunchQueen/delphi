@@ -2347,7 +2347,7 @@ function StackTableInput({ onSubmit, onBack }) {
   );
 }
 
-export default function Delphi({ paymentStatus, startCheckout, onHome, initialReportType, onMyReports, onReportSaved }) {
+export default function Delphi({ paymentStatus, startCheckout, onHome, initialReportType, onMyReports }) {
   const [user, setUser] = useState(null);
   const [authLoading, setAuthLoading] = useState(true);
   const [showHistory, setShowHistory] = useState(false);
@@ -2400,13 +2400,13 @@ export default function Delphi({ paymentStatus, startCheckout, onHome, initialRe
     const tools = (finalAnswers[shortlistKey] || []).slice(0, 3).join(", ");
     const categoryLabel = (finalAnswers.categories || []).slice(0, 1).join("");
     const title = [categoryLabel, type === "stack_fit" ? "Stack Fit" : "Evaluation", tools ? "· " + tools : ""].filter(Boolean).join(" ");
-     try {
+    try {
       await supabase.from("reports").insert({
         user_id: user.id, report_type: type, title: title.trim(),
         email_html: buildEmailHtml(sections, type),
       });
-      if (onReportSaved) onReportSaved();
     } catch (err) { console.error("Failed to save report:", err); }
+  };
 
   const [reportType, setReportType] = useState(initialReportType || null);
   const [step, setStep] = useState(initialReportType ? "category_select" : "select");
