@@ -462,21 +462,25 @@ export default function App() {
         .card-lift:hover { transform: translateY(-3px); box-shadow: 0 12px 40px rgba(0,0,0,0.08); }
         .card-lift { transition: transform 0.2s, box-shadow 0.2s; }
         .nav-link:hover { color: ${C.accent} !important; }
+
+        @media (max-width: 768px) {
+          .nav-desktop { display: none !important; }
+          .nav-hamburger { display: flex !important; }
+          nav { padding: 14px 24px !important; }
+          .section-pad { padding: 56px 24px !important; }
+          .grid-2col { grid-template-columns: 1fr !important; gap: 32px !important; }
+          .grid-3col { grid-template-columns: 1fr !important; }
+          .grid-2col-pricing { grid-template-columns: 1fr !important; max-width: 100% !important; }
+          .callout-cards { margin-top: 40px; }
+        }
+        @media (min-width: 769px) {
+          .nav-hamburger { display: none !important; }
+          .mobile-menu { display: none !important; }
+        }
       `}</style>
 
       {/* ── NAV ── */}
       <nav style={{ position: "fixed", top: 0, left: 0, right: 0, zIndex: 100, padding: "18px 56px", display: "flex", justifyContent: "space-between", alignItems: "center", background: "rgba(250,247,242,0.95)", backdropFilter: "blur(10px)", borderBottom: "1px solid " + C.border }}>
-        <style>{`
-          @media (max-width: 768px) {
-            .nav-desktop { display: none !important; }
-            .nav-hamburger { display: flex !important; }
-            nav { padding: 14px 24px !important; }
-          }
-          @media (min-width: 769px) {
-            .nav-hamburger { display: none !important; }
-            .mobile-menu { display: none !important; }
-          }
-        `}</style>
         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
           <div style={{ width: 38, height: 38, borderRadius: "50%", background: C.accent, color: C.white, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18, fontWeight: 700, fontFamily: FFD }}>D</div>
           <span style={{ fontSize: 22, fontWeight: 700, color: C.text, fontFamily: FFD }}>Delphi</span>
@@ -537,42 +541,44 @@ export default function App() {
       </div>
 
       {/* ── THE TRANSLATION PROBLEM ── */}
-      <div style={{ background: C.dark, padding: "88px 56px" }}>
-        <div style={{ maxWidth: 1060, margin: "0 auto", display: "grid", gridTemplateColumns: "1fr 1fr", gap: 72, alignItems: "center" }}>
-          <div>
-            <h2 style={{ fontFamily: FFD, fontSize: "clamp(34px, 4vw, 52px)", fontWeight: 700, color: C.white, lineHeight: 1.1, marginBottom: 28 }}>
-              The buying cycle is hard<br />
-              <em style={{ fontStyle: "italic", color: C.gold }}>for everyone.</em>
-            </h2>
-            <div style={{ fontSize: 17, fontWeight: 500, lineHeight: 1.9, color: "rgba(255,255,255,0.72)" }}>
-              <p style={{ marginBottom: 16 }}>Vendors are trying to show their product at its best. Buyers are trying to make a significant investment decision with incomplete information. And the content that fills the buying cycle — demos, comparison sites, case studies — is designed to show the tool working, not to help you understand what it will take to make it work for you.</p>
-              <p style={{ marginBottom: 16 }}>What's missing isn't more information. It's <strong style={{ color: "rgba(255,255,255,0.92)" }}>translation.</strong> Translating vendor promises into realistic implementation requirements. Translating your organization's current state into a realistic readiness assessment. Knowing which questions to ask before you sign, not after.</p>
-              <p>Software doesn't just solve a problem. It becomes part of how your company runs. That decision deserves better support than a demo and a comparison site.</p>
-            </div>
-          </div>
-          <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-            {[
-              ["The demo shows the product working perfectly.", "Nobody shows you what it takes to get there."],
-              ["The comparison site ranks the tools.", "Nobody ranks your organization's readiness to use them."],
-              ["The sales rep has an answer for every objection.", "The questions that matter most never get asked."],
-              ["You buy the solution.", "You inherit the implementation."],
-            ].map(([problem, reality], i) => (
-              <div key={i} style={{ background: "rgba(255,255,255,0.05)", borderRadius: 6, padding: "20px 22px", borderLeft: "3px solid " + C.accent }}>
-                <p style={{ fontSize: 14, fontWeight: 600, color: "rgba(255,255,255,0.9)", marginBottom: 6, lineHeight: 1.5 }}>{problem}</p>
-                <p style={{ fontSize: 14, color: "rgba(255,255,255,0.55)", lineHeight: 1.6, margin: 0 }}>{reality}</p>
+      <div className="section-pad" style={{ background: C.dark, padding: "88px 56px" }}>
+        <div style={{ maxWidth: 1060, margin: "0 auto" }}>
+          <div className="grid-2col" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 72, alignItems: "center" }}>
+            <div>
+              <h2 style={{ fontFamily: FFD, fontSize: "clamp(34px, 4vw, 52px)", fontWeight: 700, color: C.white, lineHeight: 1.1, marginBottom: 28 }}>
+                The buying cycle is hard<br />
+                <em style={{ fontStyle: "italic", color: C.gold }}>for everyone.</em>
+              </h2>
+              <div style={{ fontSize: 17, fontWeight: 500, lineHeight: 1.9, color: "rgba(255,255,255,0.72)" }}>
+                <p style={{ marginBottom: 16 }}>Vendors are trying to show their product at its best. Buyers are trying to make a significant investment decision with incomplete information. And the content that fills the buying cycle — demos, comparison sites, case studies — is designed to show the tool working, not to help you understand what it will take to make it work for you.</p>
+                <p style={{ marginBottom: 16 }}>What's missing isn't more information. It's <strong style={{ color: "rgba(255,255,255,0.92)" }}>translation.</strong> Translating vendor promises into realistic implementation requirements. Translating your organization's current state into a realistic readiness assessment. Knowing which questions to ask before you sign, not after.</p>
+                <p>Software doesn't just solve a problem. It becomes part of how your company runs. That decision deserves better support than a demo and a comparison site.</p>
               </div>
-            ))}
+            </div>
+            <div className="callout-cards" style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+              {[
+                ["The demo shows the product working perfectly.", "Nobody shows you what it takes to get there."],
+                ["The comparison site ranks the tools.", "Nobody ranks your organization's readiness to use them."],
+                ["The sales rep has an answer for every objection.", "The questions that matter most never get asked."],
+                ["You buy the solution.", "You inherit the implementation."],
+              ].map(([problem, reality], i) => (
+                <div key={i} style={{ background: "rgba(255,255,255,0.05)", borderRadius: 6, padding: "20px 22px", borderLeft: "3px solid " + C.accent }}>
+                  <p style={{ fontSize: 14, fontWeight: 600, color: "rgba(255,255,255,0.9)", marginBottom: 6, lineHeight: 1.5 }}>{problem}</p>
+                  <p style={{ fontSize: 14, color: "rgba(255,255,255,0.55)", lineHeight: 1.6, margin: 0 }}>{reality}</p>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       </div>
 
       {/* ── HOW IT WORKS ── */}
-      <div id="how-it-works" style={{ padding: "88px 56px" }}>
+      <div id="how-it-works" className="section-pad" style={{ padding: "88px 56px" }}>
         <div style={{ maxWidth: 1060, margin: "0 auto" }}>
           <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: 3, textTransform: "uppercase", color: C.accent, marginBottom: 20 }}>Two reports</div>
           <h2 style={{ fontFamily: FFD, fontSize: "clamp(34px, 4vw, 52px)", fontWeight: 700, color: C.text, lineHeight: 1.1, letterSpacing: -0.5, marginBottom: 16 }}>One clear picture.<br /><em style={{ fontStyle: "italic", color: C.accent }}>Built for your situation.</em></h2>
           <p style={{ fontSize: 17, color: C.textMid, lineHeight: 1.8, marginBottom: 52, maxWidth: 600 }}>You answer a short diagnostic questionnaire about your team, your stack, and your situation. Delphi analyzes your answers against current vendor information and real implementation patterns, and returns a personalized report in under 60 seconds. No vendor relationships. No sponsored placements. No agenda.</p>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 24 }}>
+          <div className="grid-2col" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 24 }}>
             {[
               { tag: "The Evaluation", tagColor: C.white, tagBg: "rgba(255,255,255,0.18)", title: "Find the right tool.", body: "Which tool on your shortlist fits your use case, what it will realistically cost to implement, where your organization has gaps, and exactly what to ask before you sign.", features: ["Tool recommendation based on your specific situation", "Readiness assessment across six dimensions", "Questions to ask in every demo", "Vendor-specific gotchas your rep won't mention", "Current pricing and implementation timelines"], featured: true, reportType: "evaluation", btn: "Start Evaluation" },
               { tag: "The Stack Fit", tagColor: C.stack, tagBg: "rgba(74,111,165,0.1)", title: "See what it means to bring it into your stack.", body: "Take your shortlist and understand what it would actually mean to bring each tool into your existing environment — integrations, data flow, friction points, and whether your stack is ready.", features: ["Stack compatibility assessment per tool", "Integration complexity and data flow analysis", "Readiness across five integration dimensions", "Questions specific to your environment", "Vendor integration gotchas before go-live"], featured: false, reportType: "stack_fit", btn: "Start Stack Fit" },
@@ -598,10 +604,10 @@ export default function App() {
       </div>
 
       {/* ── WHAT YOU GET ── */}
-      <div style={{ padding: "88px 56px", background: C.card, borderTop: "1px solid " + C.border }}>
+      <div className="section-pad" style={{ padding: "88px 56px", background: C.card, borderTop: "1px solid " + C.border }}>
         <div style={{ maxWidth: 1060, margin: "0 auto" }}>
           <h2 style={{ fontFamily: FFD, fontSize: "clamp(34px, 4vw, 52px)", fontWeight: 700, color: C.text, lineHeight: 1.1, letterSpacing: -0.5, marginBottom: 52 }}>A report built for<br /><em style={{ fontStyle: "italic", color: C.accent }}>your</em> situation.</h2>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 1, background: C.border, border: "1px solid " + C.border, borderRadius: 10, overflow: "hidden" }}>
+          <div className="grid-3col" style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 1, background: C.border, border: "1px solid " + C.border, borderRadius: 10, overflow: "hidden" }}>
             {[
               { title: "Tools matched to your budget and readiness", body: "Your shortlist assessed against total budget — subscription plus implementation — and your organizational capacity. Tools that fit come first." },
               { title: "Realistic implementation requirements", body: "What each tool actually requires from your organization. Setup, data preparation, integration type, and ongoing admin burden — not just the license fee." },
@@ -621,27 +627,29 @@ export default function App() {
       </div>
 
       {/* ── WHY TRANSLATION IS HARD ── */}
-      <div style={{ padding: "88px 56px", borderTop: "1px solid " + C.border }}>
-        <div style={{ maxWidth: 1060, margin: "0 auto", display: "grid", gridTemplateColumns: "1fr 1fr", gap: 80, alignItems: "center" }}>
-          <div>
-            <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: 3, textTransform: "uppercase", color: C.accent, marginBottom: 20 }}>Why translation is hard</div>
-            <h2 style={{ fontFamily: FFD, fontSize: "clamp(30px, 3.5vw, 44px)", fontWeight: 700, color: C.text, lineHeight: 1.2, letterSpacing: -0.5, marginBottom: 24 }}>Vendors speak their language.<br /><em style={{ fontStyle: "italic", color: C.accent }}>You need yours.</em></h2>
-            <p style={{ fontSize: 17, color: C.textMid, lineHeight: 1.85, marginBottom: 20 }}>Every vendor has a vocabulary designed to make their product sound like the answer. Feature names, integration claims, implementation timelines — all framed to minimize friction in the sales process, not to help you assess readiness on your side.</p>
-            <p style={{ fontSize: 17, color: C.textMid, lineHeight: 1.85, marginBottom: 20 }}>Understanding what a tool actually requires — in terms of your data, your processes, your team, and your organizational readiness — is a different skill entirely. It's the skill of translating between what a system can do and what a business actually needs.</p>
-            <p style={{ fontSize: 17, color: C.textMid, lineHeight: 1.85 }}>That's what Delphi does. And it's what every software buying decision has been missing.</p>
-          </div>
-          <div style={{ background: C.card, borderRadius: 8, padding: "40px 36px", borderLeft: "3px solid " + C.accent }}>
-            <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: 3, textTransform: "uppercase", color: C.accent, marginBottom: 20 }}>Built by someone who has been on both sides</div>
-            <p style={{ fontSize: 16, color: C.textMid, lineHeight: 1.85, marginBottom: 16 }}>Product marketing is built to help buyers understand what a tool does. What it isn't built to do is help buyers understand what bringing that tool into their organization actually requires — the business readiness, the process changes, the ownership questions that determine whether an implementation succeeds or fails.</p>
-            <p style={{ fontSize: 16, color: C.textMid, lineHeight: 1.85, marginBottom: 16 }}>Analysts cover the market. G2 covers user sentiment. Neither one helps you understand what you need to change inside your organization before you sign.</p>
-            <p style={{ fontSize: 16, color: C.textMid, lineHeight: 1.85 }}>With nearly 20 years of experience in product marketing, I'm turning my expertise to helping the buyer understand their readiness when it comes to buying software.</p>
-            <p style={{ fontSize: 15, color: C.textLight, fontStyle: "italic", marginTop: 24, paddingTop: 20, borderTop: "1px solid " + C.border }}>— Maureen West, Founder</p>
+      <div className="section-pad" style={{ padding: "88px 56px", borderTop: "1px solid " + C.border }}>
+        <div style={{ maxWidth: 1060, margin: "0 auto" }}>
+          <div className="grid-2col" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 80, alignItems: "center" }}>
+            <div>
+              <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: 3, textTransform: "uppercase", color: C.accent, marginBottom: 20 }}>Why translation is hard</div>
+              <h2 style={{ fontFamily: FFD, fontSize: "clamp(30px, 3.5vw, 44px)", fontWeight: 700, color: C.text, lineHeight: 1.2, letterSpacing: -0.5, marginBottom: 24 }}>Vendors speak their language.<br /><em style={{ fontStyle: "italic", color: C.accent }}>You need yours.</em></h2>
+              <p style={{ fontSize: 17, color: C.textMid, lineHeight: 1.85, marginBottom: 20 }}>Every vendor has a vocabulary designed to make their product sound like the answer. Feature names, integration claims, implementation timelines — all framed to minimize friction in the sales process, not to help you assess readiness on your side.</p>
+              <p style={{ fontSize: 17, color: C.textMid, lineHeight: 1.85, marginBottom: 20 }}>Understanding what a tool actually requires — in terms of your data, your processes, your team, and your organizational readiness — is a different skill entirely. It's the skill of translating between what a system can do and what a business actually needs.</p>
+              <p style={{ fontSize: 17, color: C.textMid, lineHeight: 1.85 }}>That's what Delphi does. And it's what every software buying decision has been missing.</p>
+            </div>
+            <div style={{ background: C.card, borderRadius: 8, padding: "40px 36px", borderLeft: "3px solid " + C.accent }}>
+              <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: 3, textTransform: "uppercase", color: C.accent, marginBottom: 20 }}>Built by someone who has been on both sides</div>
+              <p style={{ fontSize: 16, color: C.textMid, lineHeight: 1.85, marginBottom: 16 }}>Product marketing is built to help buyers understand what a tool does. What it isn't built to do is help buyers understand what bringing that tool into their organization actually requires — the business readiness, the process changes, the ownership questions that determine whether an implementation succeeds or fails.</p>
+              <p style={{ fontSize: 16, color: C.textMid, lineHeight: 1.85, marginBottom: 16 }}>Analysts cover the market. G2 covers user sentiment. Neither one helps you understand what you need to change inside your organization before you sign.</p>
+              <p style={{ fontSize: 16, color: C.textMid, lineHeight: 1.85 }}>With nearly 20 years of experience in product marketing, I'm turning my expertise to helping the buyer understand their readiness when it comes to buying software.</p>
+              <p style={{ fontSize: 15, color: C.textLight, fontStyle: "italic", marginTop: 24, paddingTop: 20, borderTop: "1px solid " + C.border }}>— Maureen West, Founder</p>
+            </div>
           </div>
         </div>
       </div>
 
       {/* ── AI NOTE ── */}
-      <div style={{ background: C.card, borderTop: "1px solid " + C.border, borderBottom: "1px solid " + C.border, padding: "48px 56px" }}>
+      <div className="section-pad" style={{ background: C.card, borderTop: "1px solid " + C.border, borderBottom: "1px solid " + C.border, padding: "48px 56px" }}>
         <div style={{ maxWidth: 720, margin: "0 auto" }}>
           <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: 3, textTransform: "uppercase", color: C.accent, marginBottom: 14 }}>A note on AI</div>
           <p style={{ fontSize: 16, color: C.textMid, lineHeight: 1.85, margin: 0 }}>Delphi uses AI to analyze your situation against publicly available vendor information and real implementation patterns. AI can be wrong. Vendor capabilities change. Your situation is unique. This report is designed to make you a smarter buyer and give you better questions — not to make the decision for you. The judgment is still yours.</p>
@@ -649,11 +657,11 @@ export default function App() {
       </div>
 
       {/* ── PRICING ── */}
-      <div id="pricing" style={{ padding: "88px 56px" }}>
+      <div id="pricing" className="section-pad" style={{ padding: "88px 56px" }}>
         <div style={{ maxWidth: 1060, margin: "0 auto" }}>
           <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: 3, textTransform: "uppercase", color: C.accent, marginBottom: 20 }}>Pricing</div>
           <h2 style={{ fontFamily: FFD, fontSize: "clamp(34px, 4vw, 52px)", fontWeight: 700, color: C.text, lineHeight: 1.1, letterSpacing: -0.5, marginBottom: 48 }}>No subscriptions.<br /><em style={{ fontStyle: "italic", color: C.accent }}>No vendor relationships. Ever.</em></h2>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 20, maxWidth: 580 }}>
+          <div className="grid-2col-pricing" style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 20, maxWidth: 580 }}>
             {[
               { label: "Single report", price: "$300", desc: "One Evaluation or one Stack Fit report.", btn: "Get started", featured: false, priceType: "single_report" },
               { label: "Unlimited annual plan", price: "$500", desc: "Run unlimited reports for one year. No auto-renewal — you choose when to repurchase.", btn: "Get started", featured: true, priceType: "unlimited" },
@@ -672,14 +680,14 @@ export default function App() {
       </div>
 
       {/* ── CLOSING ── */}
-      <div style={{ textAlign: "center", padding: "88px 48px", background: C.dark }}>
+      <div className="section-pad" style={{ textAlign: "center", padding: "88px 48px", background: C.dark }}>
         <h2 style={{ fontFamily: FFD, fontSize: "clamp(30px, 4vw, 52px)", fontWeight: 700, color: C.white, letterSpacing: -0.5, marginBottom: 14, lineHeight: 1.1 }}>Know what you're getting into.<br /><em style={{ fontStyle: "italic", color: C.gold }}>Before you sign.</em></h2>
         <p style={{ fontSize: 18, fontWeight: 500, color: "rgba(255,255,255,0.5)", marginBottom: 36, fontFamily: FF }}>Independent. Personalized. Built for the buyer.</p>
         <button onClick={() => startCheckout("single_report", "evaluation")} style={{ background: C.white, color: C.accent, border: "none", borderRadius: 3, padding: "16px 40px", fontSize: 14, fontWeight: 700, letterSpacing: 2.5, textTransform: "uppercase", cursor: "pointer", fontFamily: FF }}>Get your report — $300</button>
       </div>
 
       {/* ── FOOTER ── */}
-      <footer style={{ background: C.dark, borderTop: "1px solid rgba(255,255,255,0.07)", padding: "32px 56px", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 16 }}>
+      <footer className="section-pad" style={{ background: C.dark, borderTop: "1px solid rgba(255,255,255,0.07)", padding: "32px 56px", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 16 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
           <div style={{ width: 30, height: 30, borderRadius: "50%", background: C.accent, color: C.white, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14, fontWeight: 700, fontFamily: FFD }}>D</div>
           <span style={{ fontSize: 17, fontWeight: 700, color: C.white, fontFamily: FFD }}>Delphi</span>
