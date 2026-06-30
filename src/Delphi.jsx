@@ -2800,3 +2800,4 @@ export default function Delphi({ paymentStatus, startCheckout, onHome, initialRe
     </div>
   );
 }
+
