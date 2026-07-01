@@ -46,19 +46,13 @@ async function sendConfirmationEmail(customerEmail, priceType) {
           <td style="width: 34px; vertical-align: top; padding: 0 12px 12px 0;">
             <div style="width: 22px; height: 22px; border-radius: 50%; background: #3D6B21; color: white; font-size: 12px; font-weight: 700; text-align: center; line-height: 22px;">1</div>
           </td>
-          <td style="font-size: 15px; color: #3E3830; line-height: 1.6; padding-bottom: 12px;">Go to <strong>delphi.report</strong> and click the green <strong>Get a Report</strong> button</td>
-        </tr>
-        <tr>
-          <td style="width: 34px; vertical-align: top; padding: 0 12px 12px 0;">
-            <div style="width: 22px; height: 22px; border-radius: 50%; background: #3D6B21; color: white; font-size: 12px; font-weight: 700; text-align: center; line-height: 22px;">2</div>
-          </td>
-          <td style="font-size: 15px; color: #3E3830; line-height: 1.6; padding-bottom: 12px;">Answer a short questionnaire about your team, stack, and situation</td>
+          <td style="font-size: 15px; color: #3E3830; line-height: 1.6; padding-bottom: 12px;">If you're still on the questionnaire, just keep going. Answer a few questions about your team, stack, and situation, and your report generates in under 60 seconds.</td>
         </tr>
         <tr>
           <td style="width: 34px; vertical-align: top; padding: 0 12px 0 0;">
-            <div style="width: 22px; height: 22px; border-radius: 50%; background: #3D6B21; color: white; font-size: 12px; font-weight: 700; text-align: center; line-height: 22px;">3</div>
+            <div style="width: 22px; height: 22px; border-radius: 50%; background: #3D6B21; color: white; font-size: 12px; font-weight: 700; text-align: center; line-height: 22px;">2</div>
           </td>
-          <td style="font-size: 15px; color: #3E3830; line-height: 1.6;">Your report generates in under 60 seconds</td>
+          <td style="font-size: 15px; color: #3E3830; line-height: 1.6;">If you've left the page, go to <strong>delphi.report</strong> and click <strong>Get a Report</strong> to pick up where you left off.</td>
         </tr>
       </table>
 
