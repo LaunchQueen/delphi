@@ -2347,7 +2347,7 @@ function StackTableInput({ onSubmit, onBack }) {
   );
 }
 
-export default function Delphi({ paymentStatus, startCheckout, onHome, initialReportType, onMyReports }) {
+export default function Delphi({ paymentStatus, startCheckout, onHome, initialReportType, onMyReports, onReportSaved }) {
   const [user, setUser] = useState(null);
   const [authLoading, setAuthLoading] = useState(true);
   const [showHistory, setShowHistory] = useState(false);
@@ -2375,7 +2375,10 @@ export default function Delphi({ paymentStatus, startCheckout, onHome, initialRe
               report_type: type,
               title: title.trim(),
               email_html: buildEmailHtml(sections, type),
-            }).then(({ error }) => { if (error) console.error("Failed to save pending report:", error); });
+            }).then(({ error }) => {
+              if (error) console.error("Failed to save pending report:", error);
+              else if (onReportSaved) onReportSaved();
+            });
           }
         } catch(e) { console.error("sessionStorage read failed:", e); }
       }
@@ -2405,6 +2408,7 @@ export default function Delphi({ paymentStatus, startCheckout, onHome, initialRe
         user_id: user.id, report_type: type, title: title.trim(),
         email_html: buildEmailHtml(sections, type),
       });
+      if (onReportSaved) onReportSaved();
     } catch (err) { console.error("Failed to save report:", err); }
   };
 
