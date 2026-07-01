@@ -440,6 +440,7 @@ export default function App() {
   if (page === "tool") return (
     <>
       {showSignIn && <SignInModal signInEmail={signInEmail} setSignInEmail={setSignInEmail} signInStatus={signInStatus} setSignInStatus={setSignInStatus} signInError={signInError} handleSignIn={handleSignIn} onClose={closeSignIn} />}
+      {showUpgrade && <UpgradeModal purchase={purchase || (paymentStatus?.planType ? { purchased_at: paymentStatus.purchasedAt, plan_type: paymentStatus.planType } : null)} onUpgrade={() => { setShowUpgrade(false); startCheckout("upgrade", null); }} onSingleReport={() => { setShowUpgrade(false); startCheckout("single_report", null); }} onClose={() => setShowUpgrade(false)} />}
       <Delphi paymentStatus={paymentStatus} startCheckout={startCheckout} onHome={() => setPage("home")} initialReportType={initialReportType} onMyReports={handleMyReports} onReportSaved={() => setReportCount(c => c + 1)} onRequireUpgrade={() => setShowUpgrade(true)} />
     </>
   );
