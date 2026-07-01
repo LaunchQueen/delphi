@@ -362,7 +362,7 @@ export default function App() {
       if (data.paid) {
         const savedReportType = sessionStorage.getItem("pendingReportType") || null;
         sessionStorage.removeItem("pendingReportType");
-        setPaymentStatus({ paid: true, mode: data.mode, email: data.customerEmail });
+        setPaymentStatus({ paid: true, mode: data.mode, email: data.customerEmail, planType: data.priceType, purchasedAt: new Date().toISOString() });
         setInitialReportType(savedReportType);
         if (user) await loadPurchaseData(user.id);
         setPage("tool");
@@ -440,7 +440,8 @@ export default function App() {
   if (page === "tool") return (
     <>
       {showSignIn && <SignInModal signInEmail={signInEmail} setSignInEmail={setSignInEmail} signInStatus={signInStatus} setSignInStatus={setSignInStatus} signInError={signInError} handleSignIn={handleSignIn} onClose={closeSignIn} />}
-      <Delphi paymentStatus={paymentStatus} startCheckout={startCheckout} onHome={() => setPage("home")} initialReportType={initialReportType} onMyReports={handleMyReports} />
+      {showUpgrade && <UpgradeModal purchase={purchase || (paymentStatus?.planType ? { purchased_at: paymentStatus.purchasedAt, plan_type: paymentStatus.planType } : null)} onUpgrade={() => { setShowUpgrade(false); startCheckout("upgrade", null); }} onSingleReport={() => { setShowUpgrade(false); startCheckout("single_report", null); }} onClose={() => setShowUpgrade(false)} />}
+      <Delphi paymentStatus={paymentStatus} startCheckout={startCheckout} onHome={() => setPage("home")} initialReportType={initialReportType} onMyReports={handleMyReports} onReportSaved={() => setReportCount(c => c + 1)} onRequireUpgrade={() => setShowUpgrade(true)} />
     </>
   );
 
@@ -451,7 +452,7 @@ export default function App() {
   return (
     <div style={{ minHeight: "100vh", background: C.bg, fontFamily: FF }}>
       {showSignIn && <SignInModal signInEmail={signInEmail} setSignInEmail={setSignInEmail} signInStatus={signInStatus} setSignInStatus={setSignInStatus} signInError={signInError} handleSignIn={handleSignIn} onClose={closeSignIn} />}
-      {showUpgrade && <UpgradeModal purchase={purchase} onUpgrade={() => { setShowUpgrade(false); startCheckout("upgrade", null); }} onSingleReport={() => { setShowUpgrade(false); startCheckout("single_report", null); }} onClose={() => setShowUpgrade(false)} />}
+      {showUpgrade && <UpgradeModal purchase={purchase || (paymentStatus?.planType ? { purchased_at: paymentStatus.purchasedAt, plan_type: paymentStatus.planType } : null)} onUpgrade={() => { setShowUpgrade(false); startCheckout("upgrade", null); }} onSingleReport={() => { setShowUpgrade(false); startCheckout("single_report", null); }} onClose={() => setShowUpgrade(false)} />}
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;0,900;1,400;1,600;1,700&family=EB+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&display=swap');
         * { box-sizing: border-box; margin: 0; padding: 0; }
