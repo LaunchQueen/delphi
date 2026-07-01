@@ -2347,7 +2347,7 @@ function StackTableInput({ onSubmit, onBack }) {
   );
 }
 
-export default function Delphi({ paymentStatus, startCheckout, onHome, initialReportType, onMyReports, onReportSaved }) {
+export default function Delphi({ paymentStatus, startCheckout, onHome, initialReportType, onMyReports, onReportSaved, onRequireUpgrade }) {
   const [user, setUser] = useState(null);
   const [authLoading, setAuthLoading] = useState(true);
   const [showHistory, setShowHistory] = useState(false);
@@ -2425,6 +2425,9 @@ export default function Delphi({ paymentStatus, startCheckout, onHome, initialRe
   const [hoveredChoice, setHoveredChoice] = useState(null);
   const [reportSections, setReportSections] = useState([]);
   const [activeSection, setActiveSection] = useState(0);
+  const [sessionReportCount, setSessionReportCount] = useState(() => {
+    try { return parseInt(sessionStorage.getItem("delphi_session_report_count") || "0", 10); } catch { return 0; }
+  });
   const inputRef = useRef(null);
 
   const q = questionQueue[currentQ];
@@ -2510,6 +2513,11 @@ export default function Delphi({ paymentStatus, startCheckout, onHome, initialRe
       setReportSections(parsedSections);
       setStep("report");
       saveReport(parsedSections, reportType, finalAnswers);
+      setSessionReportCount(c => {
+        const next = c + 1;
+        try { sessionStorage.setItem("delphi_session_report_count", String(next)); } catch {}
+        return next;
+      });
       if (paymentStatus?.email) {
         const emailHtml = buildEmailHtml(parsedSections, reportType);
         fetch("/api/send-report", {
@@ -2520,6 +2528,14 @@ export default function Delphi({ paymentStatus, startCheckout, onHome, initialRe
     } catch {
       setReportSections([{ title: "What We Heard", content: ["Unable to generate your report. Please try again."] }]);
       setStep("report");
+    }
+  };
+
+  const handleNewReportClick = () => {
+    if (paymentStatus?.planType === "single_report" && sessionReportCount >= 1 && onRequireUpgrade) {
+      onRequireUpgrade();
+    } else {
+      restart();
     }
   };
 
@@ -2691,7 +2707,7 @@ export default function Delphi({ paymentStatus, startCheckout, onHome, initialRe
           <div style={{ height: 1, background: C.border, margin: "16px 0" }} />
           <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
             <button onClick={() => onMyReports && onMyReports()} style={{ background: "none", border: "1px solid " + C.border, borderRadius: 4, color: C.textLight, fontSize: 12, fontWeight: 700, padding: "9px 12px", letterSpacing: 1.5, textTransform: "uppercase", fontFamily: FF }}>My Reports</button>
-            <button onClick={restart} style={{ background: "none", border: "1px solid " + C.border, borderRadius: 4, color: C.textLight, fontSize: 12, fontWeight: 700, padding: "9px 12px", letterSpacing: 1.5, textTransform: "uppercase", fontFamily: FF }}>New Report</button>
+            <button onClick={handleNewReportClick} style={{ background: "none", border: "1px solid " + C.border, borderRadius: 4, color: C.textLight, fontSize: 12, fontWeight: 700, padding: "9px 12px", letterSpacing: 1.5, textTransform: "uppercase", fontFamily: FF }}>New Report</button>
           </div>
         </div>
         <div style={{ flex: 1, padding: "40px 56px 40px 48px", maxWidth: 780, overflowY: "auto" }}>
