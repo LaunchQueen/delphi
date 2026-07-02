@@ -2362,10 +2362,10 @@ export default function Delphi({ paymentStatus, startCheckout, onHome, initialRe
       setUser(newUser);
       if (newUser) {
         try {
-          const pending = sessionStorage.getItem("delphi_pending_report");
+          const pending = localStorage.getItem("delphi_pending_report");
           if (pending) {
             const { sections, type, finalAnswers } = JSON.parse(pending);
-            sessionStorage.removeItem("delphi_pending_report");
+            localStorage.removeItem("delphi_pending_report");
             const shortlistKey = type === "stack_fit" ? "stack_shortlist" : "shortlist";
             const tools = (finalAnswers[shortlistKey] || []).slice(0, 3).join(", ");
             const categoryLabel = (finalAnswers.categories || []).slice(0, 1).join("");
@@ -2395,7 +2395,7 @@ export default function Delphi({ paymentStatus, startCheckout, onHome, initialRe
   const saveReport = async (sections, type, finalAnswers) => {
     if (!user) {
       try {
-        sessionStorage.setItem("delphi_pending_report", JSON.stringify({ sections, type, finalAnswers }));
+        localStorage.setItem("delphi_pending_report", JSON.stringify({ sections, type, finalAnswers }));
       } catch(e) { console.error("sessionStorage write failed:", e); }
       return;
     }
