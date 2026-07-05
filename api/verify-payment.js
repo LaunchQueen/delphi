@@ -52,7 +52,7 @@ async function sendConfirmationEmail(customerEmail, priceType) {
           <td style="width: 34px; vertical-align: top; padding: 0 12px 0 0;">
             <div style="width: 22px; height: 22px; border-radius: 50%; background: #3D6B21; color: white; font-size: 12px; font-weight: 700; text-align: center; line-height: 22px;">2</div>
           </td>
-          <td style="font-size: 15px; color: #3E3830; line-height: 1.6;">If you've left the page, go to <strong>delphi.report</strong> and click <strong>Get a Report</strong> to pick up where you left off.</td>
+          <td style="font-size: 15px; color: #3E3830; line-height: 1.6;">If you've left the page, go to <a href="https://delphi.report" style="color: #3D6B21; text-decoration: underline;"><strong>delphi.report</strong></a> and click <strong>Get a Report</strong> to pick up where you left off.</td>
         </tr>
       </table>
 
@@ -62,7 +62,7 @@ async function sendConfirmationEmail(customerEmail, priceType) {
       </div>
 
       <p style="font-size: 12px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: #3D6B21; margin: 0 0 10px;">If you need to come back later</p>
-      <p style="font-size: 15px; color: #3E3830; line-height: 1.8; margin: 0 0 28px;">Go to delphi.report and click <strong>Sign In</strong>. Enter the email you used to purchase and we'll send you a link — no password required. Once you're signed in, click <strong>New Report</strong> to get started.</p>
+      <p style="font-size: 15px; color: #3E3830; line-height: 1.8; margin: 0 0 28px;">Go to <a href="https://delphi.report" style="color: #3D6B21; text-decoration: underline;">delphi.report</a> and click <strong>Sign In</strong>. Enter the email you used to purchase and we'll send you a link — no password required. Once you're signed in, click <strong>New Report</strong> to get started.</p>
 
       ${!isUnlimited ? `
       <div style="background: #F2EDE6; border-radius: 6px; padding: 18px 22px; margin-bottom: 28px; border-left: 3px solid #C4BAB0;">

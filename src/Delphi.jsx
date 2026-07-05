@@ -2312,6 +2312,9 @@ function StackTableInput({ onSubmit, onBack }) {
   };
   return (
     <div>
+      <div style={{ background: "rgba(212,131,10,0.08)", border: "1px solid " + C.amber, borderRadius: 6, padding: "12px 16px", marginBottom: 12 }}>
+        <p style={{ fontSize: 13, fontWeight: 700, color: C.amber, lineHeight: 1.6, margin: 0, fontFamily: FF }}>If a tool serves multiple purposes, tell us which one: "HubSpot CRM" or "HubSpot Email," for example.</p>
+      </div>
       <div style={{ background: C.card, border: "1px solid " + C.border, borderRadius: 6, padding: "12px 16px", marginBottom: 16 }}>
         <p style={{ fontSize: 13, color: C.textMid, lineHeight: 1.6, margin: 0, fontFamily: FF }}>For CRM and marketing automation platforms, indicating data health will improve the quality of your recommendation. All other fields are optional.</p>
       </div>
