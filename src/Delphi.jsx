@@ -2284,21 +2284,24 @@ const Logo = ({ small, color }) => (
   </div>
 );
 
-const Btn = ({ children, onClick, disabled, variant = "primary", full }) => (
-  <button onClick={onClick} disabled={disabled}
-    style={{
-      background: variant === "primary" ? (disabled ? C.border : C.accent) : variant === "ghost" ? "transparent" : C.white,
-      color: variant === "primary" ? C.white : variant === "ghost" ? C.textLight : C.accent,
-      border: variant === "ghost" ? "1.5px solid " + C.borderDark : variant === "white" ? "1.5px solid " + C.border : "none",
-      borderRadius: 4, padding: "12px 24px", fontSize: 14, letterSpacing: 1.5, textTransform: "uppercase",
-      fontFamily: FF, fontWeight: 700, cursor: disabled ? "default" : "pointer",
-      width: full ? "100%" : "auto", opacity: disabled ? 0.5 : 1, transition: "all 0.15s",
-    }}>{children}</button>
-);
+const Btn = ({ children, onClick, disabled, variant = "primary", full, color }) => {
+  const btnColor = color || C.accent;
+  return (
+    <button onClick={onClick} disabled={disabled}
+      style={{
+        background: variant === "primary" ? (disabled ? C.border : btnColor) : variant === "ghost" ? "transparent" : C.white,
+        color: variant === "primary" ? C.white : variant === "ghost" ? C.textLight : btnColor,
+        border: variant === "ghost" ? "1.5px solid " + C.borderDark : variant === "white" ? "1.5px solid " + C.border : "none",
+        borderRadius: 4, padding: "12px 24px", fontSize: 14, letterSpacing: 1.5, textTransform: "uppercase",
+        fontFamily: FF, fontWeight: 700, cursor: disabled ? "default" : "pointer",
+        width: full ? "100%" : "auto", opacity: disabled ? 0.5 : 1, transition: "all 0.15s",
+      }}>{children}</button>
+  );
+};
 
 const HEALTH_OPTIONS = ["Clean and well-governed", "Decent with some gaps", "Messy but functional", "It's a disaster and we know it"];
 
-function StackTableInput({ onSubmit, onBack }) {
+function StackTableInput({ onSubmit, onBack, reportType }) {
   const [rows, setRows] = useState([
     { tool: "", health: "" }, { tool: "", health: "" }, { tool: "", health: "" },
     { tool: "", health: "" }, { tool: "", health: "" },
@@ -2315,11 +2318,11 @@ function StackTableInput({ onSubmit, onBack }) {
       <div style={{ background: C.card, border: "1px solid " + C.border, borderRadius: 6, padding: "12px 16px", marginBottom: 12 }}>
         <p style={{ fontSize: 13, color: C.textMid, lineHeight: 1.6, margin: 0, fontFamily: FF }}>For CRM and marketing automation platforms, indicating data health will improve the quality of your recommendation. All other fields are optional.</p>
       </div>
-      <div style={{ background: "rgba(61,107,33,0.08)", border: "1px solid " + C.accent, borderRadius: 6, padding: "12px 16px", marginBottom: 16 }}>
-        <p style={{ fontSize: 13, fontWeight: 700, color: C.accent, lineHeight: 1.6, margin: 0, fontFamily: FF }}>If a tool serves multiple purposes, tell us which one: "HubSpot CRM" or "HubSpot Email," for example.</p>
+      <div style={{ background: reportType === "stack_fit" ? "rgba(74,111,165,0.08)" : "rgba(61,107,33,0.08)", border: "1px solid " + (reportType === "stack_fit" ? C.stack : C.accent), borderRadius: 6, padding: "12px 16px", marginBottom: 16 }}>
+        <p style={{ fontSize: 13, fontWeight: 700, color: reportType === "stack_fit" ? C.stack : C.accent, lineHeight: 1.6, margin: 0, fontFamily: FF }}>If a tool serves multiple purposes, tell us which one: "HubSpot CRM" or "HubSpot Email," for example.</p>
       </div>
       <div style={{ border: "1px solid " + C.border, borderRadius: 6, overflow: "hidden", marginBottom: 16 }}>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", background: C.accent }}>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", background: reportType === "stack_fit" ? C.stack : C.accent }}>
           <div style={{ padding: "10px 16px", fontSize: 11, fontWeight: 700, letterSpacing: 1.5, textTransform: "uppercase", color: C.white }}>Tool name</div>
           <div style={{ padding: "10px 16px", fontSize: 11, fontWeight: 700, letterSpacing: 1.5, textTransform: "uppercase", color: C.white, borderLeft: "1px solid rgba(255,255,255,0.2)" }}>Health (optional)</div>
         </div>
@@ -2338,7 +2341,7 @@ function StackTableInput({ onSubmit, onBack }) {
       <button onClick={addRow} style={{ background: "none", border: "1px dashed " + C.border, borderRadius: 4, color: C.textLight, fontSize: 13, fontWeight: 500, padding: "10px 16px", cursor: "pointer", fontFamily: FF, width: "100%", marginBottom: 20 }}>+ Add another tool</button>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
         {onBack ? <button onClick={onBack} style={{ background: "none", border: "none", color: C.textLight, fontSize: 14, fontWeight: 600, cursor: "pointer", fontFamily: FF }}>&larr; Back</button> : <span />}
-        <Btn onClick={handleSubmit} disabled={!rows.some(r => r.tool.trim())}>Continue</Btn>
+        <Btn onClick={handleSubmit} disabled={!rows.some(r => r.tool.trim())} color={reportType === "stack_fit" ? C.stack : C.accent}>Continue</Btn>
       </div>
       <button onClick={() => onSubmit("Not provided")} style={{ background: "none", border: "none", color: C.textLight, fontSize: 13, fontWeight: 500, marginTop: 16, textDecoration: "underline", cursor: "pointer", display: "block", fontFamily: FF }}>Skip this question</button>
     </div>
@@ -2549,7 +2552,7 @@ export default function Delphi({ paymentStatus, startCheckout, onHome, initialRe
   if (authLoading && !paymentStatus?.paid) return (
     <div style={pageWrap}>
       <style>{GS}</style>
-      <div style={{ width: 36, height: 36, border: "3px solid " + C.border, borderTop: "3px solid " + C.accent, borderRadius: "50%", animation: "spin 0.9s linear infinite" }} />
+      <div style={{ width: 36, height: 36, border: "3px solid " + C.border, borderTop: "3px solid " + (reportType === "stack_fit" ? C.stack : C.accent), borderRadius: "50%", animation: "spin 0.9s linear infinite" }} />
     </div>
   );
 
@@ -2603,7 +2606,7 @@ export default function Delphi({ paymentStatus, startCheckout, onHome, initialRe
         <style>{GS}</style>
         <div style={{ maxWidth: 600, width: "100%", animation: "fadeUp 0.4s ease" }}>
           <Logo />
-          <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: 2, textTransform: "uppercase", color: C.accent, background: "rgba(61,107,33,0.08)", borderRadius: 20, padding: "4px 12px", marginBottom: 16, display: "inline-block" }}>
+          <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: 2, textTransform: "uppercase", color: reportType === "stack_fit" ? C.stack : C.accent, background: reportType === "stack_fit" ? "rgba(74,111,165,0.08)" : "rgba(61,107,33,0.08)", borderRadius: 20, padding: "4px 12px", marginBottom: 16, display: "inline-block" }}>
             {reportType === "stack_fit" ? "The Stack Fit" : "The Evaluation"}
           </div>
           {categoryStep === "categories" ? (
@@ -2617,8 +2620,8 @@ export default function Delphi({ paymentStatus, startCheckout, onHome, initialRe
                   return (
                     <button key={cat.id} onClick={() => toggleCategory(cat.id)}
                       style={{
-                        background: sel ? C.accent : C.white,
-                        border: "1.5px solid " + (sel ? C.accent : C.border),
+                        background: sel ? (reportType === "stack_fit" ? C.stack : C.accent) : C.white,
+                        border: "1.5px solid " + (sel ? (reportType === "stack_fit" ? C.stack : C.accent) : C.border),
                         borderRadius: 4, padding: "14px 18px", textAlign: "left",
                         cursor: grayed ? "default" : "pointer",
                         opacity: grayed ? 0.38 : 1,
@@ -2635,7 +2638,7 @@ export default function Delphi({ paymentStatus, startCheckout, onHome, initialRe
                   );
                 })}
               </div>
-              <Btn onClick={() => setCategoryStep("tools")} disabled={selectedCategories.length === 0}>Enter Tools</Btn>
+              <Btn onClick={() => setCategoryStep("tools")} disabled={selectedCategories.length === 0} color={reportType === "stack_fit" ? C.stack : C.accent}>Enter Tools</Btn>
             </>
           ) : (
             <>
@@ -2656,7 +2659,7 @@ export default function Delphi({ paymentStatus, startCheckout, onHome, initialRe
               </div>
               <div style={{ display: "flex", gap: 12 }}>
                 <Btn variant="ghost" onClick={() => setCategoryStep("categories")}>Back</Btn>
-                <Btn onClick={confirmSelection} disabled={!selectedTools.some(t => t?.trim())}>Continue</Btn>
+                <Btn onClick={confirmSelection} disabled={!selectedTools.some(t => t?.trim())} color={reportType === "stack_fit" ? C.stack : C.accent}>Continue</Btn>
               </div>
             </>
           )}
@@ -2669,7 +2672,7 @@ export default function Delphi({ paymentStatus, startCheckout, onHome, initialRe
     <div style={pageWrap}>
       <style>{GS}</style>
       <div style={{ textAlign: "center", maxWidth: 480, padding: "0 24px" }}>
-        <div style={{ width: 48, height: 48, border: "3px solid " + C.border, borderTop: "3px solid " + C.accent, borderRadius: "50%", margin: "0 auto 28px", animation: "spin 0.9s linear infinite" }} />
+        <div style={{ width: 48, height: 48, border: "3px solid " + C.border, borderTop: "3px solid " + (reportType === "stack_fit" ? C.stack : C.accent), borderRadius: "50%", margin: "0 auto 28px", animation: "spin 0.9s linear infinite" }} />
         <p style={{ fontSize: 22, fontWeight: 700, color: C.text, marginBottom: 14, fontFamily: FFD }}>Building your report</p>
         <p style={{ fontSize: 16, fontWeight: 500, color: C.textMid, lineHeight: 1.75, marginBottom: 12 }}>
           {reportType === "stack_fit" ? "Analyzing your stack, integration patterns, and compatibility signals." : "Analyzing your situation against known implementation requirements and organizational readiness signals."}
@@ -2755,14 +2758,14 @@ export default function Delphi({ paymentStatus, startCheckout, onHome, initialRe
       <div style={{ maxWidth: 600, width: "100%" }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 24 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-            <div style={{ width: 30, height: 30, borderRadius: "50%", background: C.accent, color: C.white, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13, fontWeight: 700, fontFamily: FFD }}>D</div>
-            <span style={{ fontSize: 13, fontWeight: 700, letterSpacing: 1.5, textTransform: "uppercase", color: C.accent }}>{reportType === "stack_fit" ? "The Stack Fit" : "The Evaluation"}</span>
+            <div style={{ width: 30, height: 30, borderRadius: "50%", background: reportType === "stack_fit" ? C.stack : C.accent, color: C.white, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13, fontWeight: 700, fontFamily: FFD }}>D</div>
+            <span style={{ fontSize: 13, fontWeight: 700, letterSpacing: 1.5, textTransform: "uppercase", color: reportType === "stack_fit" ? C.stack : C.accent }}>{reportType === "stack_fit" ? "The Stack Fit" : "The Evaluation"}</span>
             {selectedCategories.length > 0 && (() => { const cat = TOOL_CATEGORIES.find(c => c.id === selectedCategories[0]); return cat ? <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: 1.5, textTransform: "uppercase", color: C.white, background: reportType === "stack_fit" ? C.stack : C.accent, borderRadius: 20, padding: "3px 10px" }}>{cat.shortLabel}</span> : null; })()}
           </div>
           <span style={{ fontSize: 13, fontWeight: 500, color: C.textLight }}>{currentQ + 1} / {questionQueue.length}</span>
         </div>
         <div style={{ width: "100%", height: 3, background: C.border, borderRadius: 2, marginBottom: 36 }}>
-          <div style={{ width: progress + "%", height: "100%", background: C.accent, borderRadius: 2, transition: "width 0.35s ease" }} />
+          <div style={{ width: progress + "%", height: "100%", background: reportType === "stack_fit" ? C.stack : C.accent, borderRadius: 2, transition: "width 0.35s ease" }} />
         </div>
         {q && currentQ === 0 && (
           <p style={{ fontSize: 15, fontWeight: 500, color: C.textMid, lineHeight: 1.75, marginBottom: 28, paddingBottom: 24, borderBottom: "1px solid " + C.border }}>
@@ -2789,7 +2792,7 @@ export default function Delphi({ paymentStatus, startCheckout, onHome, initialRe
                   ) : (
                     <span style={{ fontSize: 12, fontWeight: 500, color: C.borderDark, fontFamily: FF }}>Command + Enter to continue</span>
                   )}
-                  <Btn onClick={() => currentInput.trim() && submitAnswer(currentInput.trim())} disabled={!currentInput.trim()}>Continue</Btn>
+                  <Btn onClick={() => currentInput.trim() && submitAnswer(currentInput.trim())} disabled={!currentInput.trim()} color={reportType === "stack_fit" ? C.stack : C.accent}>Continue</Btn>
                 </div>
                 <button onClick={() => submitAnswer("Not provided")} style={{ background: "none", border: "none", color: C.textLight, fontSize: 13, fontWeight: 500, marginTop: 16, textDecoration: "underline", cursor: "pointer", display: "block", fontFamily: FF }}>Skip this question</button>
               </>
@@ -2801,7 +2804,7 @@ export default function Delphi({ paymentStatus, startCheckout, onHome, initialRe
                     <button key={opt} onClick={() => submitAnswer(opt)}
                       onMouseEnter={() => setHoveredChoice(opt)}
                       onMouseLeave={() => setHoveredChoice(null)}
-                      style={{ background: hoveredChoice === opt ? C.accent : C.white, border: "1.5px solid " + (hoveredChoice === opt ? C.accent : C.border), borderRadius: 4, color: hoveredChoice === opt ? C.white : C.text, fontSize: 16, fontWeight: 500, padding: "14px 18px", textAlign: "left", lineHeight: 1.4, cursor: "pointer", transition: "all 0.15s", fontFamily: FF }}>
+                      style={{ background: hoveredChoice === opt ? (reportType === "stack_fit" ? C.stack : C.accent) : C.white, border: "1.5px solid " + (hoveredChoice === opt ? (reportType === "stack_fit" ? C.stack : C.accent) : C.border), borderRadius: 4, color: hoveredChoice === opt ? C.white : C.text, fontSize: 16, fontWeight: 500, padding: "14px 18px", textAlign: "left", lineHeight: 1.4, cursor: "pointer", transition: "all 0.15s", fontFamily: FF }}>
                       {opt}
                     </button>
                   ))}
@@ -2814,7 +2817,7 @@ export default function Delphi({ paymentStatus, startCheckout, onHome, initialRe
               </>
             )}
             {q.type === "stack_table" && (
-              <StackTableInput onSubmit={submitAnswer} onBack={currentQ > 0 ? () => setCurrentQ(currentQ - 1) : null} />
+              <StackTableInput onSubmit={submitAnswer} onBack={currentQ > 0 ? () => setCurrentQ(currentQ - 1) : null} reportType={reportType} />
             )}
           </>
         )}
