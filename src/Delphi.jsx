@@ -1,10 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { createClient } from "@supabase/supabase-js";
-
-const supabase = createClient(
-  import.meta.env.VITE_SUPABASE_URL,
-  import.meta.env.VITE_SUPABASE_ANON_KEY
-);
+import { supabase } from "./supabaseClient.js";
 
 const C = {
   bg: "#FAF7F2", card: "#F2EDE6", sidebar: "#EDE6DC", border: "#E0D8CE",
@@ -2566,8 +2561,12 @@ export default function Delphi({ paymentStatus, startCheckout, onHome, initialRe
         <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 0 }}>
           <Logo />
           <div style={{ display: "flex", alignItems: "center", gap: 14, marginTop: 4 }}>
-            <button onClick={() => onMyReports && onMyReports()} style={{ background: "none", border: "1px solid " + C.border, borderRadius: 4, color: C.textMid, fontSize: 12, fontWeight: 700, padding: "7px 14px", letterSpacing: 1.5, textTransform: "uppercase", fontFamily: FF, cursor: "pointer" }}>My Reports</button>
-            <button onClick={handleSignOut} style={{ background: "none", border: "none", color: C.textLight, fontSize: 13, fontWeight: 500, cursor: "pointer", fontFamily: FF }}>Sign out</button>
+            {user && (
+              <>
+                <button onClick={() => onMyReports && onMyReports()} style={{ background: "none", border: "1px solid " + C.border, borderRadius: 4, color: C.textMid, fontSize: 12, fontWeight: 700, padding: "7px 14px", letterSpacing: 1.5, textTransform: "uppercase", fontFamily: FF, cursor: "pointer" }}>My Reports</button>
+                <button onClick={handleSignOut} style={{ background: "none", border: "none", color: C.textLight, fontSize: 13, fontWeight: 500, cursor: "pointer", fontFamily: FF }}>Sign out</button>
+              </>
+            )}
           </div>
         </div>
         <h1 style={{ fontFamily: FFD, fontSize: "clamp(28px, 4vw, 44px)", fontWeight: 700, color: C.text, lineHeight: 1.1, letterSpacing: -1, marginBottom: 12 }}>What are you trying to figure out?</h1>

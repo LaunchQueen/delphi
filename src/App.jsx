@@ -3,12 +3,7 @@ import Delphi from "./Delphi.jsx";
 import FeedbackForm from "./FeedbackForm.jsx";
 import Sample from "./Sample.jsx";
 import About from "./About.jsx";
-import { createClient } from "@supabase/supabase-js";
-
-const supabase = createClient(
-  import.meta.env.VITE_SUPABASE_URL,
-  import.meta.env.VITE_SUPABASE_ANON_KEY
-);
+import { supabase } from "./supabaseClient.js";
 
 const C = {
   bg: "#FAF7F2", card: "#F2EDE6", sidebar: "#EDE6DC", border: "#E0D8CE",
