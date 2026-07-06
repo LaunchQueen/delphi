@@ -528,7 +528,7 @@ export default function App() {
           <em style={{ fontStyle: "italic", color: C.accent }}>Getting it right is harder.</em>
         </h1>
         <p style={{ fontSize: 20, lineHeight: 1.85, color: C.textMid, marginBottom: 48, maxWidth: 680, fontWeight: 500 }}>
-          Delphi gives B2B buyers an independent second opinion on any software decision — translating vendor promises into a personalized assessment of what the tool actually requires for your business, and whether your organization is ready to make it work.
+          Delphi gives B2B buyers an independent second opinion on sales and marketing software decisions — translating vendor promises into a personalized assessment of what the tool actually requires for your business, and whether your organization is ready to make it work.
         </p>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 24, flexWrap: "wrap" }}>
           <button onClick={() => document.getElementById("how-it-works").scrollIntoView({ behavior: "smooth" })} className="btn-primary" style={{ background: C.accent, color: C.white, border: "none", borderRadius: 3, padding: "16px 40px", fontSize: 14, fontWeight: 700, letterSpacing: 2.5, textTransform: "uppercase", cursor: "pointer", fontFamily: FF, transition: "background 0.15s" }}>Start your evaluation — $300</button>
