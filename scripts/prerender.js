@@ -12,7 +12,27 @@
 import { createServer } from "http";
 import { readFile, writeFile, mkdir, stat } from "fs/promises";
 import path from "path";
-import puppeteer from "puppeteer";
+
+// Vercel's build servers are a stripped-down Linux environment that's missing
+// system libraries the regular Puppeteer-bundled Chrome needs. @sparticuz/chromium
+// is a Chromium build made specifically to run there. Locally (on your Mac), we
+// just use regular Puppeteer, which already works fine.
+async function launchBrowser() {
+  if (process.env.VERCEL) {
+    const puppeteerCore = (await import("puppeteer-core")).default;
+    const chromium = (await import("@sparticuz/chromium")).default;
+    const executablePath = await chromium.executablePath();
+    return puppeteerCore.launch({
+      args: chromium.args,
+      defaultViewport: chromium.defaultViewport,
+      executablePath,
+      headless: chromium.headless,
+    });
+  } else {
+    const puppeteer = (await import("puppeteer")).default;
+    return puppeteer.launch({ headless: "new" });
+  }
+}
 
 const DIST = path.resolve("dist");
 const PORT = 4173;
@@ -95,7 +115,7 @@ async function main() {
   const server = await startStaticServer();
 
   console.log("Prerender: launching headless Chrome...");
-  const browser = await puppeteer.launch({ headless: "new" });
+  const browser = await launchBrowser();
 
   const failures = [];
 
