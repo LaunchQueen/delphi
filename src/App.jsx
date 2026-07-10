@@ -77,7 +77,7 @@ function UpgradeModal({ purchase, onUpgrade, onSingleReport, onClose }) {
         <div style={{ display: "flex", flexDirection: "column", gap: 12, marginBottom: 20 }}>
           <div style={{ border: "2px solid " + C.accent, borderRadius: 8, padding: "20px 20px" }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 8 }}>
-              <p style={{ fontSize: 15, fontWeight: 700, color: C.text, fontFamily: FFD }}>Unlimited annual plan</p>
+              <p style={{ fontSize: 15, fontWeight: 700, color: C.text, fontFamily: FFD }}>Unlimited Access for 1 Year</p>
               <p style={{ fontSize: 18, fontWeight: 700, color: C.accent, fontFamily: FFD }}>${upgradePrice}</p>
             </div>
             {withinWindow ? (
@@ -165,7 +165,7 @@ function AccountPage({ user, onNewReport, onSignOut, onHome }) {
   const typeColor = (t) => t === "stack_fit" ? C.stack : C.accent;
   const typeBg = (t) => t === "stack_fit" ? "rgba(74,111,165,0.08)" : "rgba(61,107,33,0.08)";
 
-  const planLabel = purchase?.plan_type === "unlimited" ? "Unlimited annual plan" : purchase ? "Single report" : "No active plan";
+  const planLabel = purchase?.plan_type === "unlimited" ? "Unlimited Access for 1 Year" : purchase ? "Single report" : "No active plan";
   const validUntil = purchase?.valid_until ? formatDate(purchase.valid_until) : null;
 
   if (activeReport) return (
@@ -657,21 +657,28 @@ export default function App() {
         <div style={{ maxWidth: 1060, margin: "0 auto" }}>
           <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: 3, textTransform: "uppercase", color: C.accent, marginBottom: 20 }}>Pricing</div>
           <h2 style={{ fontFamily: FFD, fontSize: "clamp(34px, 4vw, 52px)", fontWeight: 700, color: C.text, lineHeight: 1.1, letterSpacing: -0.5, marginBottom: 48 }}>No subscriptions.<br /><em style={{ fontStyle: "italic", color: C.accent }}>No vendor relationships. Ever.</em></h2>
-          <div className="grid-2col-pricing" style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 20, maxWidth: 580 }}>
-            {[
-              { label: "Single report", price: "$300", desc: "One Evaluation or one Stack Fit report.", btn: "Get started", featured: false, priceType: "single_report" },
-              { label: "Unlimited annual plan", price: "$500", desc: "Run unlimited reports for one year. No auto-renewal — you choose when to repurchase.", btn: "Get started", featured: true, priceType: "unlimited" },
-            ].map((card, i) => (
-              <div key={i} className="card-lift" style={{ background: card.featured ? C.accent : C.white, border: card.featured ? "1.5px solid " + C.accent : "1.5px solid " + C.border, borderRadius: 8, padding: "32px", display: "flex", flexDirection: "column", gap: 12, position: "relative" }}>
-                {card.featured && <div style={{ position: "absolute", top: -1, right: 20, background: C.accentDark, color: C.white, fontSize: 10, fontWeight: 700, letterSpacing: 1.5, textTransform: "uppercase", padding: "4px 12px", borderRadius: "0 0 4px 4px" }}>Best value</div>}
-                <p style={{ fontSize: 11, fontWeight: 700, letterSpacing: 2.5, textTransform: "uppercase", color: card.featured ? "rgba(255,255,255,0.6)" : C.textLight }}>{card.label}</p>
-                <p style={{ fontSize: 44, fontWeight: 700, color: card.featured ? C.white : C.text, fontFamily: FFD, lineHeight: 1 }}>{card.price}</p>
-                <p style={{ fontSize: 14, fontWeight: 500, color: card.featured ? "rgba(255,255,255,0.8)" : C.textMid, lineHeight: 1.6, flex: 1 }}>{card.desc}</p>
-                <button onClick={() => startCheckout(card.priceType, "evaluation")} className={card.featured ? "btn-white" : "btn-primary"} style={{ background: card.featured ? C.white : C.accent, color: card.featured ? C.accent : C.white, border: "none", borderRadius: 3, padding: "12px 20px", fontSize: 12, fontWeight: 700, letterSpacing: 2, textTransform: "uppercase", fontFamily: FF, cursor: "pointer", width: "100%", transition: "background 0.15s" }}>{card.btn}</button>
-              </div>
-            ))}
+          <div className="grid-2col" style={{ display: "grid", gridTemplateColumns: "580px 1fr", gap: 40, alignItems: "stretch" }}>
+            <div className="grid-2col-pricing" style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 20 }}>
+              {[
+                { label: "Single report", price: "$300", desc: "One Evaluation or one Stack Fit report.", btn: "Get started", featured: false, priceType: "single_report" },
+                { label: "Unlimited Access for 1 Year", price: "$500", desc: "Run unlimited reports for one year. No auto-renewal — you choose when to repurchase.", btn: "Get started", featured: true, priceType: "unlimited" },
+              ].map((card, i) => (
+                <div key={i} className="card-lift" style={{ background: card.featured ? C.accent : C.white, border: card.featured ? "1.5px solid " + C.accent : "1.5px solid " + C.border, borderRadius: 8, padding: "32px", display: "flex", flexDirection: "column", gap: 12, position: "relative" }}>
+                  {card.featured && <div style={{ position: "absolute", top: -1, right: 20, background: C.accentDark, color: C.white, fontSize: 10, fontWeight: 700, letterSpacing: 1.5, textTransform: "uppercase", padding: "4px 12px", borderRadius: "0 0 4px 4px" }}>Best value</div>}
+                  <p style={{ fontSize: 11, fontWeight: 700, letterSpacing: 2.5, textTransform: "uppercase", color: card.featured ? "rgba(255,255,255,0.6)" : C.textLight }}>{card.label}</p>
+                  <p style={{ fontSize: 44, fontWeight: 700, color: card.featured ? C.white : C.text, fontFamily: FFD, lineHeight: 1 }}>{card.price}</p>
+                  <p style={{ fontSize: 14, fontWeight: 500, color: card.featured ? "rgba(255,255,255,0.8)" : C.textMid, lineHeight: 1.6, flex: 1 }}>{card.desc}</p>
+                  <button onClick={() => startCheckout(card.priceType, "evaluation")} className={card.featured ? "btn-white" : "btn-primary"} style={{ background: card.featured ? C.white : C.accent, color: card.featured ? C.accent : C.white, border: "none", borderRadius: 3, padding: "12px 20px", fontSize: 12, fontWeight: 700, letterSpacing: 2, textTransform: "uppercase", fontFamily: FF, cursor: "pointer", width: "100%", transition: "background 0.15s" }}>{card.btn}</button>
+                </div>
+              ))}
+            </div>
+            <div style={{ background: C.card, border: "1px solid " + C.border, borderRadius: 8, padding: "36px 32px", display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "flex-start", height: "100%" }}>
+              <p style={{ fontSize: 11, fontWeight: 700, letterSpacing: 2.5, textTransform: "uppercase", color: C.accent, marginBottom: 16 }}>Not sure yet?</p>
+              <h3 style={{ fontFamily: FFD, fontSize: 24, fontWeight: 700, color: C.text, marginBottom: 14, lineHeight: 1.3, width: "100%" }}>See a sample report before you buy.</h3>
+              <p style={{ fontSize: 15, fontWeight: 500, color: C.textMid, lineHeight: 1.75, marginBottom: 24, width: "100%" }}>Browse a sample Evaluation and Stack Fit report so you know exactly what you're getting, before you spend anything.</p>
+              <a href="/sample" style={{ display: "inline-block", background: C.accent, color: C.white, borderRadius: 3, padding: "13px 26px", fontSize: 13, fontWeight: 700, letterSpacing: 2, textTransform: "uppercase", textDecoration: "none", fontFamily: FF }}>View sample reports</a>
+            </div>
           </div>
-          <p style={{ fontSize: 13, fontWeight: 500, color: C.textLight, marginTop: 16 }}>Beta access available. Use your access code at checkout.</p>
         </div>
       </div>
 
